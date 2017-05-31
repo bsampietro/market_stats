@@ -23,6 +23,9 @@ import os.path
 
 from ibapi.common import *
 
+import json
+from json.decoder import JSONDecodeError
+
 # from ibapi.utils import iswrapper
 
 # types
@@ -116,7 +119,8 @@ class TestApp(TestWrapper, TestClient):
         self.next_req_id = 0
         self.req_id_to_stock_ticker_map = {}
 
-        self.load_data()
+        # self.load_data()
+        self.load_data_json()
 
         self.connect(ipaddress, portid, clientid)
         print("serverVersion:%s connectionTime:%s" % (self.serverVersion(), self.twsConnectionTime()))
@@ -161,8 +165,9 @@ class TestApp(TestWrapper, TestClient):
         """ Marks the ending of the historical bars reception. """
         # super().historicalDataEnd(reqId, start, end)
 
-        self.save_data()
-        # print(self.implied_volatility)
+        # self.save_data()
+        self.save_data_json()
+        
         print("Historical data fetched, you can request again...")
 
     # Client method wrappers
@@ -170,7 +175,7 @@ class TestApp(TestWrapper, TestClient):
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = contract.symbol
 
-        duration_string = "2 Y"
+        duration_string = "1 Y"
         if contract.symbol in self.implied_volatility:
             last = max(self.implied_volatility[contract.symbol].keys())
             last = datetime.strptime(last, "%Y%m%d")
@@ -179,7 +184,7 @@ class TestApp(TestWrapper, TestClient):
             if delta.days <= 0:
                 return
             else:
-                duration_string = f"{delta.days} D"
+                duration_string = f"{delta.days + 1} D"
 
         print(f"Last historical query duration string: {duration_string}")
 
@@ -193,7 +198,7 @@ class TestApp(TestWrapper, TestClient):
             self.next_req_id += 1
         return self.next_req_id
 
-    def get_iv_rank(self, ticker, days = 365):
+    def get_iv_rank(self, ticker, days):
         # values = self.find_in_data(ticker).values()
         # min_value = min(values)
         # max_value = max(values)
@@ -202,51 +207,66 @@ class TestApp(TestWrapper, TestClient):
         max_date = datetime.strptime(max_date, "%Y%m%d")
 
         volatility_list = []
-        for i in range(days)
+        for i in range(days):
             new_date = max_date - timedelta(days=i)
-            volatility_list.append(self.find_in_data(ticker, new_date.strftime("%Y%m%d")))
-        min_value = min(volatility_list)
-        max_value = max(volatility_list)
-
-
-        print(f"IV today: {self.get_iv_today(ticker) * 100}")
-        return ((self.get_iv_today(ticker) - min_value) / (max_value - min_value)) * 100
-
+            volatility = self.find_in_data(ticker, new_date.strftime("%Y%m%d"), True)
+            if volatility is not None:
+                volatility_list.append(volatility)
+        min_value = min(volatility_list) * 100
+        max_value = max(volatility_list) * 100
+        iv_today = self.get_iv_today(ticker) * 100
+        
+        # return (iv_today - min_value) / (max_value - min_value)
+        return ((iv_today - min_value) / (max_value - min_value) * 100, iv_today, min_value, max_value)
+        
     
     def get_iv_today(self, ticker):
         return self.find_in_data(ticker, today_in_string())
         
 
-    def find_in_data(self, ticker, the_day = None):
+    def find_in_data(self, ticker, the_day = None, silent = False):
         try:
             if the_day is None:
                 return self.implied_volatility[ticker]
             else:
                 return self.implied_volatility[ticker][the_day]
         except KeyError as e:
-            self.request_historical_data(get_stock_contract(ticker))
-            raise GettingInfoError(f"Need to get info for ticker {ticker}")
+            if silent:
+                return None
+            else:
+                self.request_historical_data(get_stock_contract(ticker))
+                raise GettingInfoError(f"Trying to get historical info for ticker {ticker}")
 
 
     def save_data(self):
-        with open('data', 'wb') as f:
+        with open('data.pk', 'wb') as f:
             pickle.dump(self.implied_volatility, f)
 
     def load_data(self):
-        if os.path.isfile('data'):
-            with open('data', 'rb') as f:
+        if os.path.isfile('data.pk'):
+            with open('data.pk', 'rb') as f:
                 self.implied_volatility = pickle.load(f)
+        else:
+            self.implied_volatility = {}
+
+    def save_data_json(self):
+        with open('data.json', 'w') as f:
+            json.dump(self.implied_volatility, f)
+
+    def load_data_json(self):
+        if os.path.isfile('data.json'):
+            with open('data.json', 'r') as f:
+                try:
+                    self.implied_volatility = json.load(f)
+                except JSONDecodeError:
+                    self.implied_volatility = {}
         else:
             self.implied_volatility = {}
 
 
     # Main method
     def do_stuff(self):
-        self.reqCurrentTime()
-
-        # contract1 = get_options_contract("MSFT", "20170616", 70, "C")
-        # self.req_id_to_stock_ticker_map[1] = "MSFT"
-        # self.reqMktData(1, contract1, "", True, False, [])
+        # self.reqCurrentTime()
 
         # contract2 = get_options_contract("SPY", "20170616", 235, "C")
         # self.req_id_to_stock_ticker_map[2] = "SPY"
@@ -262,12 +282,25 @@ class TestApp(TestWrapper, TestClient):
             if command != "":
                 command = command.split(" ")
                 stock = command[0]
-                duration = 12
-                if len(command) == 2
+                duration = 365
+                if len(command) == 2:
                     duration = command[1]
                 
                 try:
-                    self.get_iv_rank(stock)
+                    ivr, iv, iv_min, iv_max = self.get_iv_rank(stock, int(duration))
+                    ivr, iv, iv_min, iv_max = format(ivr, '.2f'), format(iv, '.2f'), \
+                        format(iv_min, '.2f'), format(iv_max, '.2f')
+                    # print(f"IV today is: {iv}")
+                    # print(f"IV min is: {iv_min}")
+                    # print(f"IV max is: {iv_max}")
+                    # print(f"IV rank is: {ivr}")
+                    
+                    show = format(f"Stock: {stock}", '<18')
+                    show += format(f"IV rank: {ivr}", '<19')
+                    show += format(f"IV today: {iv}", '<20')
+                    show += format(f"IV min: {iv_min}", '<18')
+                    show += format(f"IV max: {iv_max}", '<18')
+                    print(show)
                 except GettingInfoError as e:
                     print(e)
                     print("Try again when available message appears...")
