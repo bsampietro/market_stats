@@ -188,3 +188,6 @@ M
 
 TJX
 VOD
+
+JD
+XME
