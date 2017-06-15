@@ -1,7 +1,14 @@
+import sys
+sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
+
+from threading import Thread
+
 from ibapi import wrapper
 from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
+
+from util import *
 
 
 class TestWrapper(wrapper.EWrapper):

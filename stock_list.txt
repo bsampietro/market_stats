@@ -191,3 +191,7 @@ VOD
 
 JD
 XME
+
+XLP
+XLY
+XLI

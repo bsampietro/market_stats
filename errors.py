@@ -1,0 +1,2 @@
+class GettingInfoError(Exception):
+    pass
