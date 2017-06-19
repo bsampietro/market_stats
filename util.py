@@ -1,10 +1,8 @@
+import sys
+sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
+from ibapi.contract import *
+
 from datetime import datetime, timedelta
-
-def get_option_expiration(date):
-    day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
-    return datetime(date.year, date.month, day)
-# print option_expiration(datetime.today())
-
 
 def get_options_contract(symbol, date_str, strike, right):
     contract = Contract()
@@ -48,3 +46,8 @@ def read_stock_list(path):
     # print(str(stock_list))
     # for stock in stock_list:
     #     print(stock)
+
+def get_option_expiration(date):
+    day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
+    return datetime(date.year, date.month, day)
+# print option_expiration(datetime.today())

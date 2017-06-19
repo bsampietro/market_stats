@@ -7,6 +7,7 @@ from util import *
 from access import *
 from errors import *
 
+
 class DataHandler:
     def __init__(self, connect:bool):
         
@@ -15,7 +16,7 @@ class DataHandler:
 
         self.remote = None
         if connect:
-            self.remote = TestApp(self.implied_volatility)
+            self.remote = TestApp(self)
         
 
     def save_data(self):
@@ -55,7 +56,24 @@ class DataHandler:
 
     def save(self):
         self.save_data_json()
-        
+
+    def stop(self):
+        self.disconnect()
+        # self.save()
+
+    def get_max_stored_date(self, ticker):
+        max_date = max(self.find_in_data(ticker).keys())
+        return datetime.strptime(max_date, "%Y%m%d")
+
+    def store_iv(self, ticker, date, value):
+        if not ticker in self.implied_volatility:
+            self.implied_volatility[ticker] = {}
+        self.implied_volatility[ticker][date] = value
+
+    def has_iv_ticker(self, ticker):
+        return ticker in self.implied_volatility
+    
+
     def find_in_data(self, ticker, the_day = None, silent = False):
         try:
             if the_day is None:
@@ -66,7 +84,7 @@ class DataHandler:
             if silent:
                 return None
             elif self.connected():
-                self.remote.request_historical_data(get_stock_contract(ticker))
+                self.remote.request_historical_data(ticker)
                 raise GettingInfoError(f"Getting historical info for ticker {ticker}")
             else:
                 raise GettingInfoError("Remote not connected, please restart again with connect parameter")

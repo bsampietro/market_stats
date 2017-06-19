@@ -11,9 +11,9 @@ class IVRank:
         self.ticker = ticker
 
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def period_iv_list(self, back_days = 365):
-        max_date = self.get_max_stored_date()
+        max_date = self.data_handler.get_max_stored_date(self.ticker)
 
         iv_list = []
         for i in range(back_days):
@@ -24,12 +24,12 @@ class IVRank:
         return iv_list
 
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def min_iv(self):
         return min(self.period_iv_list())
 
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def max_iv(self):
         return max(self.period_iv_list())
 
@@ -38,29 +38,21 @@ class IVRank:
         return self.calculate_iv_rank(self.get_iv_today())
 
     
-    @lru_cache(maxsize=None)
     def get_iv_today(self):
         return self.data_handler.find_in_data(self.ticker, today_in_string()) * 100
     
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def get_period_iv_ranks(self, back_days = 365):
         period_iv_ranks = []
-        today = datetime.today()
         for iv in self.period_iv_list(back_days):
             period_iv_ranks.append(self.calculate_iv_rank(iv))
         return period_iv_ranks
         
 
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def average_period_iv(self, back_days = 365):
         return sum(self.period_iv_list(back_days)) / len(self.period_iv_list(back_days))
-
-
-    @lru_cache(maxsize=None)
-    def get_max_stored_date(self):
-        max_date = max(self.data_handler.find_in_data(self.ticker).keys())
-        return datetime.strptime(max_date, "%Y%m%d")
     
 
     # private

@@ -17,25 +17,22 @@ class TestWrapper(wrapper.EWrapper):
 
 class TestClient(EClient):
     def __init__(self, wrapper):
-        # print(self.__class__)
-        # print(wrapper.__class__)
         EClient.__init__(self, wrapper)
 
     def keyboardInterrupt(self):
-        #intended to be overloaded
         self.disconnect()
 
 
 
 class TestApp(TestWrapper, TestClient):
-    def __init__(self, data):
+    def __init__(self, data_handler):
         TestWrapper.__init__(self)
         TestClient.__init__(self, wrapper=self)
 
         # logging.getLogger().setLevel(logging.INFO)
         ## logging.basicConfig(level=logging.INFO)
 
-        self.implied_volatility = data
+        self.data_handler = data_handler
 
         # variables
         self.next_req_id = 0
@@ -51,52 +48,43 @@ class TestApp(TestWrapper, TestClient):
     # Wrapper
     def tickSnapshotEnd(self, reqId: int):
         # super().tickSnapshotEnd(reqId)
-        print("Async Bruno answer for snapshot:", reqId)
+        print("tickSnapshotEnd - reqId:", reqId)
 
-    def currentTime(self, time: int):
-        # super().currentTime(time)
-        print(f"Async Bruno answer for time: {time}")
+    # def currentTime(self, time: int):
+    #     # super().currentTime(time)
+    #     print(f"Async Bruno answer for time: {time}")
 
     # def connectAck(self):
     #     """ callback signifying completion of successful connection """
     #     # self.logAnswer(current_fn_name(), vars())
     #     super().connectAck()
-    #     # Another option instead of using Threading
-    #     # self.do_stuff()
 
     
-    def nextValidId(self, orderId:int):
-        """ Receives next valid order id."""
-        super().nextValidId(orderId)
-        # self.next_req_id = orderId
+    # def nextValidId(self, orderId:int):
+    #     """ Receives next valid order id."""
+    #     super().nextValidId(orderId)
+    #     # self.next_req_id = orderId
 
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
-        # super().historicalData(reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps)
+        self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
 
-        if not self.req_id_to_stock_ticker_map[reqId] in self.implied_volatility:
-            self.implied_volatility[self.req_id_to_stock_ticker_map[reqId]] = {}
-        self.implied_volatility[self.req_id_to_stock_ticker_map[reqId]][date] = close
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
-        """ Marks the ending of the historical bars reception. """
-        # super().historicalDataEnd(reqId, start, end)
+        self.data_handler.save()
 
-        # self.save_data()
-        self.save_data_json()
-        
         print("Historical data fetched, you can request again...")
 
+
     # Client method wrappers
-    def request_historical_data(self, contract, what_to_bring = "IV"):
+    def request_historical_data(self, ticker, what_to_bring = "IV"):
         next_req_id = self.get_next_req_id()
-        self.req_id_to_stock_ticker_map[next_req_id] = contract.symbol
+        self.req_id_to_stock_ticker_map[next_req_id] = ticker
 
         duration_string = "1 Y"
-        if contract.symbol in self.implied_volatility:
-            last = max(self.implied_volatility[contract.symbol].keys())
-            last = datetime.strptime(last, "%Y%m%d")
+        if self.data_handler.has_iv_ticker(ticker):
+            last = self.data_handler.get_max_stored_date(ticker)
             delta = datetime.today() - last
 
             if delta.days <= 0:
@@ -106,8 +94,11 @@ class TestApp(TestWrapper, TestClient):
 
         print(f"Last historical query duration string: {duration_string}")
 
-        self.reqHistoricalData(next_req_id, contract, '', duration_string, "1 day", "OPTION_IMPLIED_VOLATILITY", 1, 1, [])
+        self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", "OPTION_IMPLIED_VOLATILITY", 1, 1, [])
 
+
+    # def get_days_from_last_query(self, ticker):
+    #     pass
 
 
     # App functions
