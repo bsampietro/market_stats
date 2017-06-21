@@ -34,19 +34,21 @@ class IVRank:
         return max(self.period_iv_list())
 
     
-    def get_iv_rank_today(self):
-        return self.calculate_iv_rank(self.get_iv_today())
+    def get_iv_rank_at(self, date):
+        return self.calculate_iv_rank(self.get_iv_at(date))
 
-    
-    def get_iv_today(self):
-        return self.data_handler.find_in_data(self.ticker, today_in_string()) * 100
+
+    def get_iv_at(self, date):
+        return self.data_handler.find_in_data(self.ticker, date) * 100
     
     
     # @lru_cache(maxsize=None)
-    def get_period_iv_ranks(self, back_days = 365):
+    def get_period_iv_ranks(self, back_days = 365, max_results = 15):
         period_iv_ranks = []
         for iv in self.period_iv_list(back_days):
             period_iv_ranks.append(self.calculate_iv_rank(iv))
+            if len(period_iv_ranks) == max_results:
+                break
         return period_iv_ranks
         
 
