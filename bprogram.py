@@ -8,28 +8,28 @@ from datahandler import *
 from errors import *
 from ivrank import *
 
-def print_ticker(ticker, date):
+from texttable import Texttable
+
+# Global variables
+data_handler = None
+
+
+# Helper methods
+def get_row(ticker, date):
     try:
-        print(f"{ticker} at {date}")
-
         iv_rank = IVRank(data_handler, ticker)
-        show = format(f"IVR: {format(iv_rank.get_iv_rank_at(date), '.2f')}", '<19')
-        show += format(f"IV: {format(iv_rank.get_iv_at(date), '.2f')}", '<20')
-        show += format(f"IV avg: {format(iv_rank.average_period_iv(), '.2f')}", '<21')
-        show += format(f"IV min: {format(iv_rank.min_iv(), '.2f')}", '<18')
-        show += format(f"IV max: {format(iv_rank.max_iv(), '.2f')}", '<18')
-        print(show)
 
-        show = ""
-        for iv in iv_rank.get_period_iv_ranks(max_results = 15):
-            show += format(iv, '<10.2f')
-        print(show)
-        
+        row = [ticker, date, iv_rank.get_iv_rank_at(date), iv_rank.get_iv_at(date),
+            iv_rank.average_period_iv(), iv_rank.min_iv(), iv_rank.max_iv()]
+        row += iv_rank.get_period_iv_ranks(max_results = 10)
+        return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
+        return ['-'] * 17
 
-    
+
+# Main method
 if __name__ == "__main__":
     connect = False
     if len(sys.argv) > 1:
@@ -47,10 +47,19 @@ if __name__ == "__main__":
             data_handler.stop()
             break
 
+
+        t = Texttable(max_width = 0)
+        t.set_precision(2)
+
+        header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'IV min', 'IV max']
+        header += ['-'] * 10
+        t.add_row(header)
+
         if command[0] == "list":
             tickers = read_stock_list(command[1])
             for ticker in tickers:
-                print_ticker(ticker, today_in_string())
+                t.add_row(get_row(ticker, today_in_string()))
+
         else:
             ticker = command[0].upper()
             
@@ -58,8 +67,9 @@ if __name__ == "__main__":
             if len(command) == 2:
                 duration = command[1]
 
-            # print_ticker(ticker, "20170619")
-            print_ticker(ticker, today_in_string())
+            t.add_row(get_row(ticker, today_in_string()))
+
+        print(t.draw())
 
 
 #time.sleep(60)
