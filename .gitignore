@@ -1,3 +1,4 @@
 tws_output.txt
 data.*
 __pycache__/*
+*.log

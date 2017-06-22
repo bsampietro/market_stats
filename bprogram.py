@@ -31,6 +31,12 @@ def get_row(ticker, date):
 
 # Main method
 if __name__ == "__main__":
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.FileHandler("output.log"))
+    ## logging.basicConfig(level=logging.INFO)
+
+
     connect = False
     if len(sys.argv) > 1:
         connect = (sys.argv[1] == "connect")

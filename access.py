@@ -29,9 +29,6 @@ class TestApp(TestWrapper, TestClient):
         TestWrapper.__init__(self)
         TestClient.__init__(self, wrapper=self)
 
-        # logging.getLogger().setLevel(logging.INFO)
-        ## logging.basicConfig(level=logging.INFO)
-
         self.data_handler = data_handler
 
         # variables
