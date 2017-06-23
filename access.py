@@ -2,6 +2,7 @@ import sys
 sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
 
 from threading import Thread
+import logging
 
 from ibapi import wrapper
 from ibapi.client import EClient
@@ -45,11 +46,8 @@ class TestApp(TestWrapper, TestClient):
     # Wrapper
     def tickSnapshotEnd(self, reqId: int):
         # super().tickSnapshotEnd(reqId)
-        print("tickSnapshotEnd - reqId:", reqId)
-
-    # def currentTime(self, time: int):
-    #     # super().currentTime(time)
-    #     print(f"Async Bruno answer for time: {time}")
+        # print("tickSnapshotEnd - reqId:", reqId)
+        pass
 
     # def connectAck(self):
     #     """ callback signifying completion of successful connection """
@@ -69,16 +67,12 @@ class TestApp(TestWrapper, TestClient):
 
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
-        self.data_handler.save()
-
-        print("Historical data fetched, you can request again...")
+        # self.data_handler.save()
+        logging.getLogger().debug("Historical data fetched")
 
 
     # Client method wrappers
     def request_historical_data(self, ticker, what_to_bring = "IV"):
-        next_req_id = self.get_next_req_id()
-        self.req_id_to_stock_ticker_map[next_req_id] = ticker
-
         duration_string = "1 Y"
         if self.data_handler.has_iv_ticker(ticker):
             last = self.data_handler.get_max_stored_date(ticker)
@@ -88,15 +82,15 @@ class TestApp(TestWrapper, TestClient):
                 return
             else:
                 duration_string = f"{delta.days + 1} D"
-
-        print(f"Last historical query duration string: {duration_string}")
-
+        logging.getLogger().debug(f"Last historical query duration string: {duration_string}")
+        
+        next_req_id = self.get_next_req_id()
+        self.req_id_to_stock_ticker_map[next_req_id] = ticker
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", "OPTION_IMPLIED_VOLATILITY", 1, 1, [])
 
-
-    # def get_days_from_last_query(self, ticker):
-    #     pass
-
+        # next_req_id = self.get_next_req_id()
+        # self.req_id_to_stock_ticker_map[next_req_id] = ticker
+        # self.reqMktData(next_req_id, get_stock_contract(ticker), "", True, False, [])
 
     # App functions
     def get_next_req_id(self, next = True):
@@ -105,5 +99,5 @@ class TestApp(TestWrapper, TestClient):
         return self.next_req_id
 
     
-
-
+    # def get_days_from_last_query(self, ticker):
+    #     pass

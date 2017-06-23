@@ -58,8 +58,9 @@ class DataHandler:
         self.save_data_json()
 
     def stop(self):
+        self.save()
         self.disconnect()
-        # self.save()
+        
 
     def get_max_stored_date(self, ticker):
         max_date = max(self.find_in_data(ticker).keys())

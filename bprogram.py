@@ -26,7 +26,7 @@ def get_row(ticker, date):
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return ['-'] * 17
+        return [ticker] + ['-'] * 16
 
 
 # Main method
@@ -50,32 +50,39 @@ if __name__ == "__main__":
         command = command.split(" ")
 
         if command[0] == "exit" or command[0] == "e":
-            data_handler.stop()
+            try:
+                data_handler.stop()
+            except KeyError as e:
+                print(f"Exit with error: {e}")
             break
 
+        try:
 
-        t = Texttable(max_width = 0)
-        t.set_precision(2)
+            t = Texttable(max_width = 0)
+            t.set_precision(2)
 
-        header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'IV min', 'IV max']
-        header += ['-'] * 10
-        t.add_row(header)
+            header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'IV min', 'IV max']
+            header += ['-'] * 10
+            t.add_row(header)
 
-        if command[0] == "list":
-            tickers = read_stock_list(command[1])
-            for ticker in tickers:
+            if command[0] == "list":
+                tickers = read_stock_list(command[1])
+                for ticker in tickers:
+                    t.add_row(get_row(ticker, today_in_string()))
+
+            else:
+                ticker = command[0].upper()
+                
+                duration = 365
+                if len(command) == 2:
+                    duration = command[1]
+
                 t.add_row(get_row(ticker, today_in_string()))
 
-        else:
-            ticker = command[0].upper()
-            
-            duration = 365
-            if len(command) == 2:
-                duration = command[1]
+            print(t.draw())
 
-            t.add_row(get_row(ticker, today_in_string()))
-
-        print(t.draw())
+        except FileNotFoundError as e:
+            print(f"Didn't find file {e}")
 
 
 #time.sleep(60)

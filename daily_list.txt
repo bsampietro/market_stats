@@ -16,32 +16,32 @@ OIH
 
 VXX
 
-#FXE
+FXE
 
-#IYR
-#XLU
-#HYG
+IYR
+XLU
+HYG
 
-#EFA
-#EEM
+EFA
+EEM
 
-#UNG
+UNG
 
-#FXI
-#EWW
-#EWZ
+FXI
+EWW
+EWZ
 
-#XRT
-#XLE
-#XLF
+XRT
+XLE
+XLF
 
-#XME
-#XBI
+XME
+XBI
 
-#XLP
-#XLV
-#XLK
-#XLI
-#XLY
+XLP
+XLV
+XLK
+XLI
+XLY
 
-#EWJ
+EWJ

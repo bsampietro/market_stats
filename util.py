@@ -4,27 +4,31 @@ from ibapi.contract import *
 
 from datetime import datetime, timedelta
 
-def get_options_contract(symbol, date_str, strike, right):
+def get_basic_contract(symbol):
     contract = Contract()
-    contract.secType = "OPT"
-    contract.exchange = "SMART"
-    # contract.primaryExch = "ISLAND"
-    contract.currency = "USD"
-    contract.multiplier = "100"
     contract.symbol = symbol
+    contract.currency = "USD"
+    contract.exchange = "SMART"
+    # Specify the Primary Exchange attribute to avoid contract ambiguity 
+    # contract.primaryExch = "ISLAND"
+    if symbol in ("GLD", "GDX", "GDXJ"):
+        contract.exchange = "ARCA"
+    elif symbol in ("MSFT"):
+        contract.primaryExch = "ISLAND"
+    return contract
+
+def get_options_contract(symbol, date_str, strike, right):
+    contract = get_basic_contract(symbol)
+    contract.secType = "OPT"
+    contract.multiplier = "100"
     contract.lastTradeDateOrContractMonth = date_str
     contract.strike = strike
     contract.right = right
     return contract
 
 def get_stock_contract(symbol):
-    contract = Contract()
-    contract.symbol = symbol
+    contract = get_basic_contract(symbol)
     contract.secType = "STK"
-    contract.currency = "USD"
-    contract.exchange = "SMART"
-    # Specify the Primary Exchange attribute to avoid contract ambiguity 
-    contract.primaryExch = "ISLAND"
     return contract
 
 def today_in_string():
