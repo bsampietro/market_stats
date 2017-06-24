@@ -34,6 +34,14 @@ def get_stock_contract(symbol):
 def today_in_string():
     return datetime.today().strftime("%Y%m%d")
 
+def date_in_string(date):
+    if type(date) is str:
+        return date
+    elif type(date) is datetime:
+        return date.strftime("%Y%m%d")
+    else:
+        raise RuntimeError("Bruno: the_day argument is of wrong type")
+
 def read_stock_list(path):
     stock_list = []
     with open(path) as stocks:

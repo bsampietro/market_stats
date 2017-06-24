@@ -47,9 +47,6 @@ class DataHandler:
     def connected(self):
         return self.remote is not None
 
-    def disconnect(self):
-        if self.connected():
-            self.remote.disconnect()
 
     def load(self):
         self.load_data_json()
@@ -58,8 +55,9 @@ class DataHandler:
         self.save_data_json()
 
     def stop(self):
-        self.save()
-        self.disconnect()
+        if self.connected():
+            self.save()
+            self.remote.disconnect()
         
 
     def get_max_stored_date(self, ticker):
@@ -80,6 +78,7 @@ class DataHandler:
             if the_day is None:
                 return self.implied_volatility[ticker]
             else:
+                the_day = date_in_string(the_day)
                 return self.implied_volatility[ticker][the_day]
         except KeyError as e:
             if silent:

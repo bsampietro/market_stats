@@ -63,6 +63,8 @@ class TestApp(TestWrapper, TestClient):
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
+        super().historicalData(reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps)
+        
         self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
 
 

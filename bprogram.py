@@ -12,6 +12,8 @@ from texttable import Texttable
 
 # Global variables
 data_handler = None
+connected = False
+MAX_RESULTS = 10
 
 
 # Helper methods
@@ -21,12 +23,19 @@ def get_row(ticker, date):
 
         row = [ticker, date, iv_rank.get_iv_rank_at(date), iv_rank.get_iv_at(date),
             iv_rank.average_period_iv(), iv_rank.min_iv(), iv_rank.max_iv()]
-        row += iv_rank.get_period_iv_ranks(max_results = 10)
+        row += ['-']
+        row += iv_rank.get_period_iv_ranks(max_results = MAX_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return [ticker] + ['-'] * 16
+        return [ticker] + ['-'] * (MAX_RESULTS + 7) # 7 is the basic data
+
+def get_query_date(ticker):
+    if connected:
+        return today_in_string()
+    else:
+        return date_in_string(data_handler.get_max_stored_date(ticker))
 
 
 # Main method
@@ -36,11 +45,9 @@ if __name__ == "__main__":
     logger.addHandler(logging.FileHandler("output.log"))
     ## logging.basicConfig(level=logging.INFO)
 
-
-    connect = False
     if len(sys.argv) > 1:
-        connect = (sys.argv[1] == "connect")
-    data_handler = DataHandler(connect)
+        connected = (sys.argv[1] == "connect")
+    data_handler = DataHandler(connected)
 
     while True:
         command = input('--> ')
@@ -62,13 +69,13 @@ if __name__ == "__main__":
             t.set_precision(2)
 
             header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'IV min', 'IV max']
-            header += ['-'] * 10
+            header += ['-'] * (MAX_RESULTS + 1) # 1 is the separator
             t.add_row(header)
 
             if command[0] == "list":
-                tickers = read_stock_list(command[1])
+                tickers = read_stock_list('daily_list.txt')
                 for ticker in tickers:
-                    t.add_row(get_row(ticker, today_in_string()))
+                    t.add_row(get_row(ticker, get_query_date(ticker)))
 
             else:
                 ticker = command[0].upper()
@@ -77,7 +84,7 @@ if __name__ == "__main__":
                 if len(command) == 2:
                     duration = command[1]
 
-                t.add_row(get_row(ticker, today_in_string()))
+                t.add_row(get_row(ticker, get_query_date(ticker)))
 
             print(t.draw())
 
