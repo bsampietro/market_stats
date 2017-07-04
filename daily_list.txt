@@ -3,16 +3,17 @@ IWM
 QQQ
 DIA
 
+TLT
+HYG
+
 GLD
 SLV
 GDX
 GDXJ
 
-TLT
-
-USO
 XOP
 OIH
+USO
 
 VXX
 
@@ -20,28 +21,26 @@ FXE
 
 IYR
 XLU
-HYG
 
 EFA
 EEM
-
-
 EWZ
 EWW
 FXI
 
 XRT
-XLE
 XLF
-
-XME
-XBI
-XLV
-
 XLP
-XLY
-XLI
-XLK
+XLE
 
 UNG
-EWJ
+XLV
+
+#XME
+#XBI
+
+#XLY
+#XLI
+#XLK
+
+#EWJ

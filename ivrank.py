@@ -55,6 +55,10 @@ class IVRank:
     # @lru_cache(maxsize=None)
     def average_period_iv(self, back_days = 365):
         return sum(self.period_iv_list(back_days)) / len(self.period_iv_list(back_days))
+
+
+    def current_avg_ratio(self, date, back_days = 365):
+        return self.get_iv_at(date) / self.average_period_iv(back_days)
     
 
     # private

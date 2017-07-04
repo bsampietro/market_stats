@@ -22,14 +22,14 @@ def get_row(ticker, date):
         iv_rank = IVRank(data_handler, ticker)
 
         row = [ticker, date, iv_rank.get_iv_rank_at(date), iv_rank.get_iv_at(date),
-            iv_rank.average_period_iv(), iv_rank.min_iv(), iv_rank.max_iv()]
+            iv_rank.average_period_iv(), iv_rank.current_avg_ratio(date), iv_rank.min_iv(), iv_rank.max_iv()]
         row += ['-']
         row += iv_rank.get_period_iv_ranks(max_results = MAX_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return [ticker] + ['-'] * (MAX_RESULTS + 7) # 7 is the basic data
+        return [ticker] + ['-'] * (MAX_RESULTS + 8)
 
 def get_query_date(ticker):
     if connected:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             t = Texttable(max_width = 0)
             t.set_precision(2)
 
-            header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'IV min', 'IV max']
+            header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'Ratio', 'IV min', 'IV max']
             header += ['-'] * (MAX_RESULTS + 1) # 1 is the separator
             t.add_row(header)
 
@@ -89,7 +89,10 @@ if __name__ == "__main__":
             print(t.draw())
 
         except FileNotFoundError as e:
-            print(f"Didn't find file {e}")
+            print(f"Didn't find file: {e}")
+
+        except GettingInfoError as e:
+            print(e)
 
 
 #time.sleep(60)
