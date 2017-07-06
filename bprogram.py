@@ -21,15 +21,15 @@ def get_row(ticker, date):
     try:
         iv_rank = IVRank(data_handler, ticker)
 
-        row = [ticker, date, iv_rank.get_iv_rank_at(date), iv_rank.get_iv_at(date),
-            iv_rank.average_period_iv(), iv_rank.current_avg_ratio(date), iv_rank.min_iv(), iv_rank.max_iv()]
+        row = [ticker, date, iv_rank.get_iv_at(date), iv_rank.average_period_iv(), 
+            iv_rank.current_avg_ratio(date), iv_rank.min_iv(), iv_rank.max_iv()]
         row += ['-']
         row += iv_rank.get_period_iv_ranks(max_results = MAX_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return [ticker] + ['-'] * (MAX_RESULTS + 8)
+        return [ticker] + ['-'] * (MAX_RESULTS + 7)
 
 def get_query_date(ticker):
     if connected:
@@ -68,8 +68,8 @@ if __name__ == "__main__":
             t = Texttable(max_width = 0)
             t.set_precision(2)
 
-            header = ['Ticker', 'Date', 'IVR', 'IV', 'IV avg', 'Ratio', 'IV min', 'IV max']
-            header += ['-'] * (MAX_RESULTS + 1) # 1 is the separator
+            header = ['Ticker', 'Date', 'IV', 'IV avg', 'Ratio', 'IV min', 'IV max', '-', 'IVR']
+            header += ['-'] * (MAX_RESULTS - 1) # 1 is the IVR title
             t.add_row(header)
 
             if command[0] == "list":

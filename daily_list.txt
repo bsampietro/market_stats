@@ -30,12 +30,12 @@ FXI
 
 XRT
 XLF
-XLP
 XLE
 
 UNG
 XLV
 
+#XLP
 #XME
 #XBI
 
