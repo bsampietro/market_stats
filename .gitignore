@@ -1,4 +1,5 @@
-tws_output.txt
-data.*
 __pycache__/*
+tws_output.txt
 *.log
+*.json
+*.pk

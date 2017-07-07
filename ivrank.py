@@ -13,12 +13,12 @@ class IVRank:
     
     @lru_cache(maxsize=None)
     def period_iv_list(self, back_days = 365):
-        max_date = self.data_handler.get_max_stored_date(self.ticker)
+        max_date = self.data_handler.get_max_stored_date("IV", self.ticker)
 
         iv_list = []
         for i in range(back_days):
             older_date = max_date - timedelta(days = i)
-            iv = self.data_handler.find_in_data(self.ticker, older_date.strftime("%Y%m%d"), True)
+            iv = self.data_handler.find_in_data("IV", self.ticker, older_date.strftime("%Y%m%d"), True)
             if iv is not None:
                 iv_list.append(iv * 100)
         return iv_list
@@ -35,7 +35,7 @@ class IVRank:
 
 
     def get_iv_at(self, date):
-        return self.data_handler.find_in_data(self.ticker, date) * 100
+        return self.data_handler.find_in_data("IV", self.ticker, date) * 100
     
     
     def get_period_iv_ranks(self, back_days = 365, max_results = 15):

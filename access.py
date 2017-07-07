@@ -35,6 +35,7 @@ class TestApp(TestWrapper, TestClient):
         # variables
         self.next_req_id = 0
         self.req_id_to_stock_ticker_map = {}
+        self.req_id_to_requested_historical_data = {}
 
         self.connect("127.0.0.1", 7496, 0)
 
@@ -43,30 +44,17 @@ class TestApp(TestWrapper, TestClient):
         thread.start()
         # self.run()
 
-    # Wrapper
-    def tickSnapshotEnd(self, reqId: int):
-        # super().tickSnapshotEnd(reqId)
-        # print("tickSnapshotEnd - reqId:", reqId)
-        pass
-
-    # def connectAck(self):
-    #     """ callback signifying completion of successful connection """
-    #     # self.logAnswer(current_fn_name(), vars())
-    #     super().connectAck()
-
-    
-    # def nextValidId(self, orderId:int):
-    #     """ Receives next valid order id."""
-    #     super().nextValidId(orderId)
-    #     # self.next_req_id = orderId
 
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
         super().historicalData(reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps)
         
-        self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
-
+        if self.req_id_to_requested_historical_data[reqId] == "IV":
+            self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
+        else: # HV
+            self.data_handler.store_hv(self.req_id_to_stock_ticker_map[reqId], date, close)
+    
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
         # self.data_handler.save()
@@ -74,10 +62,10 @@ class TestApp(TestWrapper, TestClient):
 
 
     # Client method wrappers
-    def request_historical_data(self, ticker, what_to_bring = "IV"):
+    def request_historical_data(self, requested_data, ticker):
         duration_string = "1 Y"
-        if self.data_handler.has_iv_ticker(ticker):
-            last = self.data_handler.get_max_stored_date(ticker)
+        last = self.data_handler.get_max_stored_date(requested_data, ticker, silent = True)
+        if last is not None:
             delta = datetime.today() - last
 
             if delta.days <= 0:
@@ -88,7 +76,14 @@ class TestApp(TestWrapper, TestClient):
         
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
-        self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", "OPTION_IMPLIED_VOLATILITY", 1, 1, [])
+        self.req_id_to_requested_historical_data[next_req_id] = requested_data
+
+        if requested_data == "IV":
+            what_to_show = "OPTION_IMPLIED_VOLATILITY"
+        else: # HV
+            what_to_show = "HISTORICAL_VOLATILITY"
+
+        self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
         # next_req_id = self.get_next_req_id()
         # self.req_id_to_stock_ticker_map[next_req_id] = ticker
@@ -103,3 +98,20 @@ class TestApp(TestWrapper, TestClient):
     
     # def get_days_from_last_query(self, ticker):
     #     pass
+
+    # Wrapper
+    # def tickSnapshotEnd(self, reqId: int):
+    #     # super().tickSnapshotEnd(reqId)
+    #     # print("tickSnapshotEnd - reqId:", reqId)
+
+    # def connectAck(self):
+    #     """ callback signifying completion of successful connection """
+    #     # self.logAnswer(current_fn_name(), vars())
+    #     super().connectAck()
+
+    
+    # def nextValidId(self, orderId:int):
+    #     """ Receives next valid order id."""
+    #     super().nextValidId(orderId)
+    #     # self.next_req_id = orderId
+

@@ -7,6 +7,7 @@ from util import *
 from datahandler import *
 from errors import *
 from ivrank import *
+from hv import *
 
 from texttable import Texttable
 
@@ -20,22 +21,24 @@ MAX_RESULTS = 10
 def get_row(ticker, date):
     try:
         iv_rank = IVRank(data_handler, ticker)
+        hv = HV(data_handler, ticker)
 
         row = [ticker, date, iv_rank.get_iv_at(date), iv_rank.average_period_iv(), 
-            iv_rank.current_avg_ratio(date), iv_rank.min_iv(), iv_rank.max_iv()]
+            iv_rank.current_avg_ratio(date), iv_rank.min_iv(), iv_rank.max_iv(), 
+            hv.average_period_hv()]
         row += ['-']
         row += iv_rank.get_period_iv_ranks(max_results = MAX_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return [ticker] + ['-'] * (MAX_RESULTS + 7)
+        return [ticker] + ['-'] * (MAX_RESULTS + 8) # 8 is row initial size
 
 def get_query_date(ticker):
     if connected:
         return today_in_string()
     else:
-        return date_in_string(data_handler.get_max_stored_date(ticker))
+        return date_in_string(data_handler.get_max_stored_date("IV", ticker))
 
 
 # Main method
@@ -68,7 +71,7 @@ if __name__ == "__main__":
             t = Texttable(max_width = 0)
             t.set_precision(2)
 
-            header = ['Ticker', 'Date', 'IV', 'IV avg', 'Ratio', 'IV min', 'IV max', '-', 'IVR']
+            header = ['Ticker', 'Date', 'IV', 'IV avg', 'Ratio', 'IV min', 'IV max', 'HV avg', '-', 'IVR']
             header += ['-'] * (MAX_RESULTS - 1) # 1 is the IVR title
             t.add_row(header)
 
@@ -93,6 +96,10 @@ if __name__ == "__main__":
 
         except GettingInfoError as e:
             print(e)
+
+        except:
+            data_handler.stop()
+            raise
 
 
 #time.sleep(60)
