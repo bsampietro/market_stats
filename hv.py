@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import calendar
 
+from functools import lru_cache
+
 from util import *
 
 class HV:
@@ -8,7 +10,8 @@ class HV:
         self.data_handler = data_handler
         self.ticker = ticker
 
-    
+
+    @lru_cache(maxsize=None)
     def period_hv_list(self, back_days = 365):
         max_date = self.data_handler.get_max_stored_date("HV", self.ticker)
 
@@ -21,14 +24,18 @@ class HV:
         return hv_list
 
 
+    @lru_cache(maxsize=None)
     def average_period_hv(self, back_days = 365):
-        period_hv_list = self.period_hv_list(back_days)
-        return sum(period_hv_list) / len(period_hv_list)
+        return sum(self.period_hv_list(back_days)) / len(self.period_hv_list(back_days))
     
 
-    # def min_iv(self):
-    #     return min(self.period_iv_list())
+    def min(self):
+        return min(self.period_hv_list())
 
     
-    # def max_iv(self):
-    #     return max(self.period_iv_list())
+    def max(self):
+        return max(self.period_hv_list())
+
+
+    def range(self):
+        return self.max() - self.min()

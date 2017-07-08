@@ -34,6 +34,7 @@ class IVRank:
         return max(self.period_iv_list())
 
 
+    @lru_cache(maxsize=None)
     def get_iv_at(self, date):
         return self.data_handler.find_in_data("IV", self.ticker, date) * 100
     
