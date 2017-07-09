@@ -6,7 +6,7 @@ import logging
 from util import *
 from datahandler import *
 from errors import *
-from ivrank import *
+from iv import *
 from hv import *
 
 from texttable import Texttable
@@ -20,21 +20,21 @@ MAX_RESULTS = 8
 # Helper methods
 def get_row(ticker, date):
     try:
-        iv_rank = IVRank(data_handler, ticker)
+        iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
 
         row = [ticker,
             date,
-            iv_rank.get_iv_at(date),
-            iv_rank.current_avg_ratio(date),
-            iv_rank.get_iv_at(date) / hv.average_period_hv(),
-            iv_rank.average_period_iv(),
-            hv.average_period_hv(),
-            iv_rank.average_period_iv() / hv.average_period_hv(),
-            iv_rank.min_iv(),
-            iv_rank.max_iv()]
+            iv.get_at(date),
+            iv.current_to_average_ratio(date),
+            iv.get_at(date) / hv.period_average(),
+            iv.period_average(),
+            hv.period_average(),
+            iv.period_average() / hv.period_average(),
+            iv.min(),
+            iv.max()]
         row += ['-']
-        row += iv_rank.get_period_iv_ranks(max_results = MAX_RESULTS)
+        row += iv.period_iv_ranks(max_results = MAX_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)

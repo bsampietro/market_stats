@@ -5,14 +5,14 @@ from functools import lru_cache
 
 from util import *
 
-class IVRank:
+class IV:
     def __init__(self, data_handler, ticker):
         self.data_handler = data_handler
         self.ticker = ticker
 
     
     @lru_cache(maxsize=None)
-    def period_iv_list(self, back_days = 365):
+    def period_list(self, back_days = 365):
         max_date = self.data_handler.get_max_stored_date("IV", self.ticker)
 
         iv_list = []
@@ -25,23 +25,23 @@ class IVRank:
 
     
     @lru_cache(maxsize=None)
-    def min_iv(self):
-        return min(self.period_iv_list())
+    def min(self):
+        return min(self.period_list())
 
     
     @lru_cache(maxsize=None)
-    def max_iv(self):
-        return max(self.period_iv_list())
+    def max(self):
+        return max(self.period_list())
 
 
     @lru_cache(maxsize=None)
-    def get_iv_at(self, date):
+    def get_at(self, date):
         return self.data_handler.find_in_data("IV", self.ticker, date) * 100
     
     
-    def get_period_iv_ranks(self, back_days = 365, max_results = 15):
+    def period_iv_ranks(self, back_days = 365, max_results = 15):
         period_iv_ranks = []
-        for iv in self.period_iv_list(back_days):
+        for iv in self.period_list(back_days):
             period_iv_ranks.append(self.calculate_iv_rank(iv))
             if len(period_iv_ranks) == max_results:
                 break
@@ -49,15 +49,15 @@ class IVRank:
         
 
     @lru_cache(maxsize=None)
-    def average_period_iv(self, back_days = 365):
-        return sum(self.period_iv_list(back_days)) / len(self.period_iv_list(back_days))
+    def period_average(self, back_days = 365):
+        return sum(self.period_list(back_days)) / len(self.period_list(back_days))
 
 
-    def current_avg_ratio(self, date, back_days = 365):
-        return self.get_iv_at(date) / self.average_period_iv(back_days)
+    def current_to_average_ratio(self, date, back_days = 365):
+        return self.get_at(date) / self.period_average(back_days)
     
 
     # private
 
     def calculate_iv_rank(self, iv):
-        return (iv - self.min_iv()) / (self.max_iv() - self.min_iv()) * 100
+        return (iv - self.min()) / (self.max() - self.min()) * 100
