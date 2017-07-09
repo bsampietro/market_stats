@@ -15,7 +15,8 @@ from texttable import Texttable
 # Global variables
 data_handler = None
 connected = False
-MAX_RESULTS = 8
+IVR_RESULTS = 8 # Number of historical IVR rows
+DATA_RESULTS = 10 # Number of main data rows
 
 
 # Helper methods
@@ -35,13 +36,14 @@ def get_row(ticker, date):
             mixed_vs.iv_average_to_hv_average(),
             iv.min(),
             iv.max()]
+        assert len(row) == DATA_RESULTS
         row += ['-']
-        row += iv.period_iv_ranks(max_results = MAX_RESULTS)
+        row += iv.period_iv_ranks(max_results = IVR_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
         print("Try again when available message appears...")
-        return [ticker] + ['-'] * (MAX_RESULTS + 10) # 10 is row initial size
+        return [ticker] + ['-'] * (IVR_RESULTS + DATA_RESULTS)
 
 def get_query_date(ticker):
     if connected:
@@ -96,7 +98,8 @@ if __name__ == "__main__":
                 'IV max',
                 '-', 
                 'IVR']
-            header += ['-'] * (MAX_RESULTS - 1) # 1 is the IVR title
+            assert DATA_RESULTS == (len(header) - 2)
+            header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
             t.add_row(header)
 
             if command[0] == "list":
