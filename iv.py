@@ -34,7 +34,6 @@ class IV:
         return max(self.period_list())
 
 
-    @lru_cache(maxsize=None)
     def get_at(self, date):
         return self.data_handler.find_in_data("IV", self.ticker, date) * 100
     

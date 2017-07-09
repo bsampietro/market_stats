@@ -15,8 +15,8 @@ from texttable import Texttable
 # Global variables
 data_handler = None
 connected = False
-IVR_RESULTS = 8 # Number of historical IVR rows
-DATA_RESULTS = 10 # Number of main data rows
+IVR_RESULTS = 5 # Number of historical IVR rows
+DATA_RESULTS = 12 # Number of main data rows
 
 
 # Helper methods
@@ -24,7 +24,7 @@ def get_row(ticker, date):
     try:
         iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
-        mixed_vs = MixedVs(iv, hv)
+        mixed_vs = MixedVs(data_handler, iv, hv)
 
         row = [ticker,
             date,
@@ -34,6 +34,8 @@ def get_row(ticker, date):
             iv.period_average(),
             hv.period_average(),
             mixed_vs.iv_average_to_hv_average(),
+            mixed_vs.difference_average(),
+            mixed_vs.negative_difference_ratio(),
             iv.min(),
             iv.max()]
         assert len(row) == DATA_RESULTS
@@ -94,8 +96,10 @@ if __name__ == "__main__":
                 'IVavg',
                 'HVavg',
                 'Avg2Avg',
-                'IV min',
-                'IV max',
+                'IV2HVdf',
+                'IV2HV-',
+                'IVmin',
+                'IVmax',
                 '-', 
                 'IVR']
             assert DATA_RESULTS == (len(header) - 2)
