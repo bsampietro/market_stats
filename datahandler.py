@@ -12,7 +12,7 @@ class DataHandler:
     def __init__(self, connect:bool):
         
         self.load()
-        # implied_volatility variable is loaded now...
+        # implied_volatility and historical_volatility variables are loaded now...
 
         self.remote = None
         if connect:
@@ -107,3 +107,10 @@ class DataHandler:
                 raise GettingInfoError(f"Getting historical {requested_data} info for ticker {ticker}")
             else:
                 raise GettingInfoError("Unavailable info and remote not connected, please restart again with connect parameter")
+
+
+    def delete_at(self, date):
+        for key in self.implied_volatility.keys():
+            self.implied_volatility[key].pop(date, None)
+        for key in self.historical_volatility.keys():
+            self.historical_volatility[key].pop(date, None)

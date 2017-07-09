@@ -34,10 +34,10 @@ XLE
 
 UNG
 XLV
+#XBI
 
 #XLP
 #XME
-#XBI
 
 #XLY
 #XLI

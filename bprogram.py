@@ -72,6 +72,10 @@ if __name__ == "__main__":
             except KeyError as e:
                 print(f"Exit with error: {e}")
             break
+        elif command[0] == "delete":
+            data_handler.delete_at(today_in_string())
+            print("Entries deleted")
+            continue
 
         try:
 
