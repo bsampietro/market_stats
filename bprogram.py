@@ -8,6 +8,7 @@ from datahandler import *
 from errors import *
 from iv import *
 from hv import *
+from mixed_vs import *
 
 from texttable import Texttable
 
@@ -22,15 +23,16 @@ def get_row(ticker, date):
     try:
         iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
+        mixed_vs = MixedVs(iv, hv)
 
         row = [ticker,
             date,
             iv.get_at(date),
             iv.current_to_average_ratio(date),
-            iv.get_at(date) / hv.period_average(),
+            mixed_vs.iv_current_to_hv_average(date),
             iv.period_average(),
             hv.period_average(),
-            iv.period_average() / hv.period_average(),
+            mixed_vs.iv_average_to_hv_average(),
             iv.min(),
             iv.max()]
         row += ['-']
