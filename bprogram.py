@@ -122,14 +122,17 @@ if __name__ == "__main__":
 
             print(t.draw())
 
-        except FileNotFoundError as e:
-            print(f"Didn't find file: {e}")
-
         except GettingInfoError as e:
             print(e)
 
+        except FileNotFoundError as e:
+            print(f"Didn't find file: {e}")
+
+        except AttributeError as e:
+            print("Usual attribute error raised")
+
         except:
-            data_handler.stop()
+            data_handler.disconnect()
             raise
 
 

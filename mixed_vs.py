@@ -6,6 +6,7 @@ from functools import lru_cache
 
 class MixedVs:
     BACK_DAYS = 365
+    COMPARATION_PERIOD = BACK_DAYS - 30
 
     def __init__(self, data_handler, iv, hv):
         self.iv = iv
@@ -27,7 +28,7 @@ class MixedVs:
     def iv_hv_difference(self):
         back_day = datetime.today() - timedelta(days = MixedVs.BACK_DAYS)
         differences = []
-        for i in range(MixedVs.BACK_DAYS - 30):
+        for i in range(MixedVs.COMPARATION_PERIOD):
             iv = self.data_handler.find_in_data("IV", self.ticker, back_day, silent = True)
             hv = self.data_handler.find_in_data("HV", self.ticker, back_day + timedelta(days = 28), silent = True)
             if iv is not None and hv is not None:
@@ -40,9 +41,10 @@ class MixedVs:
         return sum(self.iv_hv_difference()) / len(self.iv_hv_difference())
 
 
+    # returns percentage of success of daily one month volatility trading
     def negative_difference_ratio(self):
         negative_count = 0
         for diff in self.iv_hv_difference():
             if diff < 0:
                 negative_count += 1
-        return (float(negative_count) / (MixedVs.BACK_DAYS - 30)) * 100
+        return (float(MixedVs.COMPARATION_PERIOD - negative_count) / (MixedVs.COMPARATION_PERIOD)) * 100

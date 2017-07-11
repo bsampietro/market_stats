@@ -61,10 +61,13 @@ class DataHandler:
     def save(self):
         self.save_data_json()
 
+    def disconnect(self):
+        self.remote.disconnect()
+
     def stop(self):
         if self.connected():
             self.save()
-            self.remote.disconnect()
+            self.disconnect()
         
 
     def get_max_stored_date(self, requested_data, ticker, silent = False):
