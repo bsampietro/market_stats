@@ -130,6 +130,12 @@ if __name__ == "__main__":
                     bring_if_connected(ticker)
                     t.add_row(get_row(ticker, get_query_date(ticker)))
 
+            elif ".txt" in command[0]:
+                tickers = read_stock_list(command[0])
+                for ticker in tickers:
+                    bring_if_connected(ticker)
+                    t.add_row(get_row(ticker, get_query_date(ticker)))
+
             else:
                 ticker = command[0].upper()
                 
@@ -147,9 +153,6 @@ if __name__ == "__main__":
 
         except FileNotFoundError as e:
             print(f"Didn't find file: {e}")
-
-        except AttributeError as e:
-            print("Usual attribute error raised")
 
         except:
             data_handler.disconnect()
