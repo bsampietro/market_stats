@@ -14,6 +14,8 @@ class HV:
     @lru_cache(maxsize=None)
     def period_list(self, back_days = 365):
         max_date = self.data_handler.get_max_stored_date("HV", self.ticker)
+        if max_date is None:
+            return None
 
         hv_list = []
         for i in range(back_days):

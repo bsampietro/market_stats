@@ -3,6 +3,8 @@ import sys
 import time
 import logging
 
+from datetime import datetime, date
+
 from util import *
 from datahandler import *
 from errors import *
@@ -51,7 +53,23 @@ def get_query_date(ticker):
     if connected:
         return today_in_string()
     else:
-        return date_in_string(data_handler.get_max_stored_date("IV", ticker))
+        max_stored_date = data_handler.get_max_stored_date("IV", ticker)
+        if max_stored_date is None:
+            return today_in_string()
+        else:
+            return date_in_string(max_stored_date)
+
+def bring_if_connected(ticker):
+    if connected:
+        # IV is brought by datahandler when requesting current day implied volatility
+        # max_stored_date = data_handler.get_max_stored_date("IV", ticker)
+        # if (max_stored_date is None) or max_stored_date.date() < date.today()
+        #     data_handler.request_historical_data("IV", ticker)
+
+        max_stored_date = data_handler.get_max_stored_date("HV", ticker)
+        if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+            print("Getting HV data...")
+            data_handler.request_historical_data("HV", ticker)
 
 
 # Main method
@@ -109,6 +127,7 @@ if __name__ == "__main__":
             if command[0] == "list":
                 tickers = read_stock_list('daily_list.txt')
                 for ticker in tickers:
+                    bring_if_connected(ticker)
                     t.add_row(get_row(ticker, get_query_date(ticker)))
 
             else:
@@ -118,6 +137,7 @@ if __name__ == "__main__":
                 if len(command) == 2:
                     duration = command[1]
 
+                bring_if_connected(ticker)
                 t.add_row(get_row(ticker, get_query_date(ticker)))
 
             print(t.draw())

@@ -58,13 +58,13 @@ class TestApp(TestWrapper, TestClient):
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
         # self.data_handler.save()
-        logging.getLogger().debug("Historical data fetched")
+        logging.getLogger().info("Historical data fetched")
 
 
     # Client method wrappers
     def request_historical_data(self, requested_data, ticker):
         duration_string = "1 Y"
-        last = self.data_handler.get_max_stored_date(requested_data, ticker, silent = True)
+        last = self.data_handler.get_max_stored_date(requested_data, ticker)
         if last is not None:
             delta = datetime.today() - last
 
@@ -72,7 +72,7 @@ class TestApp(TestWrapper, TestClient):
                 return
             else:
                 duration_string = f"{delta.days + 1} D"
-        logging.getLogger().debug(f"Last historical query duration string: {duration_string}")
+        logging.getLogger().info(f"Last historical query duration string: {duration_string}")
         
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = ticker

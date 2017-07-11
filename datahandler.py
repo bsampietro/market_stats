@@ -70,8 +70,8 @@ class DataHandler:
             self.disconnect()
         
 
-    def get_max_stored_date(self, requested_data, ticker, silent = False):
-        data = self.find_in_data(requested_data, ticker, None, silent)
+    def get_max_stored_date(self, requested_data, ticker):
+        data = self.find_in_data(requested_data, ticker, None, silent = True)
         if data is None:
             return None
         else:
@@ -87,6 +87,10 @@ class DataHandler:
         if not ticker in self.historical_volatility:
             self.historical_volatility[ticker] = {}
         self.historical_volatility[ticker][date] = value
+
+
+    def request_historical_data(self, requested_data, ticker):
+        self.remote.request_historical_data(requested_data, ticker)
     
 
     def find_in_data(self, requested_data, ticker, the_day = None, silent = False):
@@ -106,7 +110,7 @@ class DataHandler:
             if silent:
                 return None
             elif self.connected():
-                self.remote.request_historical_data(requested_data, ticker)
+                self.request_historical_data(requested_data, ticker)
                 raise GettingInfoError(f"Getting historical {requested_data} info for ticker {ticker}")
             else:
                 raise GettingInfoError("Unavailable info and remote not connected, please restart again with connect parameter")
