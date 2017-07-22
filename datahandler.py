@@ -111,7 +111,7 @@ class DataHandler:
                 return None
             elif self.connected():
                 self.request_historical_data(requested_data, ticker)
-                raise GettingInfoError(f"Getting historical {requested_data} info for ticker {ticker}")
+                raise GettingInfoError(f"Getting {requested_data} data for ticker {ticker}...")
             else:
                 raise GettingInfoError("Unavailable info and remote not connected, please restart again with connect parameter")
 
@@ -121,3 +121,7 @@ class DataHandler:
             self.implied_volatility[key].pop(date, None)
         for key in self.historical_volatility.keys():
             self.historical_volatility[key].pop(date, None)
+
+    def wait_for_async_request(self):
+        if self.connected():
+            self.remote.wait_for_async_request()

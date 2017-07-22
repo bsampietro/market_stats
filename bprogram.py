@@ -1,6 +1,5 @@
 import sys
 
-import time
 import logging
 
 from datetime import datetime, date
@@ -46,7 +45,6 @@ def get_row(ticker, date):
         return row
     except GettingInfoError as e:
         print(e)
-        print("Try again when available message appears...")
         return [ticker] + ['-'] * (IVR_RESULTS + DATA_RESULTS)
 
 def get_query_date(ticker):
@@ -68,7 +66,7 @@ def bring_if_connected(ticker):
 
         max_stored_date = data_handler.get_max_stored_date("HV", ticker)
         if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-            print("Getting HV data...")
+            print(f"Getting HV data for ticker {ticker}...")
             data_handler.request_historical_data("HV", ticker)
 
 
@@ -146,6 +144,8 @@ if __name__ == "__main__":
                 bring_if_connected(ticker)
                 t.add_row(get_row(ticker, get_query_date(ticker)))
 
+            print("Waiting for async request...")
+            data_handler.wait_for_async_request()
             print(t.draw())
 
         except GettingInfoError as e:
@@ -157,6 +157,3 @@ if __name__ == "__main__":
         except:
             data_handler.disconnect()
             raise
-
-
-#time.sleep(60)

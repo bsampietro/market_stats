@@ -3,6 +3,7 @@ sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
 
 from threading import Thread
 import logging
+import time
 
 from ibapi import wrapper
 from ibapi.client import EClient
@@ -57,8 +58,8 @@ class TestApp(TestWrapper, TestClient):
     
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
-        # self.data_handler.save()
-        logging.getLogger().info("Historical data fetched")
+        self.req_id_to_stock_ticker_map.pop(reqId, None)
+        logging.getLogger().info(f"Historical data fetched for reqId: {reqId}")
 
 
     # Client method wrappers
@@ -95,6 +96,13 @@ class TestApp(TestWrapper, TestClient):
             self.next_req_id += 1
         return self.next_req_id
 
+
+    def wait_for_async_request(self):
+        for i in range(120):
+            if len(self.req_id_to_stock_ticker_map) == 0:
+                break
+            else:
+                time.sleep(1)
     
     # def get_days_from_last_query(self, ticker):
     #     pass

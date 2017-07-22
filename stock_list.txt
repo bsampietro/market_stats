@@ -1,4 +1,3 @@
-AMZN
 CMCSA
 #CSCO
 CVX
@@ -19,3 +18,5 @@ V
 WFC
 WMT
 XOM
+
+#AMZN

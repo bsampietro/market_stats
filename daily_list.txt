@@ -16,6 +16,7 @@ OIH
 USO
 
 VXX
+#UVXY
 
 FXE
 
@@ -32,15 +33,18 @@ XRT
 XLF
 XLE
 
-UNG
+XLY
+XLI
+XLP
 XLV
-#XBI
 
-#XLP
-#XME
+XME
+XBI
+FEZ
+FXY
+UNG
+KRE
 
-#XLY
-#XLI
 #XLK
 
 #EWJ
