@@ -9,12 +9,11 @@ def get_basic_contract(symbol):
     contract.symbol = symbol
     contract.currency = "USD"
     contract.exchange = "SMART"
-    # Specify the Primary Exchange attribute to avoid contract ambiguity 
-    # contract.primaryExch = "ISLAND"
     if symbol in ("GLD", "GDX", "GDXJ"):
         contract.exchange = "ARCA"
-    elif symbol in ("MSFT"):
-        contract.primaryExch = "ISLAND"
+    elif symbol in ("MSFT", "INTC", "CSCO"):
+        contract.exchange = "ISLAND"
+        # contract.primaryExchange = "ISLAND"
     return contract
 
 def get_options_contract(symbol, date_str, strike, right):
