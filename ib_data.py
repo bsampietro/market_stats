@@ -53,8 +53,10 @@ class IBData(IBDataWrapper, IBDataClient):
         
         if self.req_id_to_requested_historical_data[reqId] == "IV":
             self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
-        else: # HV
+        elif self.req_id_to_requested_historical_data[reqId] == "HV":
             self.data_handler.store_hv(self.req_id_to_stock_ticker_map[reqId], date, close)
+        else: # stock
+            self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], date, close)
     
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
@@ -81,8 +83,10 @@ class IBData(IBDataWrapper, IBDataClient):
 
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
-        else: # HV
+        elif requested_data == "HV":
             what_to_show = "HISTORICAL_VOLATILITY"
+        else: # STOCKS close
+            what_to_show = "ASK"
 
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
