@@ -13,12 +13,6 @@ from mixed_vs import *
 
 from texttable import Texttable
 
-# Global variables
-data_handler = None
-connected = False
-IVR_RESULTS = 5 # Number of historical IVR rows
-DATA_RESULTS = 12 # Number of main data rows
-
 
 # Helper methods
 def get_row(ticker, date):
@@ -35,10 +29,8 @@ def get_row(ticker, date):
             iv.period_average(),
             hv.period_average(),
             mixed_vs.iv_average_to_hv_average(),
-            mixed_vs.difference_average(),
             mixed_vs.negative_difference_ratio(),
-            iv.min(),
-            iv.max()]
+            mixed_vs.difference_average()]
         assert len(row) == DATA_RESULTS
         row += ['-']
         row += iv.period_iv_ranks(max_results = IVR_RESULTS)
@@ -69,6 +61,13 @@ def bring_if_connected(ticker):
             print(f"Getting HV data for ticker {ticker}...")
             data_handler.request_historical_data("HV", ticker)
 
+
+
+# Global variables
+data_handler = None
+connected = False
+IVR_RESULTS = 7 # Number of historical IVR rows
+DATA_RESULTS = 10 # Number of main data rows
 
 # Main method
 if __name__ == "__main__":
@@ -112,10 +111,8 @@ if __name__ == "__main__":
                 'IVavg',
                 'HVavg',
                 'Avg2Avg',
-                'IV2HVdf',
                 'IV2HV-',
-                'IVmin',
-                'IVmax',
+                'IV2HVdf',
                 '-', 
                 'IVR']
             assert DATA_RESULTS == (len(header) - 2)
