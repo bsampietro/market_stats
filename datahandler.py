@@ -4,7 +4,7 @@ from json.decoder import JSONDecodeError
 import os.path
 
 from util import *
-from access import *
+from ib_data import *
 from errors import *
 
 
@@ -16,7 +16,7 @@ class DataHandler:
 
         self.remote = None
         if connect:
-            self.remote = TestApp(self)
+            self.remote = IBData(self)
         
 
     # def save_data(self):

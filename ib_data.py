@@ -13,11 +13,11 @@ from ibapi.common import *
 from util import *
 
 
-class TestWrapper(wrapper.EWrapper):
+class IBDataWrapper(wrapper.EWrapper):
     def __init__(self):
         wrapper.EWrapper.__init__(self)
 
-class TestClient(EClient):
+class IBDataClient(EClient):
     def __init__(self, wrapper):
         EClient.__init__(self, wrapper)
 
@@ -26,10 +26,10 @@ class TestClient(EClient):
 
 
 
-class TestApp(TestWrapper, TestClient):
+class IBData(IBDataWrapper, IBDataClient):
     def __init__(self, data_handler):
-        TestWrapper.__init__(self)
-        TestClient.__init__(self, wrapper=self)
+        IBDataWrapper.__init__(self)
+        IBDataClient.__init__(self, wrapper=self)
 
         self.data_handler = data_handler
 
