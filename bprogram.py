@@ -73,7 +73,7 @@ DATA_RESULTS = 10 # Number of main data rows
 if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(logging.FileHandler("output.log"))
+    logger.addHandler(logging.FileHandler("_bprogram.log"))
     ## logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) > 1:

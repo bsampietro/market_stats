@@ -30,6 +30,21 @@ def get_stock_contract(symbol):
     contract.secType = "STK"
     return contract
 
+def get_futures_contract(symbol, lastTradeDate):
+    contract = get_basic_contract(symbol)
+    contract.secType = "FUT"
+    contract.lastTradeDateOrContractMonth = lastTradeDate # "201612"
+    return contract
+
+def get_special_contract(symbol, lastTradeDate = None):
+    contract = None
+    if symbol == "ES":
+        contract = get_futures_contract(symbol, lastTradeDate)
+        contract.exchange = "GLOBEX"
+    else:
+        contract = get_stock_contract(symbol)
+    return contract
+
 def today_in_string():
     return datetime.today().strftime("%Y%m%d")
 

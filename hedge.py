@@ -9,31 +9,26 @@ from util import *
 from errors import *
 
 
-# Global variables
-# data_handler = None
-# connected = False
-# IVR_RESULTS = 7 # Number of historical IVR rows
-# DATA_RESULTS = 10 # Number of main data rows
+# Global variables and constants
+MONITOR_TICKER = "ES" # SPY or ES
+LAST_TRADE_DATE = "201712"
 
 # Main method
 if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(logging.FileHandler("output.log"))
+    logger.addHandler(logging.FileHandler("_hedge.log"))
     ## logging.basicConfig(level=logging.INFO)
-
-    # if len(sys.argv) > 1:
-    #     connected = (sys.argv[1] == "connect")
     
     try:
         ib_hedge = IBHedge()
-        ib_hedge.request_market_data("SPY")
+        ib_hedge.start_monitoring(MONITOR_TICKER, LAST_TRADE_DATE)
 
         # Waiting indefinitely to catch the program termination exception
         time.sleep(999999999)
     except (KeyboardInterrupt, SystemExit) as e:
-        ib_hedge.terminateEverything()
+        ib_hedge.clear_all()
         print("Program stopped")
     except:
-        ib_hedge.terminateEverything()
+        ib_hedge.clear_all()
         raise

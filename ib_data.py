@@ -86,9 +86,6 @@ class IBData(IBDataWrapper, IBDataClient):
 
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
-        # next_req_id = self.get_next_req_id()
-        # self.req_id_to_stock_ticker_map[next_req_id] = ticker
-        # self.reqMktData(next_req_id, get_stock_contract(ticker), "", True, False, [])
 
     # App functions
     def get_next_req_id(self, next = True):
