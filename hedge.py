@@ -10,8 +10,9 @@ from errors import *
 
 
 # Global variables and constants
-MONITOR_TICKER = "ES" # SPY or ES
+MONITOR_TICKER = "SPY" # SPY or ES
 LAST_TRADE_DATE = "201712"
+HEDGER_STRIKE = 230 # SPY:230 / ES:2300 # and use same last_trade_date than future
 
 # Main method
 if __name__ == "__main__":
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     
     try:
         ib_hedge = IBHedge()
+        ib_hedge.wait_for_readiness()
         ib_hedge.start_monitoring(MONITOR_TICKER, LAST_TRADE_DATE)
 
         # Waiting indefinitely to catch the program termination exception

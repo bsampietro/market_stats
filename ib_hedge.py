@@ -31,7 +31,7 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
     LIMIT = -0.01
     RANGE = 20
 
-    def __init__(self):
+    def __init__(self, test_mode=False):
         IBHedgeWrapper.__init__(self)
         IBHedgeClient.__init__(self, wrapper=self)
 
@@ -43,6 +43,12 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
         # price variables
         self.initial_price = None
         self.time_price = {}
+
+        # state variables
+        self.test_mode = test_mode
+
+        # tws variables
+        self.next_order_id = None
 
 
         self.connect("127.0.0.1", 7496, 1)
@@ -68,6 +74,10 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
 
 
     def start_monitoring(self, ticker, last_trade_date = None):
+        self.request_market_data(ticker, last_trade_date)
+
+
+    def request_market_data(self, ticker, last_trade_date = None):
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
         self.reqMktData(next_req_id, get_special_contract(ticker, last_trade_date), "", False, False, [])
@@ -75,6 +85,10 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
 
     def tickPrice(self, reqId, tickType, price:float, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
+
+        if price <= 0:
+            print(f"Returned 0 or under 0 price: '{price}', for ticker {self.req_id_to_stock_ticker_map[reqId]}")
+            return
 
         if tickType == 2:
             now = int(time.time())
@@ -87,7 +101,7 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
             compared_to_when = now - IBHedge.RANGE
             compared_to_price = None
             for i in range(120):
-                if compared_to_when in self.time_price and compared_to_when < now:
+                if compared_to_when in self.time_price and compared_to_when <= now:
                     compared_to_price = self.time_price[compared_to_when]
                     break
                 compared_to_when += 1
@@ -100,11 +114,14 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
             print(f"Compared to when: {compared_to_when}")
             print(f"Compared to price: {compared_to_price}")
             if percentage_change < IBHedge.LIMIT:
-                print("Do something!") # and reset!
+                print("Do something!") # buy put and maybe try to sell it ?!
 
             print("")
 
 
+    def nextValidId(self, orderId:int):
+        super().nextValidId(orderId)
+        self.next_order_id = orderId
 
 
     # App functions
@@ -112,3 +129,31 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
         if next:
             self.next_req_id += 1
         return self.next_req_id
+
+
+    def is_ready(self):
+        return self.next_order_id is not None
+
+
+    def wait_for_readiness(self):
+        for i in range(120):
+            if self.is_ready():
+                break
+            else:
+                time.sleep(1)
+        if self.is_ready():
+            print("IB Ready")
+        else:
+            # raise exception ?
+            print("IB was not reported ready after 120 seconds")
+
+
+
+
+    # Overload methods for test mode
+    def reqMktData(self, reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions):
+        if self.test_mode:
+            # manually call tickPrice
+            pass
+        else:
+            super().reqMktData(reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions)
