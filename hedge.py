@@ -10,7 +10,7 @@ from errors import *
 
 
 # Global variables and constants
-MONITOR_TICKER = "SPY" # SPY or ES
+MONITOR_TICKER = "ES" # SPY or ES
 LAST_TRADE_DATE = "201712"
 HEDGER_STRIKE = 230 # SPY:230 / ES:2300 # and use same last_trade_date than future
 
