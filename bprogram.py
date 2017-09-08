@@ -13,9 +13,11 @@ from mixed_vs import *
 
 from texttable import Texttable
 
+import os.path
+
 
 # Helper methods
-def get_row(ticker, date):
+def get_iv_row(ticker, date):
     try:
         iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
@@ -86,64 +88,73 @@ if __name__ == "__main__":
             continue
 
         command = command.split(" ")
-
-        if command[0] == "exit" or command[0] == "e":
-            try:
-                data_handler.stop()
-            except KeyError as e:
-                print(f"Exit with error: {e}")
-            break
-        elif command[0] == "delete":
-            data_handler.delete_at(today_in_string())
-            print("Entries deleted")
-            continue
+        command += [""] * 5 # adding empty strings to the list to make it easier to manage the command
 
         try:
 
-            t = Texttable(max_width = 0)
-            t.set_precision(2)
+            if command[0] == "exit" or command[0] == "e":
+                try:
+                    data_handler.stop()
+                except KeyError as e:
+                    print(f"Exit with error: {e}")
+                break
 
-            header = ['Ticker',
-                'Date',
-                'IV',
-                'IV2IVavg',
-                'IV2HVavg',
-                'IVavg',
-                'HVavg',
-                'Avg2Avg',
-                'IV2HV-',
-                'IV2HVdf',
-                '-', 
-                'IVR']
-            assert DATA_RESULTS == (len(header) - 2)
-            header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
-            t.add_row(header)
+            elif command[0] == "delete":
+                data_handler.delete_at(today_in_string())
+                print("Entries deleted")
+                continue
 
-            if command[0] == "list":
-                tickers = read_stock_list('daily_list.txt')
-                for ticker in tickers:
+            elif command[0] == "" or command[1] == "":
+                continue
+
+            elif command[0] == "v":
+
+                t = Texttable(max_width = 0)
+                t.set_precision(2)
+
+                header = ['Ticker',
+                    'Date',
+                    'IV',
+                    'IV2IVavg',
+                    'IV2HVavg',
+                    'IVavg',
+                    'HVavg',
+                    'Avg2Avg',
+                    'IV2HV-',
+                    'IV2HVdf',
+                    '-', 
+                    'IVR']
+                assert DATA_RESULTS == (len(header) - 2)
+                header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
+                t.add_row(header)
+
+                text_file = command[1] + ".txt"
+
+                if os.path.isfile(text_file):
+                    tickers = read_stock_list(text_file)
+                    for ticker in tickers:
+                        bring_if_connected(ticker)
+                        t.add_row(get_iv_row(ticker, get_query_date(ticker)))
+                else:
+                    ticker = command[1].upper()
+                    
+                    duration = 365
+                    if command[2] != "":
+                        duration = command[2]
+
                     bring_if_connected(ticker)
-                    t.add_row(get_row(ticker, get_query_date(ticker)))
+                    t.add_row(get_iv_row(ticker, get_query_date(ticker)))
 
-            elif ".txt" in command[0]:
-                tickers = read_stock_list(command[0])
-                for ticker in tickers:
-                    bring_if_connected(ticker)
-                    t.add_row(get_row(ticker, get_query_date(ticker)))
+                print("Waiting for async request...")
+                data_handler.wait_for_async_request()
+                print(t.draw())
+
+            elif command[0] == "s":
+                # get the stock thing going
+                print("doing the 's' command...")
 
             else:
-                ticker = command[0].upper()
-                
-                duration = 365
-                if len(command) == 2:
-                    duration = command[1]
-
-                bring_if_connected(ticker)
-                t.add_row(get_row(ticker, get_query_date(ticker)))
-
-            print("Waiting for async request...")
-            data_handler.wait_for_async_request()
-            print(t.draw())
+                print("Command not recognized")
 
         except GettingInfoError as e:
             print(e)
