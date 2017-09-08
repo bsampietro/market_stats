@@ -12,7 +12,7 @@ class HV:
 
 
     @lru_cache(maxsize=None)
-    def period_list(self, back_days = 365):
+    def period_list(self, back_days):
         max_date = self.data_handler.get_max_stored_date("HV", self.ticker)
         if max_date is None:
             return None
@@ -27,15 +27,5 @@ class HV:
 
 
     @lru_cache(maxsize=None)
-    def period_average(self, back_days = 365):
+    def period_average(self, back_days):
         return sum(self.period_list(back_days)) / len(self.period_list(back_days))
-    
-
-    @lru_cache(maxsize=None)
-    def min(self):
-        return min(self.period_list())
-
-    
-    @lru_cache(maxsize=None)
-    def max(self):
-        return max(self.period_list())

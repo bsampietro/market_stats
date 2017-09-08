@@ -62,7 +62,8 @@ class DataHandler:
         self.save_data_json()
 
     def disconnect(self):
-        self.remote.disconnect()
+        if self.connected():
+            self.remote.disconnect()
 
     def stop(self):
         if self.connected():

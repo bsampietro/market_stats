@@ -12,7 +12,7 @@ class IV:
 
     
     @lru_cache(maxsize=None)
-    def period_list(self, back_days = 365):
+    def period_list(self, back_days):
         max_date = self.data_handler.get_max_stored_date("IV", self.ticker)
         if max_date is None:
             return None
@@ -27,38 +27,38 @@ class IV:
 
     
     @lru_cache(maxsize=None)
-    def min(self):
-        return min(self.period_list())
+    def min(self, back_days):
+        return min(self.period_list(back_days))
 
     
     @lru_cache(maxsize=None)
-    def max(self):
-        return max(self.period_list())
+    def max(self, back_days):
+        return max(self.period_list(back_days))
 
 
     def get_at(self, date):
         return self.data_handler.find_in_data("IV", self.ticker, date) * 100
-    
-    
-    def period_iv_ranks(self, back_days = 365, max_results = 15):
+
+
+    def period_iv_ranks(self, back_days, max_results):
         period_iv_ranks = []
         for iv in self.period_list(back_days):
-            period_iv_ranks.append(self.calculate_iv_rank(iv))
+            period_iv_ranks.append(self.calculate_iv_rank(iv, back_days))
             if len(period_iv_ranks) == max_results:
                 break
         return period_iv_ranks
         
 
     @lru_cache(maxsize=None)
-    def period_average(self, back_days = 365):
+    def period_average(self, back_days):
         return sum(self.period_list(back_days)) / len(self.period_list(back_days))
 
 
-    def current_to_average_ratio(self, date, back_days = 365):
+    def current_to_average_ratio(self, date, back_days):
         return self.get_at(date) / self.period_average(back_days)
     
 
     # private
 
-    def calculate_iv_rank(self, iv):
-        return (iv - self.min()) / (self.max() - self.min()) * 100
+    def calculate_iv_rank(self, iv, back_days):
+        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100

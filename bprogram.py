@@ -17,7 +17,7 @@ import os.path
 
 
 # Helper methods
-def get_iv_row(ticker, date):
+def get_iv_row(ticker, date, back_days):
     try:
         iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
@@ -26,16 +26,16 @@ def get_iv_row(ticker, date):
         row = [ticker,
             date,
             iv.get_at(date),
-            iv.current_to_average_ratio(date),
-            mixed_vs.iv_current_to_hv_average(date),
-            iv.period_average(),
-            hv.period_average(),
-            mixed_vs.iv_average_to_hv_average(),
-            mixed_vs.negative_difference_ratio(),
-            mixed_vs.difference_average()]
+            iv.current_to_average_ratio(date, back_days),
+            mixed_vs.iv_current_to_hv_average(date, back_days),
+            iv.period_average(back_days),
+            hv.period_average(back_days),
+            mixed_vs.iv_average_to_hv_average(back_days),
+            mixed_vs.negative_difference_ratio(back_days),
+            mixed_vs.difference_average(back_days)]
         assert len(row) == DATA_RESULTS
         row += ['-']
-        row += iv.period_iv_ranks(max_results = IVR_RESULTS)
+        row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
@@ -70,6 +70,7 @@ data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 DATA_RESULTS = 10 # Number of main data rows
+BACK_DAYS = 365 # Number of back days to take into account for statistics
 
 # Main method
 if __name__ == "__main__":
@@ -130,20 +131,22 @@ if __name__ == "__main__":
 
                 text_file = command[1] + ".txt"
 
+                back_days = BACK_DAYS
+                if command[2] != "":
+                    back_days = int(command[2])
+                    if back_days <= 30:
+                        # take it as months if less than 30
+                        back_days *= 30
+
                 if os.path.isfile(text_file):
                     tickers = read_stock_list(text_file)
                     for ticker in tickers:
                         bring_if_connected(ticker)
-                        t.add_row(get_iv_row(ticker, get_query_date(ticker)))
+                        t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
                 else:
                     ticker = command[1].upper()
-                    
-                    duration = 365
-                    if command[2] != "":
-                        duration = command[2]
-
                     bring_if_connected(ticker)
-                    t.add_row(get_iv_row(ticker, get_query_date(ticker)))
+                    t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
 
                 print("Waiting for async request...")
                 data_handler.wait_for_async_request()
