@@ -1,7 +1,7 @@
 SPY
 QQQ
 IWM
-#DIA
+DIA
 
 TLT
 HYG
@@ -32,19 +32,25 @@ XRT
 XLF
 XLE
 
-#XLY
-#XLI
-#XLV
-#XBI
-#XME
+#separator
+---
 
-#UNG
-#XLP
-#XLB
-#FEZ
-#FXY
-#FXB
-#KRE
+TBT
+
+XLY
+XLI
+XLB
+XLV
+XBI
+XME
+XLP
+
+FEZ
+UNG
+KRE
+
+FXY
+FXB
 
 #XLK
 #EWJ

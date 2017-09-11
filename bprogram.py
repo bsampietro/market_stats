@@ -39,7 +39,10 @@ def get_iv_row(ticker, date, back_days):
         return row
     except GettingInfoError as e:
         print(e)
-        return [ticker] + ['-'] * (IVR_RESULTS + DATA_RESULTS)
+        return empty_row(ticker)
+
+def empty_row(ticker):
+    return [ticker] + ['-'] * (IVR_RESULTS + DATA_RESULTS)
 
 def get_query_date(ticker):
     if connected:
@@ -141,6 +144,9 @@ if __name__ == "__main__":
                 if os.path.isfile(text_file):
                     tickers = read_stock_list(text_file)
                     for ticker in tickers:
+                        if ticker == '---':
+                            t.add_row(empty_row(ticker))
+                            continue
                         bring_if_connected(ticker)
                         t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
                 else:
