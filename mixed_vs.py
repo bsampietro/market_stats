@@ -26,12 +26,13 @@ class MixedVs:
     def iv_hv_difference(self, back_days):
         back_day = datetime.today() - timedelta(days = back_days)
         differences = []
-        for i in range(back_days - 30):
+        available_hv_period = back_days - 30 # Takes IV starting from last year until 30 days ago and compares to HV until today
+        for i in range(available_hv_period):
             iv = self.data_handler.find_in_data("IV", self.ticker, back_day, silent = True)
             hv = self.data_handler.find_in_data("HV", self.ticker, back_day + timedelta(days = 28), silent = True)
             if iv is not None and hv is not None:
                 differences.append(iv * 100 - hv * 100)
-            back_day = back_day + timedelta(days = 1)
+            back_day += timedelta(days = 1)
         return differences
 
 
@@ -45,4 +46,5 @@ class MixedVs:
         for diff in self.iv_hv_difference(back_days):
             if diff < 0:
                 negative_count += 1
-        return (float(back_days - 30 - negative_count) / (back_days - 30)) * 100
+        available_hv_period = len(self.iv_hv_difference(back_days)) # similar to (back_days - 30 - unavailable days)
+        return (float(available_hv_period - negative_count) / available_hv_period) * 100
