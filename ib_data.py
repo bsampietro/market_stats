@@ -100,23 +100,10 @@ class IBData(IBDataWrapper, IBDataClient):
                 break
             else:
                 time.sleep(1)
-    
-    # def get_days_from_last_query(self, ticker):
-    #     pass
 
-    # Wrapper
-    # def tickSnapshotEnd(self, reqId: int):
-    #     # super().tickSnapshotEnd(reqId)
-    #     # print("tickSnapshotEnd - reqId:", reqId)
 
-    # def connectAck(self):
-    #     """ callback signifying completion of successful connection """
-    #     # self.logAnswer(current_fn_name(), vars())
-    #     super().connectAck()
-
-    
-    # def nextValidId(self, orderId:int):
-    #     """ Receives next valid order id."""
-    #     super().nextValidId(orderId)
-    #     # self.next_req_id = orderId
-
+    def error(self, reqId:TickerId, errorCode:int, errorString:str):
+        super().error(reqId, errorCode, errorString)
+        
+        self.req_id_to_stock_ticker_map.pop(reqId, None)
+        logging.getLogger().info(f"Bruno says: Error logged with reqId: {reqId}")
