@@ -57,11 +57,26 @@ def get_stock_row(ticker, date):
             stock.current_to_ma_percentage(date, 50),
             '-',
             stock.ma(200),
-            stock.current_to_ma_percentage(date, 200),
-            '-',
-            stock.hv(30),
-            stock.hv(365)]
+            stock.current_to_ma_percentage(date, 200)]
         assert len(row) - 1 == STOCK_RESULTS
+        return row
+    except GettingInfoError as e:
+        print(e)
+        return empty_row(ticker, STOCK_RESULTS)
+
+
+def get_hv_row(ticker, date):
+    try:
+        stock = Stock(data_handler, ticker)
+        iv = IV(data_handler, ticker)
+        row = [ticker,
+            date,
+            stock.hv(30),
+            stock.hv(365),
+            stock.hv_average(),
+            iv.get_at(date) / stock.hv_average(),
+            iv.period_average(365) / stock.hv_average()]
+        assert len(row) - 1 == HV_RESULTS
         return row
     except GettingInfoError as e:
         print(e)
@@ -108,7 +123,8 @@ connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 DATA_RESULTS = 10 # Number of main data rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-STOCK_RESULTS = 10 + 4 # Number of stock rows besides the ticker + separators
+STOCK_RESULTS = 8 + 3 # Number of stock rows besides the ticker + separators
+HV_RESULTS = 6
 
 # Main method
 if __name__ == "__main__":
@@ -189,10 +205,6 @@ if __name__ == "__main__":
                     bring_if_connected(ticker)
                     t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
 
-                print("Waiting for async request...")
-                data_handler.wait_for_async_request()
-                print(t.draw())
-
             elif command[0] == "s":
                 
                 t = Texttable(max_width = 0)
@@ -209,11 +221,8 @@ if __name__ == "__main__":
                     'MA50%',
                     '-',
                     'MA200',
-                    'MA200%',
-                    '-',
-                    'HV30',
-                    'HV365']
-
+                    'MA200%']
+                assert STOCK_RESULTS == (len(header) - 1)
                 t.add_row(header)
 
                 text_file = command[1] + ".txt"
@@ -231,12 +240,46 @@ if __name__ == "__main__":
                     bring_if_connected(ticker)
                     t.add_row(get_stock_row(ticker, get_query_date(ticker)))
 
-                print("Waiting for async request...")
-                data_handler.wait_for_async_request()
-                print(t.draw())
+
+            elif command[0] == "hv":
+
+                t = Texttable(max_width = 0)
+                t.set_precision(2)
+
+                header = ['Ticker',
+                    'Date',
+                    'HV30',
+                    'HV365',
+                    'HVavg',
+                    'IV2HVavg',
+                    'avg2avg']
+                assert HV_RESULTS == (len(header) - 1)
+                t.add_row(header)
+
+                text_file = command[1] + ".txt"
+
+                if os.path.isfile(text_file):
+                    tickers = read_stock_list(text_file)
+                    for ticker in tickers:
+                        if ticker == '---':
+                            t.add_row(empty_row(ticker, HV_RESULTS))
+                            continue
+                        bring_if_connected(ticker)
+                        t.add_row(get_hv_row(ticker, get_query_date(ticker)))
+                else:
+                    ticker = command[1].upper()
+                    bring_if_connected(ticker)
+                    t.add_row(get_hv_row(ticker, get_query_date(ticker)))
+
 
             else:
                 print("Command not recognized")
+
+
+            print("Waiting for async request...")
+            data_handler.wait_for_async_request()
+            print(t.draw())
+
 
         except GettingInfoError as e:
             print(e)
