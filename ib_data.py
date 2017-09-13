@@ -85,7 +85,7 @@ class IBData(IBDataWrapper, IBDataClient):
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
         elif requested_data == "HV":
             what_to_show = "HISTORICAL_VOLATILITY"
-        else: # STOCKS close
+        elif requested_data == "STOCK":
             what_to_show = "ASK"
 
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])

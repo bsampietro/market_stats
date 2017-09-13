@@ -87,6 +87,7 @@ def bring_if_connected(ticker):
     if connected:
         max_stored_date = data_handler.get_max_stored_date("IV", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
+            print(f"Getting IV data for ticker {ticker}...")
             data_handler.request_historical_data("IV", ticker)
 
         max_stored_date = data_handler.get_max_stored_date("HV", ticker)
@@ -96,6 +97,7 @@ def bring_if_connected(ticker):
 
         max_stored_date = data_handler.get_max_stored_date("STOCK", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
+            print(f"Getting STOCK data for ticker {ticker}...")
             data_handler.request_historical_data("STOCK", ticker)
 
 

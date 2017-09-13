@@ -125,7 +125,7 @@ class DataHandler:
             data = self.implied_volatility
         elif requested_data == "HV":
             data = self.historical_volatility
-        else: # Stock
+        elif requested_data == "STOCK":
             data = self.stock
 
         try:
@@ -137,13 +137,11 @@ class DataHandler:
         except KeyError as e:
             if silent:
                 return None
+            elif self.connected():
+                # self.request_historical_data(requested_data, ticker) # Now getting it before hand (bring_if_connected method)
+                raise GettingInfoError(f"{ticker} not stored, getting it in background...")
             else:
-                raise GettingInfoError("")
-            # elif self.connected():
-            #     self.request_historical_data(requested_data, ticker)
-            #     raise GettingInfoError(f"Getting {requested_data} data for ticker {ticker}...")
-            # else:
-            #     raise GettingInfoError("Unavailable info and remote not connected, please restart again with connect parameter")
+                raise GettingInfoError(f"{ticker} info not available and remote not connected")
 
 
     def delete_at(self, date):
