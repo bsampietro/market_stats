@@ -127,6 +127,8 @@ class DataHandler:
             data = self.historical_volatility
         elif requested_data == "STOCK":
             data = self.stock
+        else:
+            raise RuntimeError("Unknown requested_data parameter")
 
         try:
             if the_day is None:
@@ -147,8 +149,13 @@ class DataHandler:
     def delete_at(self, date):
         for key in self.implied_volatility.keys():
             self.implied_volatility[key].pop(date, None)
+
         for key in self.historical_volatility.keys():
             self.historical_volatility[key].pop(date, None)
+
+        for key in self.stock.keys():
+            self.stock[key].pop(date, None)
+
 
     def wait_for_async_request(self):
         if self.connected():
