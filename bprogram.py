@@ -161,6 +161,8 @@ if __name__ == "__main__":
         connected = (sys.argv[1] == "connect")
     data_handler = DataHandler(connected)
 
+    last_command = []
+
     while True:
         command = input('--> ')
         if command == "":
@@ -168,6 +170,11 @@ if __name__ == "__main__":
 
         command = command.split(" ")
         command += [""] * 5 # adding empty strings to the list to make it easier to manage the command
+
+        if command[0] == "l":
+            command = last_command
+        else:
+            last_command = command
 
         try:
 
@@ -208,12 +215,18 @@ if __name__ == "__main__":
 
                 back_days = BACK_DAYS
                 if command[2] != "":
-                    back_days = int(command[2])
-                    if back_days <= 30:
-                        # take it as months if less than 30
-                        back_days *= 30
+                    try:
+                        back_days = int(command[2])
+                        if back_days <= 30:
+                            # take it as months if less than 30
+                            back_days *= 30
+                    except ValueError:
+                        pass
 
                 rows = read_file_and_process(command[1], get_iv_row, back_days)
+                if command[2] != "" and command[3] == "ord":
+                    # order by IVR%
+                    rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
 
             elif command[0] == "s":
 
