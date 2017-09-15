@@ -155,7 +155,10 @@ if __name__ == "__main__":
                 break
 
             elif command[0] == "delete":
-                data_handler.delete_at(today_in_string())
+                if command[1] == "":
+                    data_handler.delete_at(today_in_string())
+                else:
+                    data_handler.delete_back(int(command[1]))
                 print("Entries deleted")
                 continue
 

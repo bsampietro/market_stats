@@ -83,8 +83,8 @@ class DataHandler:
             self.remote.disconnect()
 
     def stop(self):
+        self.save()
         if self.connected():
-            self.save()
             self.disconnect()
         
 
@@ -158,6 +158,16 @@ class DataHandler:
         for key in self.stock.keys():
             self.stock[key].pop(date, None)
         self.modified_stock = True
+
+        if self.connected():
+            self.remote.reset_session_requested_data()
+
+
+    def delete_back(self, back_days):
+        today = datetime.today()
+        for i in range(back_days):
+            delete_day = date_in_string(today - timedelta(days = i))
+            self.delete_at(delete_day)
 
 
     def wait_for_async_request(self):

@@ -47,6 +47,7 @@ class IBData(IBDataWrapper, IBDataClient):
         # self.run()
 
 
+    # Overridden wrapper responses
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
@@ -116,6 +117,10 @@ class IBData(IBDataWrapper, IBDataClient):
                 break
             else:
                 time.sleep(1)
+
+
+    def reset_session_requested_data(self):
+        self.session_requested_data = set()
 
 
     def error(self, reqId:TickerId, errorCode:int, errorString:str):
