@@ -43,7 +43,9 @@ def get_iv_row(ticker, date, back_days):
         return empty_row(ticker, IVR_RESULTS + DATA_RESULTS)
 
 
-def get_stock_row(ticker, date):
+# back_days parameter added for compliance with get_xxx_row methods
+# as they are passed as parameter to read_file_and_process
+def get_stock_row(ticker, date, back_days = None):
     try:
         stock = Stock(data_handler, ticker)
         row = [ticker,
@@ -65,7 +67,9 @@ def get_stock_row(ticker, date):
         return empty_row(ticker, STOCK_RESULTS)
 
 
-def get_hv_row(ticker, date):
+# back_days parameter added for compliance with get_xxx_row methods
+# as they are passed as parameter to read_file_and_process
+def get_hv_row(ticker, date, back_days = None):
     try:
         stock = Stock(data_handler, ticker)
         iv = IV(data_handler, ticker)
@@ -114,6 +118,26 @@ def bring_if_connected(ticker):
         if (max_stored_date is None) or max_stored_date.date() < date.today():
             print(f"Getting STOCK data for ticker {ticker}...")
             data_handler.request_historical_data("STOCK", ticker)
+
+
+def read_file_and_process(command, get_row_method, back_days = None):
+    text_file = command + ".txt"
+    rows = []
+    if os.path.isfile(text_file):
+        tickers = read_stock_list(text_file)
+        for ticker in tickers:
+            if ticker == '---':
+                if len(rows) == 0:
+                    raise RuntimeError("Separator can not be on the first row")
+                rows.append(empty_row(ticker, len(rows[0]) - 1))
+                continue
+            bring_if_connected(ticker)
+            rows.append(get_row_method(ticker, get_query_date(ticker), back_days))
+    else:
+        ticker = command.upper()
+        bring_if_connected(ticker)
+        rows.append(get_row_method(ticker, get_query_date(ticker), back_days))
+    return rows
 
 
 
@@ -167,9 +191,6 @@ if __name__ == "__main__":
 
             elif command[0] == "v":
 
-                t = Texttable(max_width = 0)
-                t.set_precision(2)
-
                 header = ['Ticker',
                     'Date',
                     'IV',
@@ -184,9 +205,6 @@ if __name__ == "__main__":
                     'IVR']
                 assert DATA_RESULTS == (len(header) - 2)
                 header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
-                t.add_row(header)
-
-                text_file = command[1] + ".txt"
 
                 back_days = BACK_DAYS
                 if command[2] != "":
@@ -195,23 +213,9 @@ if __name__ == "__main__":
                         # take it as months if less than 30
                         back_days *= 30
 
-                if os.path.isfile(text_file):
-                    tickers = read_stock_list(text_file)
-                    for ticker in tickers:
-                        if ticker == '---':
-                            t.add_row(empty_row(ticker, IVR_RESULTS + DATA_RESULTS))
-                            continue
-                        bring_if_connected(ticker)
-                        t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
-                else:
-                    ticker = command[1].upper()
-                    bring_if_connected(ticker)
-                    t.add_row(get_iv_row(ticker, get_query_date(ticker), back_days))
+                rows = read_file_and_process(command[1], get_iv_row, back_days)
 
             elif command[0] == "s":
-                
-                t = Texttable(max_width = 0)
-                t.set_precision(2)
 
                 header = ['Ticker',
                     'Date',
@@ -226,28 +230,13 @@ if __name__ == "__main__":
                     'MA200',
                     'MA200%']
                 assert STOCK_RESULTS == (len(header) - 1)
-                t.add_row(header)
 
-                text_file = command[1] + ".txt"
-
-                if os.path.isfile(text_file):
-                    tickers = read_stock_list(text_file)
-                    for ticker in tickers:
-                        if ticker == '---':
-                            t.add_row(empty_row(ticker, STOCK_RESULTS))
-                            continue
-                        bring_if_connected(ticker)
-                        t.add_row(get_stock_row(ticker, get_query_date(ticker)))
-                else:
-                    ticker = command[1].upper()
-                    bring_if_connected(ticker)
-                    t.add_row(get_stock_row(ticker, get_query_date(ticker)))
-
+                rows = read_file_and_process(command[1], get_stock_row)
+                if command[2] == "ord":
+                    # order by MA50%
+                    rows.sort(key = lambda row: row[8] if isinstance(row[8], (int, float)) else 0)
 
             elif command[0] == "hv":
-
-                t = Texttable(max_width = 0)
-                t.set_precision(2)
 
                 header = ['Ticker',
                     'Date',
@@ -257,26 +246,18 @@ if __name__ == "__main__":
                     'IV2HVavg',
                     'avg2avg']
                 assert HV_RESULTS == (len(header) - 1)
-                t.add_row(header)
 
-                text_file = command[1] + ".txt"
-
-                if os.path.isfile(text_file):
-                    tickers = read_stock_list(text_file)
-                    for ticker in tickers:
-                        if ticker == '---':
-                            t.add_row(empty_row(ticker, HV_RESULTS))
-                            continue
-                        bring_if_connected(ticker)
-                        t.add_row(get_hv_row(ticker, get_query_date(ticker)))
-                else:
-                    ticker = command[1].upper()
-                    bring_if_connected(ticker)
-                    t.add_row(get_hv_row(ticker, get_query_date(ticker)))
-
+                rows = read_file_and_process(command[1], get_hv_row)
 
             else:
                 print("Command not recognized")
+
+
+            t = Texttable(max_width = 0)
+            t.set_precision(2)
+            t.add_row(header)
+            for row in rows:
+                t.add_row(row)
 
 
             print("Waiting for async request...")
