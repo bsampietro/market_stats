@@ -19,9 +19,9 @@ class DataHandler:
             self.remote = IBData(self)
 
         # smart saving variables
-        self.stored_iv = False
-        self.stored_hv = False
-        self.stored_stock = False
+        self.modified_iv = False
+        self.modified_hv = False
+        self.modified_stock = False
 
 
     # def save_data(self):
@@ -36,15 +36,15 @@ class DataHandler:
     #         self.implied_volatility = {}
 
     def save_data_json(self):
-        if self.stored_iv:
+        if self.modified_iv:
             with open('data_implied_volatility.json', 'w') as f:
                 json.dump(self.implied_volatility, f)
 
-        if self.stored_hv:
+        if self.modified_hv:
             with open('data_historical_volatility.json', 'w') as f:
                 json.dump(self.historical_volatility, f)
 
-        if self.stored_stock:
+        if self.modified_stock:
             with open('stock.json', 'w') as f:
                 json.dump(self.stock, f)
 
@@ -100,19 +100,19 @@ class DataHandler:
         if not ticker in self.implied_volatility:
             self.implied_volatility[ticker] = {}
         self.implied_volatility[ticker][date] = value
-        self.stored_iv = True
+        self.modified_iv = True
 
     def store_hv(self, ticker, date, value):
         if not ticker in self.historical_volatility:
             self.historical_volatility[ticker] = {}
         self.historical_volatility[ticker][date] = value
-        self.stored_hv = True
+        self.modified_hv = True
 
     def store_stock(self, ticker, date, value):
         if not ticker in self.stock:
             self.stock[ticker] = {}
         self.stock[ticker][date] = value
-        self.stored_stock = True
+        self.modified_stock = True
 
 
     def request_historical_data(self, requested_data, ticker):
@@ -149,12 +149,15 @@ class DataHandler:
     def delete_at(self, date):
         for key in self.implied_volatility.keys():
             self.implied_volatility[key].pop(date, None)
+        self.modified_iv = True
 
         for key in self.historical_volatility.keys():
             self.historical_volatility[key].pop(date, None)
+        self.modified_hv = True
 
         for key in self.stock.keys():
             self.stock[key].pop(date, None)
+        self.modified_stock = True
 
 
     def wait_for_async_request(self):
