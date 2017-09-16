@@ -78,8 +78,10 @@ def get_hv_row(ticker, date, back_days = None):
             stock.hv(30),
             stock.hv(365),
             stock.hv_average(),
-            iv.get_at(date) / stock.hv_average(),
-            iv.period_average(365) / stock.hv_average()]
+            max(stock.period_hvs()),
+            '-',
+            iv.period_average(365) / stock.hv_average(),
+            iv.get_at(date) / stock.hv_average()]
         assert len(row) - 1 == HV_RESULTS
         return row
     except GettingInfoError as e:
@@ -148,7 +150,7 @@ IVR_RESULTS = 7 # Number of historical IVR rows
 DATA_RESULTS = 10 # Number of main data rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
 STOCK_RESULTS = 8 + 3 # Number of stock rows besides the ticker + separators
-HV_RESULTS = 6
+HV_RESULTS = 7 + 1 # Number of hv rows besides the ticker + separators
 
 # Main method
 if __name__ == "__main__":
@@ -256,8 +258,10 @@ if __name__ == "__main__":
                     'HV30',
                     'HV365',
                     'HVavg',
-                    'IV2HVavg',
-                    'avg2avg']
+                    'MaxHV',
+                    '-',
+                    'IVavg2HVavg',
+                    'IV2HVavg']
                 assert HV_RESULTS == (len(header) - 1)
 
                 rows = read_file_and_process(command[1], get_hv_row)
@@ -265,18 +269,15 @@ if __name__ == "__main__":
             else:
                 print("Command not recognized")
 
-
             t = Texttable(max_width = 0)
             t.set_precision(2)
             t.add_row(header)
             for row in rows:
                 t.add_row(row)
 
-
             print("Waiting for async request...")
             data_handler.wait_for_async_request()
             print(t.draw())
-
 
         except GettingInfoError as e:
             print(e)

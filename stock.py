@@ -28,14 +28,18 @@ class Stock:
 
 
     @lru_cache(maxsize=None)
-    def hv_average(self):
+    def period_hvs(self):
         closes = self.closes(365)
         hvs = []
         for i in range(len(closes) - 30):
             monthly_closes = closes[i:i+30]
             hvs.append((statistics.stdev(monthly_closes) / monthly_closes[-1]) * 100 * math.sqrt(12))
-        return statistics.mean(hvs)
+        return hvs
 
+
+    @lru_cache(maxsize=None)
+    def hv_average(self):
+        return statistics.mean(self.period_hvs())
 
 
     @lru_cache(maxsize=None)
