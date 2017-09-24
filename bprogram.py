@@ -134,7 +134,10 @@ def read_file_and_process(command, get_row_method, back_days = None):
                 rows.append(empty_row(ticker, len(rows[0]) - 1))
                 continue
             bring_if_connected(ticker)
-            rows.append(get_row_method(ticker, get_query_date(ticker), back_days))
+            row = get_row_method(ticker, get_query_date(ticker), back_days)
+            if row[1] == '-' and len(rows) > 0:
+                continue
+            rows.append(row)
     else:
         ticker = command.upper()
         bring_if_connected(ticker)
