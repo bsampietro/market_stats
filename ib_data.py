@@ -37,6 +37,7 @@ class IBData(IBDataWrapper, IBDataClient):
         self.next_req_id = 0
         self.req_id_to_stock_ticker_map = {}
         self.req_id_to_requested_historical_data = {}
+        self.session_requested_data = set()
 
         self.connect("127.0.0.1", 7496, 0)
 
@@ -46,6 +47,7 @@ class IBData(IBDataWrapper, IBDataClient):
         # self.run()
 
 
+    # Overridden wrapper responses
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
@@ -53,8 +55,12 @@ class IBData(IBDataWrapper, IBDataClient):
         
         if self.req_id_to_requested_historical_data[reqId] == "IV":
             self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
-        else: # HV
+        elif self.req_id_to_requested_historical_data[reqId] == "HV":
             self.data_handler.store_hv(self.req_id_to_stock_ticker_map[reqId], date, close)
+        elif self.req_id_to_requested_historical_data[reqId] == "STOCK":
+            self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], date, close)
+        else:
+            raise RuntimeError("Unknown requested_data parameter")
     
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
@@ -64,6 +70,13 @@ class IBData(IBDataWrapper, IBDataClient):
 
     # Client method wrappers
     def request_historical_data(self, requested_data, ticker):
+        requested_data_key = f"{requested_data},{ticker}"
+        if requested_data_key in self.session_requested_data:
+            logging.getLogger().info(f"{requested_data_key} already requested")
+            return
+        else:
+            self.session_requested_data.add(requested_data_key)
+
         duration_string = "1 Y"
         last = self.data_handler.get_max_stored_date(requested_data, ticker)
         if last is not None:
@@ -81,8 +94,12 @@ class IBData(IBDataWrapper, IBDataClient):
 
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
-        else: # HV
+        elif requested_data == "HV":
             what_to_show = "HISTORICAL_VOLATILITY"
+        elif requested_data == "STOCK":
+            what_to_show = "ASK"
+        else:
+            raise RuntimeError("Unknown requested_data parameter")
 
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
@@ -100,6 +117,10 @@ class IBData(IBDataWrapper, IBDataClient):
                 break
             else:
                 time.sleep(1)
+
+
+    def reset_session_requested_data(self):
+        self.session_requested_data = set()
 
 
     def error(self, reqId:TickerId, errorCode:int, errorString:str):

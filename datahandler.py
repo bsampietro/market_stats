@@ -17,7 +17,12 @@ class DataHandler:
         self.remote = None
         if connect:
             self.remote = IBData(self)
-        
+
+        # smart saving variables
+        self.modified_iv = False
+        self.modified_hv = False
+        self.modified_stock = False
+
 
     # def save_data(self):
     #     with open('data.pk', 'wb') as f:
@@ -31,11 +36,17 @@ class DataHandler:
     #         self.implied_volatility = {}
 
     def save_data_json(self):
-        with open('data_implied_volatility.json', 'w') as f:
-            json.dump(self.implied_volatility, f)
+        if self.modified_iv:
+            with open('data_implied_volatility.json', 'w') as f:
+                json.dump(self.implied_volatility, f)
 
-        with open('data_historical_volatility.json', 'w') as f:
-            json.dump(self.historical_volatility, f)
+        if self.modified_hv:
+            with open('data_historical_volatility.json', 'w') as f:
+                json.dump(self.historical_volatility, f)
+
+        if self.modified_stock:
+            with open('stock.json', 'w') as f:
+                json.dump(self.stock, f)
 
     def load_data_json(self):
         try:
@@ -49,6 +60,12 @@ class DataHandler:
                 self.historical_volatility = json.load(f)
         except (JSONDecodeError, FileNotFoundError) as e:
             self.historical_volatility = {}
+
+        try:
+            with open('stock.json', 'r') as f:
+                self.stock = json.load(f)
+        except (JSONDecodeError, FileNotFoundError) as e:
+            self.stock = {}
 
 
     def connected(self):
@@ -66,8 +83,8 @@ class DataHandler:
             self.remote.disconnect()
 
     def stop(self):
+        self.save()
         if self.connected():
-            self.save()
             self.disconnect()
         
 
@@ -83,11 +100,19 @@ class DataHandler:
         if not ticker in self.implied_volatility:
             self.implied_volatility[ticker] = {}
         self.implied_volatility[ticker][date] = value
+        self.modified_iv = True
 
     def store_hv(self, ticker, date, value):
         if not ticker in self.historical_volatility:
             self.historical_volatility[ticker] = {}
         self.historical_volatility[ticker][date] = value
+        self.modified_hv = True
+
+    def store_stock(self, ticker, date, value):
+        if not ticker in self.stock:
+            self.stock[ticker] = {}
+        self.stock[ticker][date] = value
+        self.modified_stock = True
 
 
     def request_historical_data(self, requested_data, ticker):
@@ -98,8 +123,12 @@ class DataHandler:
         data = None
         if requested_data == "IV":
             data = self.implied_volatility
-        else:
+        elif requested_data == "HV":
             data = self.historical_volatility
+        elif requested_data == "STOCK":
+            data = self.stock
+        else:
+            raise RuntimeError("Unknown requested_data parameter")
 
         try:
             if the_day is None:
@@ -111,17 +140,35 @@ class DataHandler:
             if silent:
                 return None
             elif self.connected():
-                self.request_historical_data(requested_data, ticker)
-                raise GettingInfoError(f"Getting {requested_data} data for ticker {ticker}...")
+                # self.request_historical_data(requested_data, ticker) # Now getting it before hand (bring_if_connected method)
+                raise GettingInfoError(f"{ticker} not stored, getting it in background...")
             else:
-                raise GettingInfoError("Unavailable info and remote not connected, please restart again with connect parameter")
+                raise GettingInfoError(f"{ticker} info not available and remote not connected")
 
 
     def delete_at(self, date):
         for key in self.implied_volatility.keys():
             self.implied_volatility[key].pop(date, None)
+        self.modified_iv = True
+
         for key in self.historical_volatility.keys():
             self.historical_volatility[key].pop(date, None)
+        self.modified_hv = True
+
+        for key in self.stock.keys():
+            self.stock[key].pop(date, None)
+        self.modified_stock = True
+
+        if self.connected():
+            self.remote.reset_session_requested_data()
+
+
+    def delete_back(self, back_days):
+        today = datetime.today()
+        for i in range(back_days):
+            delete_day = date_in_string(today - timedelta(days = i))
+            self.delete_at(delete_day)
+
 
     def wait_for_async_request(self):
         if self.connected():
