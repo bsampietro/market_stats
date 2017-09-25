@@ -257,7 +257,7 @@ if __name__ == "__main__":
                     # order by IVR%
                     rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
 
-            elif command[0] == "stock":
+            elif command[0] == "st":
 
                 header = ['Ticker',
                     'Date',
@@ -297,6 +297,21 @@ if __name__ == "__main__":
                 assert HV_RESULTS == (len(header) - 1)
 
                 rows = read_file_and_process(command[1], get_hv_row)
+
+            elif command[0] == "pair":
+                pair = Pair(data_handler, command[1].upper(), command[2].upper())
+                print(f"  Last: {pair.get_last_close()}")
+                print("")
+                print(f"  MA50: {pair.ma(50)}")
+                # print(f"  MA%: {pair.current_to_ma_diff(50)}")
+                print(f"  Min50: {pair.min(50)}")
+                print(f"  Max50: {pair.max(50)}")
+
+                print(f"  MA200: {pair.ma(200)}")
+                # print(f"  MA%: {pair.current_to_ma_diff(50)}")
+                print(f"  Min200: {pair.min(200)}")
+                print(f"  Max200: {pair.max(200)}")
+                continue
 
             else:
                 print("Command not recognized")

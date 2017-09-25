@@ -29,6 +29,35 @@ class Pair:
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 
 
+    @lru_cache(maxsize=None)
+    def ma(self, back_days):
+        closes = self.closes(back_days)
+        if len(closes) == 0:
+            return None
+        return statistics.mean(closes)
+
+
+    @lru_cache(maxsize=None)
+    def current_to_ma_diff(self, back_days):
+        return self.get_last_close() - self.ma(back_days)
+
+
+    @lru_cache(maxsize=None)
+    def get_last_close(self):
+        return self.closes(50)[-1] # using 50 for caching purposes
+
+
+    # def get_close_at(self, date):
+    #     return self.data_handler.find_in_data("STOCK", self.ticker, date)
+
+
+    def min(self, back_days):
+        return min(self.closes(back_days))
+
+
+    def max(self, back_days):
+        return max(self.closes(back_days))
+
 
     #private
 
@@ -49,6 +78,9 @@ class Pair:
                 closes_ticker1.append(close_ticker1)
                 closes_ticker2.append(close_ticker2)
 
+        closes_ticker1.reverse()
+        closes_ticker2.reverse()
+
         percentage_changes_ticker1 = []
         percentage_changes_ticker2 = []
 
@@ -59,3 +91,14 @@ class Pair:
             percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2[i-1] - 1) * 100)
 
         return (percentage_changes_ticker1, percentage_changes_ticker2)
+
+
+    @lru_cache(maxsize=None)
+    def closes(self, back_days):
+        percentage_changes1 = self.percentage_changes(back_days)[0]
+        percentage_changes2 = self.percentage_changes(back_days)[1]
+        substraction_closes = []
+        for i in range(len(percentage_changes1)):
+            substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
+
+        return substraction_closes
