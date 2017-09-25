@@ -79,7 +79,7 @@ def get_stock_header():
 
 
 # back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_file_and_process
+# as they are passed as parameter to read_symbol_file_and_process
 def get_stock_row(ticker, date, back_days = None):
     try:
         stock = Stock(data_handler, ticker)
@@ -120,7 +120,7 @@ def get_hv_header():
 
 
 # back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_file_and_process
+# as they are passed as parameter to read_symbol_file_and_process
 def get_hv_row(ticker, date, back_days = None):
     try:
         stock = Stock(data_handler, ticker)
@@ -136,6 +136,54 @@ def get_hv_row(ticker, date, back_days = None):
             stock.percentage_hv(365),
             stock.percentage_hv_average(),
             max(stock.percentage_period_hvs())]
+        return row
+    except GettingInfoError as e:
+        print(e)
+        return []
+
+
+def get_pairs_header():
+    header = ['Pair',
+        'Date',
+        '-',
+        'Last',
+        '-',
+        'Min50',
+        'Max50',
+        'Rank50',
+        'MA50',
+        '-',
+        'Min200',
+        'Max200',
+        'Rank200',
+        'MA200',
+        '-',
+        'Ratio',
+        'Corr']
+    return header
+
+
+def get_pairs_row(ticker1, ticker2):
+    try:
+        pair = Pair(data_handler, ticker1, ticker2)
+        date = '-' if data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(data_handler.get_max_stored_date("STOCK", ticker1))
+        row = [ticker1 + '-' + ticker2,
+            date,
+            '-',
+            pair.get_last_close(),
+            '-',
+            pair.min(50),
+            pair.max(50),
+            pair.rank(50),
+            pair.ma(50),
+            '-',
+            pair.min(200),
+            pair.max(200),
+            pair.rank(200),
+            pair.ma(200),
+            '-',
+            pair.stdev_ratio(365),
+            pair.correlation(365)]
         return row
     except GettingInfoError as e:
         print(e)
@@ -171,7 +219,7 @@ def bring_if_connected(ticker):
             data_handler.request_historical_data("STOCK", ticker)
 
 
-def read_file_and_process(command, get_row_method, back_days = None):
+def read_symbol_file_and_process(command, get_row_method, back_days = None):
     text_file = command + ".txt"
     rows = []
     if os.path.isfile(text_file):
@@ -191,6 +239,34 @@ def read_file_and_process(command, get_row_method, back_days = None):
         ticker = command.upper()
         bring_if_connected(ticker)
         rows.append(get_row_method(ticker, get_query_date(ticker), back_days))
+    return rows
+
+
+def read_pairs_file_and_process(command, get_row_method):
+    text_file = command[1] + ".txt"
+    rows = []
+    if os.path.isfile(text_file):
+        pairs = read_symbol_list(text_file)
+        for pair in pairs:
+            if pair == '---':
+                if len(rows) == 0:
+                    raise RuntimeError("Separator can not be on the first row")
+                rows.append(['-'] * len(rows[0]))
+                continue
+            tickers = pair.split('-')
+            bring_if_connected(tickers[0])
+            bring_if_connected(tickers[1])
+            row = get_row_method(tickers[0], tickers[1])
+            if len(row) == 0:
+                continue
+            rows.append(row)
+    else:
+        command[1] = command[1].upper()
+        command[2] = command[2].upper()
+        bring_if_connected(command[1])
+        bring_if_connected(command[2])
+        pair = Pair(data_handler, command[1], command[2])
+        rows.append(get_row_method(command[1], command[2]))
     return rows
 
 
@@ -244,7 +320,7 @@ if __name__ == "__main__":
                 print("Entries deleted")
                 continue
 
-            elif command[0] == "" or command[1] == "":
+            elif command[0] == "":
                 continue
 
             elif command[0] == "corr":
@@ -280,7 +356,7 @@ if __name__ == "__main__":
                     except ValueError:
                         pass
 
-                rows = read_file_and_process(command[1], get_iv_row, back_days)
+                rows = read_symbol_file_and_process(command[1], get_iv_row, back_days)
                 if command[2] != "" and command[3] == "ord":
                     # order by IVR%
                     rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
@@ -289,7 +365,7 @@ if __name__ == "__main__":
 
                 header = get_stock_header()
 
-                rows = read_file_and_process(command[1], get_stock_row)
+                rows = read_symbol_file_and_process(command[1], get_stock_row)
                 if command[2] == "ord":
                     # order by MA50%
                     rows.sort(key = lambda row: row[8] if isinstance(row[8], (int, float)) else 0)
@@ -298,22 +374,13 @@ if __name__ == "__main__":
 
                 header = get_hv_header()
 
-                rows = read_file_and_process(command[1], get_hv_row)
+                rows = read_symbol_file_and_process(command[1], get_hv_row)
 
             elif command[0] == "pair":
-                pair = Pair(data_handler, command[1].upper(), command[2].upper())
-                print(f"  Last: {pair.get_last_close()}")
-                print("")
-                print(f"  MA50: {pair.ma(50)}")
-                # print(f"  MA%: {pair.current_to_ma_diff(50)}")
-                print(f"  Min50: {pair.min(50)}")
-                print(f"  Max50: {pair.max(50)}")
 
-                print(f"  MA200: {pair.ma(200)}")
-                # print(f"  MA%: {pair.current_to_ma_diff(50)}")
-                print(f"  Min200: {pair.min(200)}")
-                print(f"  Max200: {pair.max(200)}")
-                continue
+                header = get_pairs_header()
+
+                rows = read_pairs_file_and_process(command, get_pairs_row)
 
             else:
                 print("Command not recognized")

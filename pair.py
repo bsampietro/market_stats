@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-
 from functools import lru_cache
-from util import *
 import statistics
 import math
+
+from util import *
+from errors import *
 
 class Pair:
     def __init__(self, data_handler, ticker1, ticker2):
@@ -42,21 +43,32 @@ class Pair:
         return self.get_last_close() - self.ma(back_days)
 
 
-    @lru_cache(maxsize=None)
     def get_last_close(self):
         return self.closes(50)[-1] # using 50 for caching purposes
 
 
-    # def get_close_at(self, date):
-    #     return self.data_handler.find_in_data("STOCK", self.ticker, date)
-
-
+    @lru_cache(maxsize=None)
     def min(self, back_days):
         return min(self.closes(back_days))
 
 
+    @lru_cache(maxsize=None)
     def max(self, back_days):
         return max(self.closes(back_days))
+
+
+    @lru_cache(maxsize=None)
+    def midpoint(self, back_days):
+        return (self.max(back_days) + self.min(back_days)) / 2
+
+
+    @lru_cache(maxsize=None)
+    def rank(self, back_days):
+        if self.get_last_close() > self.midpoint(back_days):
+            return (self.get_last_close() - self.midpoint(back_days)) / (self.max(back_days) - self.midpoint(back_days)) * 100
+        else:
+            return (self.midpoint(back_days) - self.get_last_close()) / (self.min(back_days) - self.midpoint(back_days)) * 100
+        # return self.to_min(back_days) / (self.max(back_days) - self.min(back_days)) * 100
 
 
     #private
@@ -66,7 +78,7 @@ class Pair:
         max_date_ticker1 = self.data_handler.get_max_stored_date("STOCK", self.ticker1)
         max_date_ticker2 = self.data_handler.get_max_stored_date("STOCK", self.ticker2)
         if max_date_ticker1 is None or max_date_ticker2 is None or max_date_ticker1 != max_date_ticker2:
-            return ([], [])
+            raise GettingInfoError(f"{self.ticker1}-{self.ticker2}: Not available data for pairs percentage change calculation")
 
         closes_ticker1 = []
         closes_ticker2 = []
