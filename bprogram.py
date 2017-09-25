@@ -11,6 +11,7 @@ from iv import *
 from hv import *
 from mixed_vs import *
 from stock import *
+from pair import *
 
 from texttable import Texttable
 
@@ -59,7 +60,10 @@ def get_stock_row(ticker, date, back_days = None):
             stock.current_to_ma_percentage(date, 50),
             '-',
             stock.ma(200),
-            stock.current_to_ma_percentage(date, 200)]
+            stock.current_to_ma_percentage(date, 200),
+            '-',
+            stock.min(200),
+            stock.max(200)]
         assert len(row) - 1 == STOCK_RESULTS
         return row
     except GettingInfoError as e:
@@ -80,8 +84,10 @@ def get_hv_row(ticker, date, back_days = None):
             stock.hv_average(),
             max(stock.period_hvs()),
             '-',
-            iv.period_average(365) / stock.hv_average(),
-            iv.get_at(date) / stock.hv_average()]
+            stock.percentage_hv(30),
+            stock.percentage_hv(365),
+            stock.percentage_hv_average(),
+            max(stock.percentage_period_hvs())]
         assert len(row) - 1 == HV_RESULTS
         return row
     except GettingInfoError as e:
@@ -126,7 +132,7 @@ def read_file_and_process(command, get_row_method, back_days = None):
     text_file = command + ".txt"
     rows = []
     if os.path.isfile(text_file):
-        tickers = read_stock_list(text_file)
+        tickers = read_symbol_list(text_file)
         for ticker in tickers:
             if ticker == '---':
                 if len(rows) == 0:
@@ -152,8 +158,8 @@ connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 DATA_RESULTS = 10 # Number of main data rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-STOCK_RESULTS = 8 + 3 # Number of stock rows besides the ticker + separators
-HV_RESULTS = 7 + 1 # Number of hv rows besides the ticker + separators
+STOCK_RESULTS = 10 + 4 # Number of stock rows besides the ticker + separators
+HV_RESULTS = 9 + 1 # Number of hv rows besides the ticker + separators
 
 # Main method
 if __name__ == "__main__":
@@ -201,7 +207,25 @@ if __name__ == "__main__":
             elif command[0] == "" or command[1] == "":
                 continue
 
-            elif command[0] == "v":
+            elif command[0] == "corr":
+                pair = Pair(data_handler, command[1].upper(), command[2].upper())
+                print(f"  Corr: {format(pair.correlation(365), '.2f')}")
+                print(f"  Beta: {format(pair.beta(365), '.2f')}")
+                continue
+
+            elif command[0] == "corrs":
+                symbols = read_symbol_list(command[1] + '.txt')
+                for symbol1 in symbols:
+                    print(symbol1)
+                    for symbol2 in symbols:
+                        if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
+                            continue
+                        pair = Pair(data_handler, symbol2, symbol1)
+                        if pair.correlation(365) > 0.60:
+                            print(f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}")
+                continue
+
+            elif command[0] == "vol":
 
                 header = ['Ticker',
                     'Date',
@@ -233,7 +257,7 @@ if __name__ == "__main__":
                     # order by IVR%
                     rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
 
-            elif command[0] == "s":
+            elif command[0] == "stock":
 
                 header = ['Ticker',
                     'Date',
@@ -246,7 +270,10 @@ if __name__ == "__main__":
                     'MA50%',
                     '-',
                     'MA200',
-                    'MA200%']
+                    'MA200%',
+                    '-',
+                    'Min200',
+                    'Max200']
                 assert STOCK_RESULTS == (len(header) - 1)
 
                 rows = read_file_and_process(command[1], get_stock_row)
@@ -254,7 +281,7 @@ if __name__ == "__main__":
                     # order by MA50%
                     rows.sort(key = lambda row: row[8] if isinstance(row[8], (int, float)) else 0)
 
-            elif command[0] == "hv":
+            elif command[0] == "hvol":
 
                 header = ['Ticker',
                     'Date',
@@ -263,14 +290,17 @@ if __name__ == "__main__":
                     'HVavg',
                     'MaxHV',
                     '-',
-                    'IVavg2HVavg',
-                    'IV2HVavg']
+                    'HV30%',
+                    'HV365%',
+                    'HVavg%',
+                    'MaxHV%']
                 assert HV_RESULTS == (len(header) - 1)
 
                 rows = read_file_and_process(command[1], get_hv_row)
 
             else:
                 print("Command not recognized")
+                continue
 
             t = Texttable(max_width = 0)
             t.set_precision(2)

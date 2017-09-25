@@ -3,6 +3,7 @@ sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
 from ibapi.contract import *
 
 from datetime import datetime, timedelta
+import statistics
 
 def get_basic_contract(symbol):
     contract = Contract()
@@ -56,24 +57,29 @@ def date_in_string(date):
     else:
         raise RuntimeError("Bruno: the_day argument is of wrong type")
 
-def read_stock_list(path):
-    stock_list = []
-    with open(path) as stocks:
-        for stock in stocks:
-            stock = stock.strip()
-            if stock != '' and stock[0] != '#':
-                stock_list.append(stock)
-    return stock_list
+def read_symbol_list(path):
+    symbol_list = []
+    with open(path) as symbols:
+        for symbol in symbols:
+            symbol = symbol.strip()
+            if symbol != '' and symbol[0] != '#':
+                symbol_list.append(symbol)
+    return symbol_list
 
-    # stock_list = read_stock_list("/home/bruno/source/python/IB/stock_list.txt")
+def covariance(data1, data2):
+    if len(data1) != len(data2):
+        raise RuntimeError("Covariance lists should have the same lenghts")
 
-    # # use stock list here ...
+    data1_mean = statistics.mean(data1)
+    data2_mean = statistics.mean(data2)
 
-    # print(str(stock_list))
-    # for stock in stock_list:
-    #     print(stock)
+    sum = 0
+    for i in range(len(data1)):
+        sum += ((data1[i] - data1_mean) * (data2[i] - data2_mean))
+
+    return sum / (len(data1) - 1)
 
 def get_option_expiration(date):
     day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
     return datetime(date.year, date.month, day)
-# print option_expiration(datetime.today())
+

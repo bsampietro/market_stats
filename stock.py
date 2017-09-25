@@ -9,6 +9,9 @@ def calculate_hv(closes):
     # return (statistics.stdev(closes) / closes[-1]) * 100 * math.sqrt(252/len(closes))
     return (statistics.stdev(closes) / statistics.mean(closes)) * 100 * math.sqrt(252/len(closes))
 
+def calculate_percentage_hv(percentage_changes):
+    return statistics.stdev(percentage_changes) * math.sqrt(252/len(percentage_changes))
+
 class Stock:
     def __init__(self, data_handler, ticker):
         self.data_handler = data_handler
@@ -17,16 +20,6 @@ class Stock:
 
     def hv(self, back_days):
         return calculate_hv(self.closes(back_days))
-
-
-    # def percentage_hv(self, back_days):
-        # nr_of_closes = len(closes)
-        # percentage_changes = []
-        # for i in range(nr_of_closes):
-        #     if i == 0:
-        #         continue
-        #     percentage_changes.append((closes[i] / closes[i-1] - 1) * 100)
-        # return statistics.stdev(percentage_changes) * math.sqrt(365/back_days)
 
 
     @lru_cache(maxsize=None)
@@ -51,16 +44,43 @@ class Stock:
         return statistics.mean(self.closes(back_days))
 
 
-    def get_close_at(self, date):
-        return self.data_handler.find_in_data("STOCK", self.ticker, date)
-
-
     def current_to_ma_percentage(self, date, back_days):
         return (float(self.get_close_at(date)) / self.ma(back_days) - 1.0) * 100
 
 
-    # private
+    def get_close_at(self, date):
+        return self.data_handler.find_in_data("STOCK", self.ticker, date)
 
+
+    def min(self, back_days):
+        return min(self.closes(back_days))
+
+
+    def max(self, back_days):
+        return max(self.closes(back_days))
+
+
+    @lru_cache(maxsize=None)
+    def percentage_hv(self, back_days):
+        return calculate_percentage_hv(self.percentage_changes(back_days))
+
+
+    @lru_cache(maxsize=None)
+    def percentage_period_hvs(self):
+        percentage_changes = self.percentage_changes(365)
+        hvs = []
+        for i in range(len(percentage_changes) - 21):
+            monthly_percentage_changes = percentage_changes[i:i+21]
+            hvs.append(calculate_percentage_hv(monthly_percentage_changes))
+        return hvs
+
+
+    @lru_cache(maxsize=None)
+    def percentage_hv_average(self):
+        return statistics.mean(self.percentage_period_hvs())
+
+
+    # private
 
     @lru_cache(maxsize=None)
     def closes(self, back_days):
@@ -76,3 +96,14 @@ class Stock:
                 closes.append(close)
         closes.reverse()
         return closes
+
+
+    @lru_cache(maxsize=None)
+    def percentage_changes(self, back_days):
+        closes = self.closes(back_days)
+        percentage_changes = []
+        for i in range(len(closes)):
+            if i == 0:
+                continue
+            percentage_changes.append((closes[i] / closes[i-1] - 1) * 100)
+        return percentage_changes
