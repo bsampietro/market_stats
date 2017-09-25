@@ -19,6 +19,22 @@ import os.path
 
 
 # Helper methods
+def get_iv_header():
+    header = ['Ticker',
+        'Date',
+        'IV',
+        'IV2IVavg',
+        'IV2HVavg',
+        'IVavg',
+        'HVavg',
+        'Avg2Avg',
+        'IV2HV-',
+        'IV2HVdf',
+        '-', 
+        'IVR']
+    header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
+    return header
+
 def get_iv_row(ticker, date, back_days):
     try:
         iv = IV(data_handler, ticker)
@@ -35,13 +51,31 @@ def get_iv_row(ticker, date, back_days):
             mixed_vs.iv_average_to_hv_average(back_days),
             mixed_vs.negative_difference_ratio(back_days),
             mixed_vs.difference_average(back_days)]
-        assert len(row) == DATA_RESULTS
         row += ['-']
         row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
         return row
     except GettingInfoError as e:
         print(e)
-        return empty_row(ticker, IVR_RESULTS + DATA_RESULTS)
+        return []
+
+
+def get_stock_header():
+    header = ['Ticker',
+        'Date',
+        'Close',
+        '-',
+        'MA30',
+        'MA30%',
+        '-',
+        'MA50',
+        'MA50%',
+        '-',
+        'MA200',
+        'MA200%',
+        '-',
+        'Min200',
+        'Max200']
+    return header
 
 
 # back_days parameter added for compliance with get_xxx_row methods
@@ -64,11 +98,25 @@ def get_stock_row(ticker, date, back_days = None):
             '-',
             stock.min(200),
             stock.max(200)]
-        assert len(row) - 1 == STOCK_RESULTS
         return row
     except GettingInfoError as e:
         print(e)
-        return empty_row(ticker, STOCK_RESULTS)
+        return []
+
+
+def get_hv_header():
+    header = ['Ticker',
+        'Date',
+        'HV30',
+        'HV365',
+        'HVavg',
+        'MaxHV',
+        '-',
+        'HV30%',
+        'HV365%',
+        'HVavg%',
+        'MaxHV%']
+    return header
 
 
 # back_days parameter added for compliance with get_xxx_row methods
@@ -88,15 +136,10 @@ def get_hv_row(ticker, date, back_days = None):
             stock.percentage_hv(365),
             stock.percentage_hv_average(),
             max(stock.percentage_period_hvs())]
-        assert len(row) - 1 == HV_RESULTS
         return row
     except GettingInfoError as e:
         print(e)
-        return empty_row(ticker, STOCK_RESULTS)
-
-
-def empty_row(ticker, blank_columns):
-    return [ticker] + ['-'] * blank_columns
+        return []
 
 
 def get_query_date(ticker):
@@ -137,11 +180,11 @@ def read_file_and_process(command, get_row_method, back_days = None):
             if ticker == '---':
                 if len(rows) == 0:
                     raise RuntimeError("Separator can not be on the first row")
-                rows.append(empty_row(ticker, len(rows[0]) - 1))
+                rows.append(['-'] * len(rows[0]))
                 continue
             bring_if_connected(ticker)
             row = get_row_method(ticker, get_query_date(ticker), back_days)
-            if row[1] == '-' and len(rows) > 0:
+            if len(row) == 0:
                 continue
             rows.append(row)
     else:
@@ -156,10 +199,7 @@ def read_file_and_process(command, get_row_method, back_days = None):
 data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
-DATA_RESULTS = 10 # Number of main data rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-STOCK_RESULTS = 10 + 4 # Number of stock rows besides the ticker + separators
-HV_RESULTS = 9 + 1 # Number of hv rows besides the ticker + separators
 
 # Main method
 if __name__ == "__main__":
@@ -211,6 +251,7 @@ if __name__ == "__main__":
                 pair = Pair(data_handler, command[1].upper(), command[2].upper())
                 print(f"  Corr: {format(pair.correlation(365), '.2f')}")
                 print(f"  Beta: {format(pair.beta(365), '.2f')}")
+                print(f"  stdev_ratio: {format(pair.stdev_ratio(365), '.2f')}")
                 continue
 
             elif command[0] == "corrs":
@@ -227,20 +268,7 @@ if __name__ == "__main__":
 
             elif command[0] == "vol":
 
-                header = ['Ticker',
-                    'Date',
-                    'IV',
-                    'IV2IVavg',
-                    'IV2HVavg',
-                    'IVavg',
-                    'HVavg',
-                    'Avg2Avg',
-                    'IV2HV-',
-                    'IV2HVdf',
-                    '-', 
-                    'IVR']
-                assert DATA_RESULTS == (len(header) - 2)
-                header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
+                header = get_iv_header()
 
                 back_days = BACK_DAYS
                 if command[2] != "":
@@ -259,22 +287,7 @@ if __name__ == "__main__":
 
             elif command[0] == "st":
 
-                header = ['Ticker',
-                    'Date',
-                    'Close',
-                    '-',
-                    'MA30',
-                    'MA30%',
-                    '-',
-                    'MA50',
-                    'MA50%',
-                    '-',
-                    'MA200',
-                    'MA200%',
-                    '-',
-                    'Min200',
-                    'Max200']
-                assert STOCK_RESULTS == (len(header) - 1)
+                header = get_stock_header()
 
                 rows = read_file_and_process(command[1], get_stock_row)
                 if command[2] == "ord":
@@ -283,18 +296,7 @@ if __name__ == "__main__":
 
             elif command[0] == "hvol":
 
-                header = ['Ticker',
-                    'Date',
-                    'HV30',
-                    'HV365',
-                    'HVavg',
-                    'MaxHV',
-                    '-',
-                    'HV30%',
-                    'HV365%',
-                    'HVavg%',
-                    'MaxHV%']
-                assert HV_RESULTS == (len(header) - 1)
+                header = get_hv_header()
 
                 rows = read_file_and_process(command[1], get_hv_row)
 
