@@ -159,7 +159,9 @@ def get_pairs_header():
         'Rank50',
         '-',
         'VRatio',
-        'Corr']
+        'Corr',
+        '-']
+    header += ['-'] * 5
     return header
 
 
@@ -174,16 +176,23 @@ def get_pairs_row(ticker1, ticker2):
             pair.ma(200),
             pair.min(200),
             pair.max(200),
-            pair.rank(200),
+            pair.current_rank(200),
             '-',
             pair.get_last_close(50),
             pair.ma(50),
             pair.min(50),
             pair.max(50),
-            pair.rank(50),
+            pair.current_rank(50),
             '-',
             pair.stdev_ratio(365),
-            pair.correlation(365)]
+            pair.correlation(365),
+            '-']
+        # ranks = pair.period_ranks(50)[-5:]
+        # ranks.reverse()
+        # row += ranks
+        closes = pair.closes(50)[-5:]
+        closes.reverse()
+        row += closes
         return row
     except GettingInfoError as e:
         print(e)

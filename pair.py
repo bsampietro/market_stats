@@ -13,6 +13,8 @@ class Pair:
         self.ticker2 = ticker2
 
 
+    # -------- Correlation part -------
+
     @lru_cache(maxsize=None)
     def correlation(self, back_days):
         changes = self.percentage_changes(back_days)
@@ -30,6 +32,23 @@ class Pair:
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 
 
+    # -------- Pairs part ----------
+
+    @lru_cache(maxsize=None)
+    def closes(self, back_days):
+        percentage_changes1 = self.accumulative_percentage_changes(back_days)[0]
+        percentage_changes2 = self.accumulative_percentage_changes(back_days)[1]
+        substraction_closes = []
+        for i in range(len(percentage_changes1)):
+            substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
+
+        return substraction_closes
+
+
+    def get_last_close(self, back_days):
+        return self.closes(back_days)[-1]
+
+
     @lru_cache(maxsize=None)
     def ma(self, back_days):
         closes = self.closes(back_days)
@@ -43,10 +62,6 @@ class Pair:
         return self.get_last_close(back_days) - self.ma(back_days)
 
 
-    def get_last_close(self, back_days):
-        return self.closes(back_days)[-1] # using 50 for caching purposes
-
-
     @lru_cache(maxsize=None)
     def min(self, back_days):
         return min(self.closes(back_days))
@@ -58,19 +73,19 @@ class Pair:
 
 
     @lru_cache(maxsize=None)
-    def midpoint(self, back_days):
-        return (self.max(back_days) + self.min(back_days)) / 2
+    def current_rank(self, back_days):
+        return self.calculate_rank(self.get_last_close(back_days), back_days)
 
 
     @lru_cache(maxsize=None)
-    def rank(self, back_days):
-        if self.get_last_close(back_days) > self.midpoint(back_days):
-            return (self.get_last_close(back_days) - self.midpoint(back_days)) / (self.max(back_days) - self.midpoint(back_days)) * 100
-        else:
-            return -(self.midpoint(back_days) - self.get_last_close(back_days)) / (self.midpoint(back_days) - self.min(back_days)) * 100
+    def period_ranks(self, back_days):
+        ranks = []
+        for close in self.closes(back_days):
+            ranks.append(self.calculate_rank(close, back_days))
+        return ranks
 
 
-    #private
+    # PRIVATE
 
     @lru_cache(maxsize=None)
     def percentage_changes(self, back_days):
@@ -122,13 +137,11 @@ class Pair:
         return (acc1, acc2)
 
 
+    def calculate_rank(self, close, back_days):
+        min_max_midpoint_distance = self.max(back_days) - self.midpoint(back_days) # = self.midpoint(back_days) - self.min(back_days)
+        return ((close - self.midpoint(back_days)) / min_max_midpoint_distance) * 100
+
 
     @lru_cache(maxsize=None)
-    def closes(self, back_days):
-        percentage_changes1 = self.accumulative_percentage_changes(back_days)[0]
-        percentage_changes2 = self.accumulative_percentage_changes(back_days)[1]
-        substraction_closes = []
-        for i in range(len(percentage_changes1)):
-            substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
-
-        return substraction_closes
+    def midpoint(self, back_days):
+        return (self.max(back_days) + self.min(back_days)) / 2
