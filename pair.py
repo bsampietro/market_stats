@@ -17,7 +17,7 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def correlation(self, back_days):
-        changes = self.percentage_changes(back_days)
+        changes = self.parallel_percentage_changes(back_days)
         return covariance(changes[0], changes[1]) / (statistics.stdev(changes[0]) * statistics.stdev(changes[1]))
 
 
@@ -28,7 +28,7 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def stdev_ratio(self, back_days):
-        changes = self.percentage_changes(back_days)
+        changes = self.parallel_percentage_changes(back_days)
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 
 
@@ -36,8 +36,8 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def closes(self, back_days):
-        percentage_changes1 = self.accumulative_percentage_changes(back_days)[0]
-        percentage_changes2 = self.accumulative_percentage_changes(back_days)[1]
+        percentage_changes1 = self.parallel_accumulative_percentage_changes(back_days)[0]
+        percentage_changes2 = self.parallel_accumulative_percentage_changes(back_days)[1]
         substraction_closes = []
         for i in range(len(percentage_changes1)):
             substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
@@ -88,7 +88,7 @@ class Pair:
     # PRIVATE
 
     @lru_cache(maxsize=None)
-    def percentage_changes(self, back_days):
+    def parallel_percentage_changes(self, back_days):
         max_date_ticker1 = self.data_handler.get_max_stored_date("STOCK", self.ticker1)
         max_date_ticker2 = self.data_handler.get_max_stored_date("STOCK", self.ticker2)
         if max_date_ticker1 is None or max_date_ticker2 is None or max_date_ticker1 != max_date_ticker2:
@@ -120,20 +120,17 @@ class Pair:
 
 
     @lru_cache(maxsize=None)
-    def accumulative_percentage_changes(self, back_days):
-        percentage_changes1 = self.percentage_changes(back_days)[0]
-        percentage_changes2 = self.percentage_changes(back_days)[1]
-        acc1 = [0]
-        acc2 = [0]
-        sum1 = 0
-        sum2 = 0
+    def parallel_accumulative_percentage_changes(self, back_days):
+        percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
+        percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
+        acc1 = [0]; acc2 = [0]
+        sum1 = 0; sum2 = 0
         for change in percentage_changes1:
             sum1 += change + sum1 * (change / 100.0) # Last part is to reflect compund percentage change
             acc1.append(sum1)
         for change in percentage_changes2:
             sum2 += change + sum2 * (change / 100.0) # Last part is to reflect compund percentage change
             acc2.append(sum2)
-
         return (acc1, acc2)
 
 
