@@ -366,6 +366,7 @@ if __name__ == "__main__":
                         pass
 
                 rows = read_symbol_file_and_process(command[1], get_iv_row, back_days)
+
                 if command[2] != "" and command[3] == "ord":
                     # order by IVR%
                     rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
@@ -375,6 +376,7 @@ if __name__ == "__main__":
                 header = get_stock_header()
 
                 rows = read_symbol_file_and_process(command[1], get_stock_row)
+
                 if command[2] == "ord":
                     # order by MA50%
                     rows.sort(key = lambda row: row[8] if isinstance(row[8], (int, float)) else 0)
@@ -390,6 +392,10 @@ if __name__ == "__main__":
                 header = get_pairs_header()
 
                 rows = read_pairs_file_and_process(command, get_pairs_row)
+
+                if command[2] == "ord" or command[3] == "ord":
+                    # order by rank
+                    rows.sort(key = lambda row: row[13] if isinstance(row[13], (int, float)) else 0)
 
             else:
                 print("Command not recognized")

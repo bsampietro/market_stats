@@ -128,10 +128,10 @@ class Pair:
         sum1 = 0
         sum2 = 0
         for change in percentage_changes1:
-            sum1 += change + sum1 * (change / 100) # Last part is to reflect compund percentage change
+            sum1 += change + sum1 * (change / 100.0) # Last part is to reflect compund percentage change
             acc1.append(sum1)
         for change in percentage_changes2:
-            sum2 += change + sum2 * (change / 100) # Last part is to reflect compund percentage change
+            sum2 += change + sum2 * (change / 100.0) # Last part is to reflect compund percentage change
             acc2.append(sum2)
 
         return (acc1, acc2)
