@@ -40,11 +40,11 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def current_to_ma_diff(self, back_days):
-        return self.get_last_close() - self.ma(back_days)
+        return self.get_last_close(back_days) - self.ma(back_days)
 
 
-    def get_last_close(self):
-        return self.closes(50)[-1] # using 50 for caching purposes
+    def get_last_close(self, back_days):
+        return self.closes(back_days)[-1] # using 50 for caching purposes
 
 
     @lru_cache(maxsize=None)
@@ -64,11 +64,10 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def rank(self, back_days):
-        if self.get_last_close() > self.midpoint(back_days):
-            return (self.get_last_close() - self.midpoint(back_days)) / (self.max(back_days) - self.midpoint(back_days)) * 100
+        if self.get_last_close(back_days) > self.midpoint(back_days):
+            return (self.get_last_close(back_days) - self.midpoint(back_days)) / (self.max(back_days) - self.midpoint(back_days)) * 100
         else:
-            return (self.midpoint(back_days) - self.get_last_close()) / (self.min(back_days) - self.midpoint(back_days)) * 100
-        # return self.to_min(back_days) / (self.max(back_days) - self.min(back_days)) * 100
+            return -(self.midpoint(back_days) - self.get_last_close(back_days)) / (self.midpoint(back_days) - self.min(back_days)) * 100
 
 
     #private
@@ -106,9 +105,28 @@ class Pair:
 
 
     @lru_cache(maxsize=None)
-    def closes(self, back_days):
+    def accumulative_percentage_changes(self, back_days):
         percentage_changes1 = self.percentage_changes(back_days)[0]
         percentage_changes2 = self.percentage_changes(back_days)[1]
+        acc1 = [0]
+        acc2 = [0]
+        sum1 = 0
+        sum2 = 0
+        for change in percentage_changes1:
+            sum1 += change + sum1 * (change / 100) # Last part is to reflect compund percentage change
+            acc1.append(sum1)
+        for change in percentage_changes2:
+            sum2 += change + sum2 * (change / 100) # Last part is to reflect compund percentage change
+            acc2.append(sum2)
+
+        return (acc1, acc2)
+
+
+
+    @lru_cache(maxsize=None)
+    def closes(self, back_days):
+        percentage_changes1 = self.accumulative_percentage_changes(back_days)[0]
+        percentage_changes2 = self.accumulative_percentage_changes(back_days)[1]
         substraction_closes = []
         for i in range(len(percentage_changes1)):
             substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
