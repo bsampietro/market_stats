@@ -6,6 +6,8 @@ import math
 from util import *
 from errors import *
 
+import pygal
+
 class Pair:
     def __init__(self, data_handler, ticker1, ticker2):
         self.data_handler = data_handler
@@ -41,7 +43,6 @@ class Pair:
         substraction_closes = []
         for i in range(len(percentage_changes1)):
             substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
-
         return substraction_closes
 
 
@@ -85,6 +86,18 @@ class Pair:
         return ranks
 
 
+    def output_chart(self):
+        line_chart = pygal.Line()
+        line_chart.title = f"{self.ticker1}-{self.ticker2}"
+        line_chart.x_title = f"Ratio: {format(self.stdev_ratio(365), '.2f')} - Corr: {format(self.correlation(365), '.2f')}"
+        # line_chart.x_labels = map(str, range(0, 50))
+        # line_chart.add("50", self.closes(50))
+        line_chart.add("365", self.closes(365))
+        line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(365)[0])
+        line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(365)[1])
+        line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
+
+
     # PRIVATE
 
     @lru_cache(maxsize=None)
@@ -126,10 +139,10 @@ class Pair:
         acc1 = [0]; acc2 = [0]
         sum1 = 0; sum2 = 0
         for change in percentage_changes1:
-            sum1 += change + sum1 * (change / 100.0) # Last part is to reflect compund percentage change
+            sum1 += change
             acc1.append(sum1)
         for change in percentage_changes2:
-            sum2 += change + sum2 * (change / 100.0) # Last part is to reflect compund percentage change
+            sum2 += change
             acc2.append(sum2)
         return (acc1, acc2)
 

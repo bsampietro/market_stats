@@ -3,6 +3,7 @@ import sys
 import logging
 
 from datetime import datetime, date
+import os.path
 
 from util import *
 from datahandler import *
@@ -14,9 +15,6 @@ from stock import *
 from pair import *
 
 from texttable import Texttable
-
-import os.path
-
 
 # Helper methods
 def get_iv_header():
@@ -168,6 +166,7 @@ def get_pairs_header():
 def get_pairs_row(ticker1, ticker2):
     try:
         pair = Pair(data_handler, ticker1, ticker2)
+        pair.output_chart() # saves the chart in /media/ramd - absolutely independent from this method
         date = '-' if data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
             date,
@@ -347,8 +346,14 @@ if __name__ == "__main__":
                         if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
                             continue
                         pair = Pair(data_handler, symbol2, symbol1)
-                        if pair.correlation(365) > 0.60:
+                        if pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60:
                             print(f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}")
+                continue
+
+            elif command[0] == "chart":
+                if command[1] == "pair":
+                    pair = Pair(data_handler, command[2].upper(), command[3].upper())
+                    pair.output_chart()
                 continue
 
             elif command[0] == "vol":
