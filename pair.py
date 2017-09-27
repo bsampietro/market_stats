@@ -9,10 +9,14 @@ from errors import *
 import pygal
 
 class Pair:
-    def __init__(self, data_handler, ticker1, ticker2):
+    def __init__(self, data_handler, ticker1, ticker2, fixed_stdev_ratio = None):
         self.data_handler = data_handler
         self.ticker1 = ticker1
         self.ticker2 = ticker2
+        try:
+            self.fixed_stdev_ratio = float(fixed_stdev_ratio)
+        except (ValueError, TypeError) as e:
+            self.fixed_stdev_ratio = None
 
 
     # -------- Correlation part -------
@@ -30,6 +34,8 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def stdev_ratio(self, back_days):
+        if self.fixed_stdev_ratio != None:
+            return self.fixed_stdev_ratio
         changes = self.parallel_percentage_changes(back_days)
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 

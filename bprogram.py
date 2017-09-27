@@ -163,9 +163,9 @@ def get_pairs_header():
     return header
 
 
-def get_pairs_row(ticker1, ticker2):
+def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
     try:
-        pair = Pair(data_handler, ticker1, ticker2)
+        pair = Pair(data_handler, ticker1, ticker2, fixed_stdev_ratio)
         pair.output_chart() # saves the chart in /media/ramd - absolutely independent from this method
         date = '-' if data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
@@ -261,10 +261,10 @@ def read_pairs_file_and_process(command, get_row_method):
                     raise RuntimeError("Separator can not be on the first row")
                 rows.append(['-'] * len(rows[0]))
                 continue
-            tickers = pair.split('-')
-            bring_if_connected(tickers[0])
-            bring_if_connected(tickers[1])
-            row = get_row_method(tickers[0], tickers[1])
+            data = pair.split('-') + [None] * 5
+            bring_if_connected(data[0])
+            bring_if_connected(data[1])
+            row = get_row_method(data[0], data[1], data[2])
             if len(row) == 0:
                 continue
             rows.append(row)
@@ -273,8 +273,7 @@ def read_pairs_file_and_process(command, get_row_method):
         command[2] = command[2].upper()
         bring_if_connected(command[1])
         bring_if_connected(command[2])
-        pair = Pair(data_handler, command[1], command[2])
-        rows.append(get_row_method(command[1], command[2]))
+        rows.append(get_row_method(command[1], command[2], command[3]))
     return rows
 
 
@@ -352,7 +351,7 @@ if __name__ == "__main__":
 
             elif command[0] == "chart":
                 if command[1] == "pair":
-                    pair = Pair(data_handler, command[2].upper(), command[3].upper())
+                    pair = Pair(data_handler, command[2].upper(), command[3].upper(), command[4])
                     pair.output_chart()
                 continue
 
