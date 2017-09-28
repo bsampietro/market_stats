@@ -170,6 +170,20 @@ class DataHandler:
             self.delete_at(delete_day)
 
 
+    def delete_ticker(self, ticker):
+        self.implied_volatility.pop(ticker, None)
+        self.modified_iv = True
+
+        self.historical_volatility.pop(ticker, None)
+        self.modified_hv = True
+
+        self.stock.pop(ticker, None)
+        self.modified_stock = True
+
+        if self.connected():
+            self.remote.reset_session_requested_data()
+
+
     def wait_for_async_request(self):
         if self.connected():
             self.remote.wait_for_async_request()

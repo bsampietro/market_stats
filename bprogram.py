@@ -145,16 +145,16 @@ def get_pairs_header():
         'Date',
         '-',
         'Last200',
-        'MA200',
         'Min200',
         'Max200',
         'Rank200',
+        'MA200',
         '-',
         'Last50',
-        'MA50',
         'Min50',
         'Max50',
         'Rank50',
+        'MA50',
         '-',
         'VRatio',
         'Corr',
@@ -166,22 +166,21 @@ def get_pairs_header():
 def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
     try:
         pair = Pair(data_handler, ticker1, ticker2, fixed_stdev_ratio)
-        pair.output_chart() # saves the chart in /media/ramd - absolutely independent from this method
         date = '-' if data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
             pair.get_last_close(200),
-            pair.ma(200),
             pair.min(200),
             pair.max(200),
             pair.current_rank(200),
+            pair.ma(200),
             '-',
             pair.get_last_close(50),
-            pair.ma(50),
             pair.min(50),
             pair.max(50),
             pair.current_rank(50),
+            pair.ma(50),
             '-',
             pair.stdev_ratio(365),
             pair.correlation(365),
@@ -211,15 +210,17 @@ def get_query_date(ticker):
 
 def bring_if_connected(ticker):
     if connected:
-        max_stored_date = data_handler.get_max_stored_date("IV", ticker)
-        if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting IV data for ticker {ticker}...")
-            data_handler.request_historical_data("IV", ticker)
+        if ticker not in NO_OPTIONS:
+            max_stored_date = data_handler.get_max_stored_date("IV", ticker)
+            if (max_stored_date is None) or max_stored_date.date() < date.today():
+                print(f"Getting IV data for ticker {ticker}...")
+                data_handler.request_historical_data("IV", ticker)
 
-        max_stored_date = data_handler.get_max_stored_date("HV", ticker)
-        if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-            print(f"Getting HV data for ticker {ticker}...")
-            data_handler.request_historical_data("HV", ticker)
+        if ticker not in NO_OPTIONS:
+            max_stored_date = data_handler.get_max_stored_date("HV", ticker)
+            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+                print(f"Getting HV data for ticker {ticker}...")
+                data_handler.request_historical_data("HV", ticker)
 
         max_stored_date = data_handler.get_max_stored_date("STOCK", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
@@ -234,19 +235,19 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
         tickers = read_symbol_list(text_file)
         for ticker in tickers:
             if ticker == '---':
-                if len(rows) == 0:
-                    raise RuntimeError("Separator can not be on the first row")
-                rows.append(['-'] * len(rows[0]))
+                if len(rows) > 0:
+                    rows.append(['-'] * len(rows[0]))
                 continue
             bring_if_connected(ticker)
             row = get_row_method(ticker, get_query_date(ticker), back_days)
-            if len(row) == 0:
-                continue
-            rows.append(row)
+            if len(row) > 0:
+                rows.append(row)
     else:
         ticker = command.upper()
         bring_if_connected(ticker)
-        rows.append(get_row_method(ticker, get_query_date(ticker), back_days))
+        row = get_row_method(ticker, get_query_date(ticker), back_days)
+        if len(row) > 0:
+            rows.append(row)
     return rows
 
 
@@ -257,23 +258,23 @@ def read_pairs_file_and_process(command, get_row_method):
         pairs = read_symbol_list(text_file)
         for pair in pairs:
             if pair == '---':
-                if len(rows) == 0:
-                    raise RuntimeError("Separator can not be on the first row")
-                rows.append(['-'] * len(rows[0]))
+                if len(rows) > 0:
+                    rows.append(['-'] * len(rows[0]))
                 continue
             data = pair.split('-') + [None] * 5
-            bring_if_connected(data[0])
-            bring_if_connected(data[1])
-            row = get_row_method(data[0], data[1], data[2])
-            if len(row) == 0:
-                continue
-            rows.append(row)
+            ticker1 = data[0]; ticker2 = data[1]; stdev_ratio = data[2]
+            bring_if_connected(ticker1)
+            bring_if_connected(ticker2)
+            row = get_row_method(ticker1, ticker2, stdev_ratio)
+            if len(row) > 0:
+                rows.append(row)
     else:
-        command[1] = command[1].upper()
-        command[2] = command[2].upper()
-        bring_if_connected(command[1])
-        bring_if_connected(command[2])
-        rows.append(get_row_method(command[1], command[2], command[3]))
+        ticker1 = command[1].upper(); ticker2 = command[2].upper(); stdev_ratio = command[3]
+        bring_if_connected(ticker1)
+        bring_if_connected(ticker2)
+        row = get_row_method(ticker1, ticker2, stdev_ratio)
+        if len(row) > 0:
+            rows.append(row)
     return rows
 
 
@@ -283,6 +284,7 @@ data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
+NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA'] # securities that should not bring options data
 
 # Main method
 if __name__ == "__main__":
@@ -319,15 +321,30 @@ if __name__ == "__main__":
                     print(f"Exit with error: {e}")
                 break
 
+            if command[0] == "":
+                continue
+
+            elif command[0] == "help":
+                print("HELP")
+                print("delete [nr_of_back_days] => deletes current date or number of back days")
+                print("corr symbol1 symbol2")
+                print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
+                print("chart pair symbol1 symbol2 fixed_stdev_ratio")
+                print("vol file.txt|symbol [back_days] [ord]")
+                print("st file.txt [ord]")
+                print("hvol file.txt|symbol")
+                print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
+                continue
+
             elif command[0] == "delete":
                 if command[1] == "":
                     data_handler.delete_at(today_in_string())
                 else:
-                    data_handler.delete_back(int(command[1]))
+                    try:
+                        data_handler.delete_back(int(command[1]))
+                    except (ValueError, TypeError) as e:
+                        data_handler.delete_ticker(command[1].upper())
                 print("Entries deleted")
-                continue
-
-            elif command[0] == "":
                 continue
 
             elif command[0] == "corr":
@@ -351,6 +368,7 @@ if __name__ == "__main__":
 
             elif command[0] == "chart":
                 if command[1] == "pair":
+                    print("Remember to bring data before with the 'pair' command (if needed).")
                     pair = Pair(data_handler, command[2].upper(), command[3].upper(), command[4])
                     pair.output_chart()
                 continue
@@ -371,7 +389,7 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command[1], get_iv_row, back_days)
 
-                if command[2] != "" and command[3] == "ord":
+                if "ord" in command:
                     # order by IVR%
                     rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
 
@@ -397,9 +415,9 @@ if __name__ == "__main__":
 
                 rows = read_pairs_file_and_process(command, get_pairs_row)
 
-                if command[2] == "ord" or command[3] == "ord":
+                if "ord" in command:
                     # order by rank
-                    rows.sort(key = lambda row: row[13] if isinstance(row[13], (int, float)) else 0)
+                    rows.sort(key = lambda row: row[12] if isinstance(row[12], (int, float)) else 0)
 
             else:
                 print("Command not recognized")

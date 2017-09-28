@@ -96,11 +96,13 @@ class Pair:
         line_chart = pygal.Line()
         line_chart.title = f"{self.ticker1}-{self.ticker2}"
         line_chart.x_title = f"Ratio: {format(self.stdev_ratio(365), '.2f')} - Corr: {format(self.correlation(365), '.2f')}"
+        line_chart.show_dots = False
         # line_chart.x_labels = map(str, range(0, 50))
         # line_chart.add("50", self.closes(50))
         line_chart.add("365", self.closes(365))
         line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(365)[0])
         line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(365)[1])
+        # need to create pairs directory for storing and putting it into harddisk ?
         line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
 
 

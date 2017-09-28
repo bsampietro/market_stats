@@ -70,6 +70,7 @@ class IBData(IBDataWrapper, IBDataClient):
 
     # Client method wrappers
     def request_historical_data(self, requested_data, ticker):
+        # Remember queries in this session
         requested_data_key = f"{requested_data},{ticker}"
         if requested_data_key in self.session_requested_data:
             logging.getLogger().info(f"{requested_data_key} already requested")
@@ -77,30 +78,34 @@ class IBData(IBDataWrapper, IBDataClient):
         else:
             self.session_requested_data.add(requested_data_key)
 
+        # Setting query variables
         duration_string = "1 Y"
-        last = self.data_handler.get_max_stored_date(requested_data, ticker)
-        if last is not None:
-            delta = datetime.today() - last
-
-            if delta.days <= 0:
-                return
-            else:
-                duration_string = f"{delta.days + 1} D"
-        logging.getLogger().info(f"Last historical query duration string: {duration_string}")
-        
-        next_req_id = self.get_next_req_id()
-        self.req_id_to_stock_ticker_map[next_req_id] = ticker
-        self.req_id_to_requested_historical_data[next_req_id] = requested_data
-
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
         elif requested_data == "HV":
             what_to_show = "HISTORICAL_VOLATILITY"
         elif requested_data == "STOCK":
             what_to_show = "ASK"
+            duration_string = "2 Y"
         else:
             raise RuntimeError("Unknown requested_data parameter")
 
+        # Adjusting max duration_string query variable
+        last = self.data_handler.get_max_stored_date(requested_data, ticker)
+        if last is not None:
+            delta = datetime.today() - last
+            if delta.days <= 0:
+                return
+            else:
+                duration_string = f"{delta.days + 1} D"
+        logging.getLogger().info(f"Last historical query duration string: {duration_string}")
+        
+        # Class level mappings
+        next_req_id = self.get_next_req_id()
+        self.req_id_to_stock_ticker_map[next_req_id] = ticker
+        self.req_id_to_requested_historical_data[next_req_id] = requested_data
+
+        # Query
         self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
 

@@ -52,6 +52,12 @@ KRE
 FXY
 FXB
 
+#special
+PPLT
+DBA
+URA
+IEF
+
 #XLK
 #EWJ
 #UUP
