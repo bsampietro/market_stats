@@ -72,7 +72,12 @@ def get_stock_header():
         'MA200%',
         '-',
         'Min200',
-        'Max200']
+        'Max200',
+        '-',
+        'UpCl15',
+        'DoCl15',
+        'ConsUp15',
+        'ConsDwn15']
     return header
 
 
@@ -95,7 +100,13 @@ def get_stock_row(ticker, date, back_days = None):
             stock.current_to_ma_percentage(date, 200),
             '-',
             stock.min(200),
-            stock.max(200)]
+            stock.max(200),
+            '-',
+            stock.closes_nr(15, up = True),
+            stock.closes_nr(15, up = False),
+            stock.consecutive_nr(15, up = True),
+            stock.consecutive_nr(15, up = False)
+            ]
         return row
     except GettingInfoError as e:
         print(e)
@@ -355,16 +366,29 @@ if __name__ == "__main__":
                 print(f"  Vol ratio:   {format(pair.stdev_ratio(365), '.2f')}")
                 continue
 
-            elif command[0] == "corrs":
+            elif command[0] == "corrs" or command[0] == "uncorrs":
                 symbols = read_symbol_list(command[1] + '.txt')
+                text_output_file = open(f"/media/ramd/{'-'.join(command)}", "w")
                 for symbol1 in symbols:
                     print(symbol1)
+                    text_output_file.write(f"{symbol1}\n")
                     for symbol2 in symbols:
                         if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
                             continue
-                        pair = Pair(data_handler, symbol2, symbol1)
-                        if symbol1 in BETA_REFERENCES or pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60:
-                            print(f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}")
+                        try:
+                            pair = Pair(data_handler, symbol2, symbol1)
+                            out_string = f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}"
+                            if command[0] == "corrs":
+                                if symbol1 in BETA_REFERENCES or (pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60):
+                                    print(out_string)
+                                    text_output_file.write(f"{out_string}\n")
+                            else:
+                                if pair.correlation(365) > -0.20 and pair.correlation(365) < 0.20:
+                                    print(out_string)
+                                    text_output_file.write(f"{out_string}\n")
+                        except GettingInfoError as e:
+                            pass
+                text_output_file.close()
                 continue
 
             elif command[0] == "chart":
@@ -436,6 +460,9 @@ if __name__ == "__main__":
             print("Waiting for async request...")
             data_handler.wait_for_async_request()
             print(t.draw())
+
+            with open(f"/media/ramd/{'-'.join(command)}", "w") as f:
+                f.write(t.draw())
 
         except GettingInfoError as e:
             print(e)

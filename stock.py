@@ -80,6 +80,34 @@ class Stock:
         return statistics.mean(self.percentage_period_hvs())
 
 
+    def closes_nr(self, back_days, up):
+        if up:
+            return self.up_down_closes(back_days).count(1)
+        else:
+            return self.up_down_closes(back_days).count(-1)
+
+
+    def consecutive_nr(self, back_days, up):
+        consecutive = 0
+        max_consecutive = 0
+        for i in self.up_down_closes(back_days):
+            if up:
+                if i > 0:
+                    consecutive += 1
+                else:
+                    if consecutive > max_consecutive:
+                        max_consecutive = consecutive
+                    consecutive = 0
+            else:
+                if i < 0:
+                    consecutive += 1
+                else:
+                    if consecutive > max_consecutive:
+                        max_consecutive = consecutive
+                    consecutive = 0
+        return max_consecutive
+
+
     # private
 
     @lru_cache(maxsize=None)
@@ -102,8 +130,25 @@ class Stock:
     def percentage_changes(self, back_days):
         closes = self.closes(back_days)
         percentage_changes = []
+        percentage_change = 0
         for i in range(len(closes)):
             if i == 0:
                 continue
-            percentage_changes.append((closes[i] / closes[i-1] - 1) * 100)
+            # percentage_change += (closes[i] / closes[i-1] - 1) * 100 # accumulative
+            percentage_change = (closes[i] / closes[i-1] - 1) * 100 # non accumulative
+            percentage_changes.append(percentage_change)
         return percentage_changes
+
+
+    @lru_cache(maxsize=None)
+    def up_down_closes(self, back_days):
+        closes = self.closes(back_days)
+        up_down_closes = []
+        for i in range(len(closes)):
+            if i == 0:
+                continue
+            if closes[i] - closes[i-1] >= 0:
+                up_down_closes.append(1)
+            else:
+                up_down_closes.append(-1)
+        return up_down_closes
