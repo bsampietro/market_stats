@@ -57,6 +57,7 @@ PPLT
 DBA
 URA
 IEF
+JJC
 
 #XLK
 #EWJ

@@ -284,7 +284,8 @@ data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA'] # securities that should not bring options data
+NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'JJC'] # securities that should not bring options data
+BETA_REFERENCES = ["SPY"]
 
 # Main method
 if __name__ == "__main__":
@@ -349,9 +350,9 @@ if __name__ == "__main__":
 
             elif command[0] == "corr":
                 pair = Pair(data_handler, command[1].upper(), command[2].upper())
-                print(f"  Corr: {format(pair.correlation(365), '.2f')}")
-                print(f"  Beta: {format(pair.beta(365), '.2f')}")
-                print(f"  stdev_ratio: {format(pair.stdev_ratio(365), '.2f')}")
+                print(f"  Correlation: {format(pair.correlation(365), '.2f')}")
+                print(f"  Beta:        {format(pair.beta(365), '.2f')}")
+                print(f"  Vol ratio:   {format(pair.stdev_ratio(365), '.2f')}")
                 continue
 
             elif command[0] == "corrs":
@@ -362,7 +363,7 @@ if __name__ == "__main__":
                         if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
                             continue
                         pair = Pair(data_handler, symbol2, symbol1)
-                        if pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60:
+                        if symbol1 in BETA_REFERENCES or pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60:
                             print(f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}")
                 continue
 
@@ -389,9 +390,12 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command[1], get_iv_row, back_days)
 
-                if "ord" in command:
-                    # order by IVR%
-                    rows.sort(key = lambda row: row[11] if isinstance(row[11], (int, float)) else 25)
+                if command[3] == "ord" or command[3] != "":
+                    try:
+                        order_column = int(command[3])
+                    except (ValueError, TypeError) as e:
+                        order_column = 11 # order by IVR%
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25)
 
             elif command[0] == "st":
 

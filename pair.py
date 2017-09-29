@@ -47,8 +47,12 @@ class Pair:
         percentage_changes1 = self.parallel_accumulative_percentage_changes(back_days)[0]
         percentage_changes2 = self.parallel_accumulative_percentage_changes(back_days)[1]
         substraction_closes = []
+        positively_correlated = self.correlation(365) >= 0
         for i in range(len(percentage_changes1)):
-            substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
+            if positively_correlated:
+                substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
+            else:
+                substraction_closes.append(percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(365))
         return substraction_closes
 
 
