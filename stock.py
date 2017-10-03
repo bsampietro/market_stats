@@ -92,14 +92,14 @@ class Stock:
         max_consecutive = 0
         for i in self.up_down_closes(back_days):
             if up:
-                if i > 0:
+                if i == 1:
                     consecutive += 1
                 else:
                     if consecutive > max_consecutive:
                         max_consecutive = consecutive
                     consecutive = 0
             else:
-                if i < 0:
+                if i == -1:
                     consecutive += 1
                 else:
                     if consecutive > max_consecutive:
@@ -142,13 +142,12 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def up_down_closes(self, back_days):
-        closes = self.closes(back_days)
         up_down_closes = []
-        for i in range(len(closes)):
-            if i == 0:
-                continue
-            if closes[i] - closes[i-1] >= 0:
+        for change in self.percentage_changes(back_days):
+            if change >= 0.15:
                 up_down_closes.append(1)
-            else:
+            elif change <= -0.15:
                 up_down_closes.append(-1)
+            else:
+                up_down_closes.append(0)
         return up_down_closes

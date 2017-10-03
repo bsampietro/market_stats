@@ -28,6 +28,8 @@ def get_iv_header():
         'Avg2Avg',
         'IV2HV-',
         'IV2HVdf',
+        'CHV30',
+        'MMRank',
         '-', 
         'IVR']
     header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
@@ -38,6 +40,7 @@ def get_iv_row(ticker, date, back_days):
         iv = IV(data_handler, ticker)
         hv = HV(data_handler, ticker)
         mixed_vs = MixedVs(data_handler, iv, hv)
+        stock = Stock(data_handler, ticker)
 
         row = [ticker,
             date,
@@ -48,7 +51,9 @@ def get_iv_row(ticker, date, back_days):
             hv.period_average(back_days),
             mixed_vs.iv_average_to_hv_average(back_days),
             mixed_vs.negative_difference_ratio(back_days),
-            mixed_vs.difference_average(back_days)]
+            mixed_vs.difference_average(back_days),
+            stock.hv(30),
+            iv.mm_iv_rank(back_days)]
         row += ['-']
         row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
         return row
@@ -133,7 +138,6 @@ def get_hv_header():
 def get_hv_row(ticker, date, back_days = None):
     try:
         stock = Stock(data_handler, ticker)
-        iv = IV(data_handler, ticker)
         row = [ticker,
             date,
             stock.hv(30),
@@ -363,7 +367,7 @@ if __name__ == "__main__":
                 pair = Pair(data_handler, command[1].upper(), command[2].upper())
                 print(f"  Correlation: {format(pair.correlation(365), '.2f')}")
                 print(f"  Beta:        {format(pair.beta(365), '.2f')}")
-                print(f"  Vol ratio:   {format(pair.stdev_ratio(365), '.2f')}")
+                print(f"  Volat ratio: {format(pair.stdev_ratio(365), '.2f')}")
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
@@ -418,8 +422,8 @@ if __name__ == "__main__":
                     try:
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
-                        order_column = 11 # order by IVR%
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25)
+                        order_column = 13 # order by IVR%
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
 
             elif command[0] == "st":
 
@@ -436,6 +440,13 @@ if __name__ == "__main__":
                 header = get_hv_header()
 
                 rows = read_symbol_file_and_process(command[1], get_hv_row)
+
+                if command[2] == "ord" or command[2] != "":
+                    try:
+                        order_column = int(command[2])
+                    except (ValueError, TypeError) as e:
+                        order_column = 2 # order by HV30
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 5, reverse = True)
 
             elif command[0] == "pair":
 

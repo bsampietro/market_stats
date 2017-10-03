@@ -56,9 +56,19 @@ class IV:
 
     def current_to_average_ratio(self, date, back_days):
         return self.get_at(date) / self.period_average(back_days)
+
+
+    def mm_iv_rank(self, back_days):
+        iv = self.period_list(back_days)[0]
+        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
     
 
     # private
 
     def calculate_iv_rank(self, iv, back_days):
-        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
+        # return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
+        count = 0
+        for close in self.period_list(back_days):
+            if iv >= close:
+                count += 1
+        return count / len(self.period_list(back_days)) * 100
