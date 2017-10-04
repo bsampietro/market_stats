@@ -58,17 +58,23 @@ class IV:
         return self.get_at(date) / self.period_average(back_days)
 
 
-    def mm_iv_rank(self, back_days):
-        iv = self.period_list(back_days)[0]
-        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
+    def current_mm_iv_rank(self, back_days):
+        return self.calculate_mm_iv_rank(self.period_list(back_days)[0], back_days)
     
 
+    
     # private
 
+    
+    # IV rank based on percentiles
     def calculate_iv_rank(self, iv, back_days):
-        # return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
         count = 0
         for close in self.period_list(back_days):
             if iv >= close:
                 count += 1
         return count / len(self.period_list(back_days)) * 100
+
+
+    # IV rank based on min-max levels
+    def calculate_mm_iv_rank(self, iv, back_days):
+        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100

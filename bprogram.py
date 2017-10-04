@@ -53,7 +53,7 @@ def get_iv_row(ticker, date, back_days):
             mixed_vs.negative_difference_ratio(back_days),
             mixed_vs.difference_average(back_days),
             stock.hv(30),
-            iv.mm_iv_rank(back_days)]
+            iv.current_mm_iv_rank(back_days)]
         row += ['-']
         row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
         return row
