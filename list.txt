@@ -27,12 +27,12 @@ EEM
 FXI
 EWZ
 EWW
+RSX
 
 XRT
 XLF
 XLE
 
-#separator
 ---
 
 TBT
@@ -45,10 +45,12 @@ XBI
 XME
 XLP
 
-FEZ
 UNG
 KRE
 
+#Not very liquid
+FEZ
+EWY
 FXY
 FXB
 

@@ -40,10 +40,11 @@ class IV:
         return self.data_handler.find_in_data("IV", self.ticker, date) * 100
 
 
+    @lru_cache(maxsize=None)
     def period_iv_ranks(self, back_days, max_results):
         period_iv_ranks = []
         for iv in self.period_list(back_days):
-            period_iv_ranks.append(self.calculate_iv_rank(iv, back_days))
+            period_iv_ranks.append(self.calculate_mm_iv_rank(iv, back_days))
             if len(period_iv_ranks) == max_results:
                 break
         return period_iv_ranks
@@ -60,6 +61,10 @@ class IV:
 
     def current_mm_iv_rank(self, back_days):
         return self.calculate_mm_iv_rank(self.period_list(back_days)[0], back_days)
+
+
+    def current_percentile_iv_rank(self, back_days):
+        return self.calculate_percentile_iv_rank(self.period_list(back_days)[0], back_days)
     
 
     
@@ -67,7 +72,7 @@ class IV:
 
     
     # IV rank based on percentiles
-    def calculate_iv_rank(self, iv, back_days):
+    def calculate_percentile_iv_rank(self, iv, back_days):
         count = 0
         for close in self.period_list(back_days):
             if iv >= close:
