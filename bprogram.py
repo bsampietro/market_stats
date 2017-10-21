@@ -423,7 +423,7 @@ if __name__ == "__main__":
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
                         order_column = 13 # order by IVR%
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 30, reverse = True)
 
             elif command[0] == "st":
 
