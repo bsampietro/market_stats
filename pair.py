@@ -100,7 +100,7 @@ class Pair:
         line_chart = pygal.Line()
         line_chart.title = f"{self.ticker1}-{self.ticker2}"
         line_chart.x_title = f"Ratio: {format(self.stdev_ratio(365), '.2f')} - Corr: {format(self.correlation(365), '.2f')}"
-        line_chart.show_dots = False
+        # line_chart.show_dots = False
         # line_chart.x_labels = map(str, range(0, 50))
         # line_chart.add("50", self.closes(50))
         line_chart.add("365", self.closes(365))

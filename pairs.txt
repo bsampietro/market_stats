@@ -1,3 +1,4 @@
+SPY-DIA
 SPY-IWM
 SPY-QQQ
 SPY-XLF
@@ -12,5 +13,7 @@ FXY-GLD
 FXE-GLD
 FXY-TLT
 XLF-TBT
-# NOB spread
+# curve spreads (NOB, etc)
 IEF-TLT-0.3
+SHY-IEF-0.5
+SHY-TLT-0.16

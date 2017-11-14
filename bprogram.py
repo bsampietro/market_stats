@@ -23,11 +23,11 @@ def get_iv_header():
         'IV',
         'IV2IVavg',
         'IV2HVavg',
-        'IVavg',
-        'HVavg',
         'Avg2Avg',
         'IV2HV-',
-        'IV2HVdf',
+        'SPYCrr',
+        'SPY R',
+        'SPY RIV',
         'CHV30',
         'PerRnk',
         '-', 
@@ -41,17 +41,19 @@ def get_iv_row(ticker, date, back_days):
         hv = HV(data_handler, ticker)
         mixed_vs = MixedVs(data_handler, iv, hv)
         stock = Stock(data_handler, ticker)
+        spy_pair = Pair(data_handler, ticker, "SPY")
+        spy_iv = IV(data_handler, "SPY")
 
         row = [ticker,
             date,
             iv.get_at(date),
             iv.current_to_average_ratio(date, back_days),
             mixed_vs.iv_current_to_hv_average(date, back_days),
-            iv.period_average(back_days),
-            hv.period_average(back_days),
             mixed_vs.iv_average_to_hv_average(back_days),
             mixed_vs.negative_difference_ratio(back_days),
-            mixed_vs.difference_average(back_days),
+            spy_pair.correlation(back_days),
+            spy_pair.stdev_ratio(back_days),
+            iv.period_average(back_days) / spy_iv.period_average(back_days),
             stock.hv(30),
             iv.current_percentile_iv_rank(back_days)]
         row += ['-']
@@ -299,7 +301,7 @@ data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'JJC'] # securities that should not bring options data
+NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'JJC', 'SHY'] # securities that should not bring options data
 BETA_REFERENCES = ["SPY"]
 
 # Main method
