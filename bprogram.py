@@ -299,14 +299,13 @@ def read_pairs_file_and_process(command, get_row_method):
 
 def notional_quantity(ivr, spy_vol_ratio):
     ratio = 0
-    if ivr >= 30 and ivr <= 50:
-        ratio = 30 / spy_vol_ratio
-    elif ivr >=50 and ivr <= 70:
-        ratio = 45 / spy_vol_ratio
-    elif ivr >= 70:
-        ratio = 60 / spy_vol_ratio
+    if ivr >= 30:
+        plus = (ivr - 30) * MULTIPLIER
+        if plus < MIN_MONEY:
+            ratio = (MIN_MONEY + plus) / spy_vol_ratio
+        else:
+            ratio = (MIN_MONEY + MIN_MONEY) / spy_vol_ratio
     return round(ratio)
-
 
 
 # Global variables
@@ -316,6 +315,11 @@ IVR_RESULTS = 7 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
 NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'JJC', 'SHY'] # securities that should not bring options data
 BETA_REFERENCES = ["SPY"]
+MIN_MONEY = 30 # minimum money to put starting on 30 IVR
+# MULTIPLIER has to be so that with ivr of 70 or more,
+# the money is the double of MIN_MONEY, so 40 * MULTIPLIER = MIN_MONEY
+# check notional_quantity method
+MULTIPLIER = MIN_MONEY / 40.0 # 40 because: 70 ivr - 30 ivr
 
 # Main method
 if __name__ == "__main__":
