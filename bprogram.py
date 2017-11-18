@@ -28,6 +28,7 @@ def get_iv_header():
         'SPYCrr',
         'SPY R',
         'SPY RIV',
+        'Ntnl',
         'CHV30',
         'PerRnk',
         '-', 
@@ -54,6 +55,7 @@ def get_iv_row(ticker, date, back_days):
             spy_pair.correlation(back_days),
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
+            notional_quantity(iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)[0], spy_pair.stdev_ratio(back_days)),
             stock.hv(30),
             iv.current_percentile_iv_rank(back_days)]
         row += ['-']
@@ -295,6 +297,17 @@ def read_pairs_file_and_process(command, get_row_method):
     return rows
 
 
+def notional_quantity(ivr, spy_vol_ratio):
+    ratio = 0
+    if ivr >= 30 and ivr <= 50:
+        ratio = 30 / spy_vol_ratio
+    elif ivr >=50 and ivr <= 70:
+        ratio = 45 / spy_vol_ratio
+    elif ivr >= 70:
+        ratio = 60 / spy_vol_ratio
+    return round(ratio)
+
+
 
 # Global variables
 data_handler = None
@@ -424,7 +437,7 @@ if __name__ == "__main__":
                     try:
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
-                        order_column = 13 # order by IVR%
+                        order_column = 14 # order by IVR%
                     rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 30, reverse = True)
 
             elif command[0] == "st":
