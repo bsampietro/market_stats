@@ -13,6 +13,7 @@ from hv import *
 from mixed_vs import *
 from stock import *
 from pair import *
+from notional import *
 
 from texttable import Texttable
 
@@ -178,7 +179,7 @@ def get_pairs_header():
         'VRatio',
         'Corr',
         '-']
-    header += ['-'] * 5
+    header += ['-'] * 4
     return header
 
 
@@ -207,7 +208,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         # ranks = pair.period_ranks(50)[-5:]
         # ranks.reverse()
         # row += ranks
-        closes = pair.closes(50)[-5:]
+        closes = pair.closes(50)[-4:]
         closes.reverse()
         row += closes
         return row
@@ -297,29 +298,14 @@ def read_pairs_file_and_process(command, get_row_method):
     return rows
 
 
-def notional_quantity(ivr, spy_vol_ratio):
-    ratio = 0
-    if ivr >= 30:
-        plus = (ivr - 30) * MULTIPLIER
-        if plus < MIN_MONEY:
-            ratio = (MIN_MONEY + plus) / spy_vol_ratio
-        else:
-            ratio = (MIN_MONEY + MIN_MONEY) / spy_vol_ratio
-    return round(ratio)
-
 
 # Global variables
 data_handler = None
 connected = False
 IVR_RESULTS = 7 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
-NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'JJC', 'SHY'] # securities that should not bring options data
+NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'SHY'] # securities that should not bring options data
 BETA_REFERENCES = ["SPY"]
-MIN_MONEY = 30 # minimum money to put starting on 30 IVR
-# MULTIPLIER has to be so that with ivr of 70 or more,
-# the money is the double of MIN_MONEY, so 40 * MULTIPLIER = MIN_MONEY
-# check notional_quantity method
-MULTIPLIER = MIN_MONEY / 40.0 # 40 because: 70 ivr - 30 ivr
 
 # Main method
 if __name__ == "__main__":
@@ -442,7 +428,7 @@ if __name__ == "__main__":
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
                         order_column = 14 # order by IVR%
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 30, reverse = True)
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
 
             elif command[0] == "st":
 
