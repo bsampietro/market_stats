@@ -108,6 +108,10 @@ class Stock:
         return max_consecutive
 
 
+    def stdev(self, back_days):
+        return statistics.stdev(self.percentage_changes(back_days))
+
+
     # private
 
     @lru_cache(maxsize=None)

@@ -40,6 +40,10 @@ class Pair:
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 
 
+    def stdev(self, back_days):
+        return statistics.stdev(self.closes(back_days))
+
+
     # -------- Pairs part ----------
 
     @lru_cache(maxsize=None)

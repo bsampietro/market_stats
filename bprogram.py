@@ -30,7 +30,6 @@ def get_iv_header():
         'SPY R',
         'SPY RIV',
         'Ntnl',
-        'CHV30',
         '%Rnk',
         'WRnk',
         '-', 
@@ -58,7 +57,6 @@ def get_iv_row(ticker, date, back_days):
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
             notional_quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
-            stock.hv(30),
             iv.current_percentile_iv_rank(back_days),
             iv.current_weighted_iv_rank(back_days)]
         row += ['-']
@@ -178,8 +176,9 @@ def get_pairs_header():
         'Rank50',
         'MA50',
         '-',
-        'VRatio',
+        'VRat',
         'Corr',
+        'SPYVRat',
         '-']
     header += ['-'] * 4
     return header
@@ -206,6 +205,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
             '-',
             pair.stdev_ratio(365),
             pair.correlation(365),
+            pair.stdev(365) / Stock(data_handler, 'SPY').stdev(365),
             '-']
         # ranks = pair.period_ranks(50)[-5:]
         # ranks.reverse()
@@ -429,7 +429,7 @@ if __name__ == "__main__":
                     try:
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
-                        order_column = 13 # order by WRnk
+                        order_column = 12 # order by WRnk
                     rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
 
             elif command[0] == "st":
