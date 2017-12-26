@@ -65,6 +65,12 @@ class IV:
 
     def current_percentile_iv_rank(self, back_days):
         return self.calculate_percentile_iv_rank(self.period_list(back_days)[0], back_days)
+
+
+    # weighted average between min-max rank (2 weighted) and percentile rank (1 weighted)
+    @lru_cache(maxsize=None)
+    def current_weighted_iv_rank(self, back_days):
+        return (2 * self.current_mm_iv_rank(back_days) + self.current_percentile_iv_rank(back_days)) / 3.0
     
 
     

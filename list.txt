@@ -53,6 +53,7 @@ FEZ
 EWY
 FXY
 FXB
+EWJ
 
 #special
 PPLT
@@ -62,5 +63,4 @@ IEF
 JJC
 
 #XLK
-#EWJ
 #UUP

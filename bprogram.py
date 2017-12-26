@@ -32,6 +32,7 @@ def get_iv_header():
         'Ntnl',
         'CHV30',
         'PerRnk',
+        'WRnk',
         '-', 
         'IVR']
     header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
@@ -56,9 +57,10 @@ def get_iv_row(ticker, date, back_days):
             spy_pair.correlation(back_days),
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
-            notional_quantity(iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)[0], spy_pair.stdev_ratio(back_days)),
+            notional_quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
             stock.hv(30),
-            iv.current_percentile_iv_rank(back_days)]
+            iv.current_percentile_iv_rank(back_days),
+            iv.current_weighted_iv_rank(back_days)]
         row += ['-']
         row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
         return row
@@ -302,7 +304,7 @@ def read_pairs_file_and_process(command, get_row_method):
 # Global variables
 data_handler = None
 connected = False
-IVR_RESULTS = 7 # Number of historical IVR rows
+IVR_RESULTS = 6 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
 NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'SHY'] # securities that should not bring options data
 BETA_REFERENCES = ["SPY"]
@@ -427,7 +429,7 @@ if __name__ == "__main__":
                     try:
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
-                        order_column = 14 # order by IVR%
+                        order_column = 13 # order by WRnk
                     rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
 
             elif command[0] == "st":
