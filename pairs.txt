@@ -16,6 +16,6 @@ FXE-GLD
 FXY-TLT
 XLF-TBT
 # curve spreads (NOB, etc)
-IEF-TLT-0.3
+IEF-TLT-0.38
 SHY-IEF-0.5
-SHY-TLT-0.16
+SHY-TLT-0.18

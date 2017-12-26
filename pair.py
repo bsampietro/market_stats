@@ -48,15 +48,17 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def closes(self, back_days):
-        percentage_changes1 = self.parallel_accumulative_percentage_changes(back_days)[0]
-        percentage_changes2 = self.parallel_accumulative_percentage_changes(back_days)[1]
+        percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
+        percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
         substraction_closes = []
+        suma = 0
         positively_correlated = self.correlation(365) >= 0
         for i in range(len(percentage_changes1)):
             if positively_correlated:
-                substraction_closes.append(percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365))
+                suma += percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(365)
             else:
-                substraction_closes.append(percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(365))
+                suma += percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(365)
+            substraction_closes.append(suma)
         return substraction_closes
 
 
@@ -110,7 +112,6 @@ class Pair:
         line_chart.add("365", self.closes(365))
         line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(365)[0])
         line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(365)[1])
-        # need to create pairs directory for storing and putting it into harddisk ?
         line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
 
 
@@ -152,7 +153,7 @@ class Pair:
     def parallel_accumulative_percentage_changes(self, back_days):
         percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
         percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
-        acc1 = [0]; acc2 = [0]
+        acc1 = []; acc2 = []
         sum1 = 0; sum2 = 0
         for change in percentage_changes1:
             sum1 += change

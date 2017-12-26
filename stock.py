@@ -109,7 +109,7 @@ class Stock:
 
 
     def stdev(self, back_days):
-        return statistics.stdev(self.percentage_changes(back_days))
+        return statistics.stdev(self.accumulative_percentage_changes(back_days))
 
 
     # private
@@ -142,6 +142,16 @@ class Stock:
             percentage_change = (closes[i] / closes[i-1] - 1) * 100 # non accumulative
             percentage_changes.append(percentage_change)
         return percentage_changes
+
+
+    @lru_cache(maxsize=None)
+    def accumulative_percentage_changes(self, back_days):
+        accumulative_percentage_changes = []
+        suma = 0
+        for change in self.percentage_changes(back_days):
+            suma += change
+            accumulative_percentage_changes.append(suma)
+        return accumulative_percentage_changes
 
 
     @lru_cache(maxsize=None)
