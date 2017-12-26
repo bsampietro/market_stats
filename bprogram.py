@@ -31,7 +31,7 @@ def get_iv_header():
         'SPY RIV',
         'Ntnl',
         'CHV30',
-        'PerRnk',
+        '%Rnk',
         'WRnk',
         '-', 
         'IVR']
@@ -304,7 +304,7 @@ def read_pairs_file_and_process(command, get_row_method):
 # Global variables
 data_handler = None
 connected = False
-IVR_RESULTS = 6 # Number of historical IVR rows
+IVR_RESULTS = 8 # Number of historical IVR rows
 BACK_DAYS = 365 # Number of back days to take into account for statistics
 NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'SHY'] # securities that should not bring options data
 BETA_REFERENCES = ["SPY"]

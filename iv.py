@@ -70,7 +70,7 @@ class IV:
     # weighted average between min-max rank (2 weighted) and percentile rank (1 weighted)
     @lru_cache(maxsize=None)
     def current_weighted_iv_rank(self, back_days):
-        return (2 * self.current_mm_iv_rank(back_days) + self.current_percentile_iv_rank(back_days)) / 3.0
+        return round((2 * self.current_mm_iv_rank(back_days) + self.current_percentile_iv_rank(back_days)) / 3.0)
     
 
     
@@ -83,9 +83,9 @@ class IV:
         for close in self.period_list(back_days):
             if iv >= close:
                 count += 1
-        return count / len(self.period_list(back_days)) * 100
+        return round(count / len(self.period_list(back_days)) * 100)
 
 
     # IV rank based on min-max levels
     def calculate_mm_iv_rank(self, iv, back_days):
-        return (iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
+        return round((iv - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100)
