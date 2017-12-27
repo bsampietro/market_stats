@@ -313,7 +313,7 @@ BETA_REFERENCES = ["SPY"]
 if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logger.addHandler(logging.FileHandler("_bprogram.log"))
+    logger.addHandler(logging.FileHandler("./log/_bprogram.log"))
     ## logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) > 1:
