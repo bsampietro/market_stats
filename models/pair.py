@@ -3,8 +3,8 @@ from functools import lru_cache
 import statistics
 import math
 
-from util import *
-from errors import *
+from lib.util import *
+from lib.errors import *
 
 import pygal
 

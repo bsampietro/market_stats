@@ -5,8 +5,8 @@ import logging
 from datetime import datetime, date
 from ib_hedge import *
 
-from util import *
-from errors import *
+from lib.util import *
+from lib.errors import *
 
 
 # Global variables and constants

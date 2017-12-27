@@ -3,9 +3,9 @@ import json
 from json.decoder import JSONDecodeError
 import os.path
 
-from util import *
+from lib.util import *
+from lib.errors import *
 from ib_data import *
-from errors import *
 
 
 class DataHandler:
@@ -37,32 +37,32 @@ class DataHandler:
 
     def save_data_json(self):
         if self.modified_iv:
-            with open('data_implied_volatility.json', 'w') as f:
+            with open('./data/data_implied_volatility.json', 'w') as f:
                 json.dump(self.implied_volatility, f)
 
         if self.modified_hv:
-            with open('data_historical_volatility.json', 'w') as f:
+            with open('./data/data_historical_volatility.json', 'w') as f:
                 json.dump(self.historical_volatility, f)
 
         if self.modified_stock:
-            with open('stock.json', 'w') as f:
+            with open('./data/stock.json', 'w') as f:
                 json.dump(self.stock, f)
 
     def load_data_json(self):
         try:
-            with open('data_implied_volatility.json', 'r') as f:
+            with open('./data/data_implied_volatility.json', 'r') as f:
                 self.implied_volatility = json.load(f)
         except (JSONDecodeError, FileNotFoundError) as e:
             self.implied_volatility = {}
 
         try:
-            with open('data_historical_volatility.json', 'r') as f:
+            with open('./data/data_historical_volatility.json', 'r') as f:
                 self.historical_volatility = json.load(f)
         except (JSONDecodeError, FileNotFoundError) as e:
             self.historical_volatility = {}
 
         try:
-            with open('stock.json', 'r') as f:
+            with open('./data/stock.json', 'r') as f:
                 self.stock = json.load(f)
         except (JSONDecodeError, FileNotFoundError) as e:
             self.stock = {}

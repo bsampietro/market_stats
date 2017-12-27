@@ -5,15 +5,15 @@ import logging
 from datetime import datetime, date
 import os.path
 
-from util import *
-from datahandler import *
-from errors import *
-from iv import *
-from hv import *
-from mixed_vs import *
-from stock import *
-from pair import *
-from notional import *
+from lib.util import *
+from lib.errors import *
+from models.datahandler import *
+from models.iv import *
+from models.hv import *
+from models.mixed_vs import *
+from models.stock import *
+from models.pair import *
+from models.notional import *
 
 from texttable import Texttable
 
@@ -251,7 +251,7 @@ def bring_if_connected(ticker):
 
 
 def read_symbol_file_and_process(command, get_row_method, back_days = None):
-    text_file = command + ".txt"
+    text_file = "./input/" + command + ".txt"
     rows = []
     if os.path.isfile(text_file):
         tickers = read_symbol_list(text_file)
@@ -274,7 +274,7 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
 
 
 def read_pairs_file_and_process(command, get_row_method):
-    text_file = command[1] + ".txt"
+    text_file = "./input/" + command[1] + ".txt"
     rows = []
     if os.path.isfile(text_file):
         pairs = read_symbol_list(text_file)

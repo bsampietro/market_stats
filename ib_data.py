@@ -10,7 +10,7 @@ from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
 
-from util import *
+from lib.util import *
 
 
 class IBDataWrapper(wrapper.EWrapper):
