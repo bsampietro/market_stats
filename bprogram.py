@@ -1,7 +1,5 @@
 import sys
-
 import logging
-
 from datetime import datetime, date
 import os.path
 
@@ -14,300 +12,12 @@ from models.mixed_vs import *
 from models.stock import *
 from models.pair import *
 from models.notional import *
+from helpers.bprogram_helper import *
+
+import config.constants as const
+from config import main_vars
 
 from texttable import Texttable
-
-# Helper methods
-def get_iv_header():
-    header = ['Ticker',
-        'Date',
-        'IV',
-        'IV2IVavg',
-        'IV2HVavg',
-        'Avg2Avg',
-        'IV2HV-',
-        'SPYCrr',
-        'SPY R',
-        'SPY RIV',
-        'Ntnl',
-        '%Rnk',
-        'WRnk',
-        '-', 
-        'IVR']
-    header += ['-'] * (IVR_RESULTS - 1) # 1 is the IVR title
-    return header
-
-def get_iv_row(ticker, date, back_days):
-    try:
-        iv = IV(data_handler, ticker)
-        hv = HV(data_handler, ticker)
-        mixed_vs = MixedVs(data_handler, iv, hv)
-        stock = Stock(data_handler, ticker)
-        spy_pair = Pair(data_handler, ticker, "SPY")
-        spy_iv = IV(data_handler, "SPY")
-
-        row = [ticker,
-            date,
-            iv.get_at(date),
-            iv.current_to_average_ratio(date, back_days),
-            mixed_vs.iv_current_to_hv_average(date, back_days),
-            mixed_vs.iv_average_to_hv_average(back_days),
-            mixed_vs.negative_difference_ratio(back_days),
-            spy_pair.correlation(back_days),
-            spy_pair.stdev_ratio(back_days),
-            iv.period_average(back_days) / spy_iv.period_average(back_days),
-            notional_quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
-            iv.current_percentile_iv_rank(back_days),
-            iv.current_weighted_iv_rank(back_days)]
-        row += ['-']
-        row += iv.period_iv_ranks(back_days, max_results = IVR_RESULTS)
-        return row
-    except GettingInfoError as e:
-        print(e)
-        return []
-
-
-def get_stock_header():
-    header = ['Ticker',
-        'Date',
-        'Close',
-        '-',
-        'MA30',
-        'MA30%',
-        '-',
-        'MA50',
-        'MA50%',
-        '-',
-        'MA200',
-        'MA200%',
-        '-',
-        'Min200',
-        'Max200',
-        '-',
-        'UpCl15',
-        'DoCl15',
-        'ConsUp15',
-        'ConsDwn15']
-    return header
-
-
-# back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_symbol_file_and_process
-def get_stock_row(ticker, date, back_days = None):
-    try:
-        stock = Stock(data_handler, ticker)
-        row = [ticker,
-            date,
-            stock.get_close_at(date),
-            '-',
-            stock.ma(30),
-            stock.current_to_ma_percentage(date, 30),
-            '-',
-            stock.ma(50),
-            stock.current_to_ma_percentage(date, 50),
-            '-',
-            stock.ma(200),
-            stock.current_to_ma_percentage(date, 200),
-            '-',
-            stock.min(200),
-            stock.max(200),
-            '-',
-            stock.closes_nr(15, up = True),
-            stock.closes_nr(15, up = False),
-            stock.consecutive_nr(15, up = True),
-            stock.consecutive_nr(15, up = False)
-            ]
-        return row
-    except GettingInfoError as e:
-        print(e)
-        return []
-
-
-def get_hv_header():
-    header = ['Ticker',
-        'Date',
-        'HV30',
-        'HV365',
-        'HVavg',
-        'MaxHV',
-        '-',
-        'HV30%',
-        'HV365%',
-        'HVavg%',
-        'MaxHV%']
-    return header
-
-
-# back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_symbol_file_and_process
-def get_hv_row(ticker, date, back_days = None):
-    try:
-        stock = Stock(data_handler, ticker)
-        row = [ticker,
-            date,
-            stock.hv(30),
-            stock.hv(365),
-            stock.hv_average(),
-            max(stock.period_hvs()),
-            '-',
-            stock.percentage_hv(30),
-            stock.percentage_hv(365),
-            stock.percentage_hv_average(),
-            max(stock.percentage_period_hvs())]
-        return row
-    except GettingInfoError as e:
-        print(e)
-        return []
-
-
-def get_pairs_header():
-    header = ['Pair',
-        'Date',
-        '-',
-        'Last200',
-        'Min200',
-        'Max200',
-        'Rank200',
-        'MA200',
-        '-',
-        'Last50',
-        'Min50',
-        'Max50',
-        'Rank50',
-        'MA50',
-        '-',
-        'VRat',
-        'Corr',
-        'SPYVRat',
-        '-']
-    header += ['-'] * 4
-    return header
-
-
-def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
-    try:
-        pair = Pair(data_handler, ticker1, ticker2, fixed_stdev_ratio)
-        date = '-' if data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(data_handler.get_max_stored_date("STOCK", ticker1))
-        row = [ticker1 + '-' + ticker2,
-            date,
-            '-',
-            pair.get_last_close(200),
-            pair.min(200),
-            pair.max(200),
-            pair.current_rank(200),
-            pair.ma(200),
-            '-',
-            pair.get_last_close(50),
-            pair.min(50),
-            pair.max(50),
-            pair.current_rank(50),
-            pair.ma(50),
-            '-',
-            pair.stdev_ratio(365),
-            pair.correlation(365),
-            pair.stdev(365) / Stock(data_handler, 'SPY').stdev(365),
-            '-']
-        # ranks = pair.period_ranks(50)[-5:]
-        # ranks.reverse()
-        # row += ranks
-        closes = pair.closes(50)[-4:]
-        closes.reverse()
-        row += closes
-        return row
-    except GettingInfoError as e:
-        print(e)
-        return []
-
-
-def get_query_date(ticker):
-    if connected:
-        return today_in_string()
-    else:
-        max_stored_date = data_handler.get_max_stored_date("IV", ticker)
-        if max_stored_date is None:
-            return today_in_string()
-        else:
-            return date_in_string(max_stored_date)
-
-
-def bring_if_connected(ticker):
-    if connected:
-        if ticker not in NO_OPTIONS:
-            max_stored_date = data_handler.get_max_stored_date("IV", ticker)
-            if (max_stored_date is None) or max_stored_date.date() < date.today():
-                print(f"Getting IV data for ticker {ticker}...")
-                data_handler.request_historical_data("IV", ticker)
-
-        if ticker not in NO_OPTIONS:
-            max_stored_date = data_handler.get_max_stored_date("HV", ticker)
-            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-                print(f"Getting HV data for ticker {ticker}...")
-                data_handler.request_historical_data("HV", ticker)
-
-        max_stored_date = data_handler.get_max_stored_date("STOCK", ticker)
-        if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting STOCK data for ticker {ticker}...")
-            data_handler.request_historical_data("STOCK", ticker)
-
-
-def read_symbol_file_and_process(command, get_row_method, back_days = None):
-    text_file = "./input/" + command + ".txt"
-    rows = []
-    if os.path.isfile(text_file):
-        tickers = read_symbol_list(text_file)
-        for ticker in tickers:
-            if ticker == '---':
-                if len(rows) > 0:
-                    rows.append(['-'] * len(rows[0]))
-                continue
-            bring_if_connected(ticker)
-            row = get_row_method(ticker, get_query_date(ticker), back_days)
-            if len(row) > 0:
-                rows.append(row)
-    else:
-        ticker = command.upper()
-        bring_if_connected(ticker)
-        row = get_row_method(ticker, get_query_date(ticker), back_days)
-        if len(row) > 0:
-            rows.append(row)
-    return rows
-
-
-def read_pairs_file_and_process(command, get_row_method):
-    text_file = "./input/" + command[1] + ".txt"
-    rows = []
-    if os.path.isfile(text_file):
-        pairs = read_symbol_list(text_file)
-        for pair in pairs:
-            if pair == '---':
-                if len(rows) > 0:
-                    rows.append(['-'] * len(rows[0]))
-                continue
-            data = pair.split('-') + [None] * 5
-            ticker1 = data[0]; ticker2 = data[1]; stdev_ratio = data[2]
-            bring_if_connected(ticker1)
-            bring_if_connected(ticker2)
-            row = get_row_method(ticker1, ticker2, stdev_ratio)
-            if len(row) > 0:
-                rows.append(row)
-    else:
-        ticker1 = command[1].upper(); ticker2 = command[2].upper(); stdev_ratio = command[3]
-        bring_if_connected(ticker1)
-        bring_if_connected(ticker2)
-        row = get_row_method(ticker1, ticker2, stdev_ratio)
-        if len(row) > 0:
-            rows.append(row)
-    return rows
-
-
-
-# Global variables
-data_handler = None
-connected = False
-IVR_RESULTS = 8 # Number of historical IVR rows
-BACK_DAYS = 365 # Number of back days to take into account for statistics
-NO_OPTIONS = ['IEF', 'PPLT', 'URA', 'DBA', 'SHY'] # securities that should not bring options data
-BETA_REFERENCES = ["SPY"]
 
 # Main method
 if __name__ == "__main__":
@@ -316,9 +26,10 @@ if __name__ == "__main__":
     logger.addHandler(logging.FileHandler("./log/_bprogram.log"))
     ## logging.basicConfig(level=logging.INFO)
 
+    main_vars.connected = False
     if len(sys.argv) > 1:
-        connected = (sys.argv[1] == "connect")
-    data_handler = DataHandler(connected)
+        main_vars.connected = (sys.argv[1] == "connect")
+    main_vars.data_handler = DataHandler(main_vars.connected)
 
     last_command = []
 
@@ -339,7 +50,7 @@ if __name__ == "__main__":
 
             if command[0] == "exit" or command[0] == "e":
                 try:
-                    data_handler.stop()
+                    main_vars.data_handler.stop()
                 except KeyError as e:
                     print(f"Exit with error: {e}")
                 break
@@ -361,17 +72,17 @@ if __name__ == "__main__":
 
             elif command[0] == "delete":
                 if command[1] == "":
-                    data_handler.delete_at(today_in_string())
+                    main_vars.data_handler.delete_at(today_in_string())
                 else:
                     try:
-                        data_handler.delete_back(int(command[1]))
+                        main_vars.data_handler.delete_back(int(command[1]))
                     except (ValueError, TypeError) as e:
-                        data_handler.delete_ticker(command[1].upper())
+                        main_vars.data_handler.delete_ticker(command[1].upper())
                 print("Entries deleted")
                 continue
 
             elif command[0] == "corr":
-                pair = Pair(data_handler, command[1].upper(), command[2].upper())
+                pair = Pair(main_vars.data_handler, command[1].upper(), command[2].upper())
                 print(f"  Correlation: {format(pair.correlation(365), '.2f')}")
                 print(f"  Beta:        {format(pair.beta(365), '.2f')}")
                 print(f"  Volat ratio: {format(pair.stdev_ratio(365), '.2f')}")
@@ -387,10 +98,10 @@ if __name__ == "__main__":
                         if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
                             continue
                         try:
-                            pair = Pair(data_handler, symbol2, symbol1)
+                            pair = Pair(main_vars.data_handler, symbol2, symbol1)
                             out_string = f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}"
                             if command[0] == "corrs":
-                                if symbol1 in BETA_REFERENCES or (pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60):
+                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60):
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                             else:
@@ -405,7 +116,7 @@ if __name__ == "__main__":
             elif command[0] == "chart":
                 if command[1] == "pair":
                     print("Remember to bring data before with the 'pair' command (if needed).")
-                    pair = Pair(data_handler, command[2].upper(), command[3].upper(), command[4])
+                    pair = Pair(main_vars.data_handler, command[2].upper(), command[3].upper(), command[4])
                     pair.output_chart()
                 continue
 
@@ -413,7 +124,7 @@ if __name__ == "__main__":
 
                 header = get_iv_header()
 
-                back_days = BACK_DAYS
+                back_days = const.BACK_DAYS
                 if command[2] != "":
                     try:
                         back_days = int(command[2])
@@ -476,7 +187,7 @@ if __name__ == "__main__":
                 t.add_row(row)
 
             print("Waiting for async request...")
-            data_handler.wait_for_async_request()
+            main_vars.data_handler.wait_for_async_request()
             print(t.draw())
 
             with open(f"/media/ramd/{'-'.join(command)}", "w") as f:
@@ -489,5 +200,5 @@ if __name__ == "__main__":
             print(f"Didn't find file: {e}")
 
         except:
-            data_handler.disconnect()
+            main_vars.data_handler.disconnect()
             raise
