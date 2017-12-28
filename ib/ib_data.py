@@ -4,6 +4,7 @@ sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
 from threading import Thread
 import logging
 import time
+from datetime import datetime
 
 from ibapi import wrapper
 from ibapi.client import EClient
