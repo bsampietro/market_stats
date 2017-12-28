@@ -3,7 +3,7 @@ import sys
 import logging
 
 from datetime import datetime, date
-from ib_hedge import *
+from ib.ib_hedge import *
 
 from lib.util import *
 from lib.errors import *

@@ -5,7 +5,7 @@ import os.path
 
 from lib.util import *
 from lib.errors import *
-from ib_data import *
+from ib.ib_data import *
 
 
 class DataHandler:
