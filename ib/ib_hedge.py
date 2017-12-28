@@ -12,7 +12,7 @@ from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
 
-from lib.util import *
+from lib import util
 
 
 class IBHedgeWrapper(wrapper.EWrapper):
@@ -80,7 +80,7 @@ class IBHedge(IBHedgeWrapper, IBHedgeClient):
     def request_market_data(self, ticker, last_trade_date = None):
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
-        self.reqMktData(next_req_id, get_special_contract(ticker, last_trade_date), "", False, False, [])
+        self.reqMktData(next_req_id, util.get_special_contract(ticker, last_trade_date), "", False, False, [])
 
 
     def tickPrice(self, reqId, tickType, price:float, attrib):

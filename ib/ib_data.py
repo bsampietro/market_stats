@@ -10,7 +10,7 @@ from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
 
-from lib.util import *
+from lib import util
 
 
 class IBDataWrapper(wrapper.EWrapper):
@@ -106,7 +106,7 @@ class IBData(IBDataWrapper, IBDataClient):
         self.req_id_to_requested_historical_data[next_req_id] = requested_data
 
         # Query
-        self.reqHistoricalData(next_req_id, get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
+        self.reqHistoricalData(next_req_id, util.get_stock_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
 
     # App functions

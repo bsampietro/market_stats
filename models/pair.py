@@ -3,7 +3,7 @@ from functools import lru_cache
 import statistics
 import math
 
-from lib.util import *
+from lib import util
 from lib.errors import *
 
 import pygal
@@ -24,7 +24,7 @@ class Pair:
     @lru_cache(maxsize=None)
     def correlation(self, back_days):
         changes = self.parallel_percentage_changes(back_days)
-        return covariance(changes[0], changes[1]) / (statistics.stdev(changes[0]) * statistics.stdev(changes[1]))
+        return util.covariance(changes[0], changes[1]) / (statistics.stdev(changes[0]) * statistics.stdev(changes[1]))
 
 
     @lru_cache(maxsize=None)

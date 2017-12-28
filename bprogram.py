@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, date
 import os.path
 
-from lib.util import *
+from lib import util
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
             elif command[0] == "delete":
                 if command[1] == "":
-                    main_vars.data_handler.delete_at(today_in_string())
+                    main_vars.data_handler.delete_at(util.today_in_string())
                 else:
                     try:
                         main_vars.data_handler.delete_back(int(command[1]))
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
-                symbols = read_symbol_list(command[1] + '.txt')
+                symbols = util.read_symbol_list(command[1] + '.txt')
                 text_output_file = open(f"/media/ramd/{'-'.join(command)}", "w")
                 for symbol1 in symbols:
                     print(symbol1)

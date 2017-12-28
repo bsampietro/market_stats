@@ -2,8 +2,9 @@ import pickle
 import json
 from json.decoder import JSONDecodeError
 import os.path
+from datetime import datetime
 
-from lib.util import *
+from lib import util
 from lib.errors import *
 from ib.ib_data import IBData
 
@@ -134,7 +135,7 @@ class DataHandler:
             if the_day is None:
                 return data[ticker]
             else:
-                the_day = date_in_string(the_day)
+                the_day = util.date_in_string(the_day)
                 return data[ticker][the_day]
         except KeyError as e:
             if silent:
@@ -166,7 +167,7 @@ class DataHandler:
     def delete_back(self, back_days):
         today = datetime.today()
         for i in range(back_days):
-            delete_day = date_in_string(today - timedelta(days = i))
+            delete_day = util.date_in_string(today - timedelta(days = i))
             self.delete_at(delete_day)
 
 

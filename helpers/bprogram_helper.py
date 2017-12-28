@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, date
 import os.path
 
-from lib.util import *
+from lib import util
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -185,7 +185,7 @@ def get_pairs_header():
 def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
     try:
         pair = Pair(main_vars.data_handler, ticker1, ticker2, fixed_stdev_ratio)
-        date = '-' if main_vars.data_handler.get_max_stored_date("STOCK", ticker1) is None else date_in_string(main_vars.data_handler.get_max_stored_date("STOCK", ticker1))
+        date = '-' if main_vars.data_handler.get_max_stored_date("STOCK", ticker1) is None else util.date_in_string(main_vars.data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
@@ -219,13 +219,13 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
 
 def get_query_date(ticker):
     if main_vars.connected:
-        return today_in_string()
+        return util.today_in_string()
     else:
         max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
         if max_stored_date is None:
-            return today_in_string()
+            return util.today_in_string()
         else:
-            return date_in_string(max_stored_date)
+            return util.date_in_string(max_stored_date)
 
 
 def bring_if_connected(ticker):
@@ -252,7 +252,7 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
     text_file = "./input/" + command + ".txt"
     rows = []
     if os.path.isfile(text_file):
-        tickers = read_symbol_list(text_file)
+        tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
             if ticker == '---':
                 if len(rows) > 0:
@@ -275,7 +275,7 @@ def read_pairs_file_and_process(command, get_row_method):
     text_file = "./input/" + command[1] + ".txt"
     rows = []
     if os.path.isfile(text_file):
-        pairs = read_symbol_list(text_file)
+        pairs = util.read_symbol_list(text_file)
         for pair in pairs:
             if pair == '---':
                 if len(rows) > 0:

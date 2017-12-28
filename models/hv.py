@@ -3,8 +3,6 @@ import calendar
 
 from functools import lru_cache
 
-from lib.util import *
-
 class HV:
     def __init__(self, data_handler, ticker):
         self.data_handler = data_handler
