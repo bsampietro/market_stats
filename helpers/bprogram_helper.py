@@ -5,14 +5,13 @@ import os.path
 
 from lib.util import *
 from lib.errors import *
-from models.datahandler import *
-from models.iv import *
-from models.hv import *
-from models.mixed_vs import *
-from models.stock import *
-from models.pair import *
-from models.notional import *
-from helpers.bprogram_helper import *
+from models.datahandler import DataHandler
+from models.iv import IV
+from models.hv import HV
+from models.mixed_vs import MixedVs
+from models.stock import Stock
+from models.pair import Pair
+from models import notional
 
 import config.constants as const
 from config import main_vars
@@ -55,7 +54,7 @@ def get_iv_row(ticker, date, back_days):
             spy_pair.correlation(back_days),
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
-            notional_quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
+            notional.quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
             iv.current_percentile_iv_rank(back_days),
             iv.current_weighted_iv_rank(back_days)]
         row += ['-']

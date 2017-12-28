@@ -5,13 +5,13 @@ import os.path
 
 from lib.util import *
 from lib.errors import *
-from models.datahandler import *
-from models.iv import *
-from models.hv import *
-from models.mixed_vs import *
-from models.stock import *
-from models.pair import *
-from models.notional import *
+from models.datahandler import DataHandler
+from models.iv import IV
+from models.hv import HV
+from models.mixed_vs import MixedVs
+from models.stock import Stock
+from models.pair import Pair
+
 from helpers.bprogram_helper import *
 
 import config.constants as const
