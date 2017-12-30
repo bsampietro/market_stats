@@ -230,13 +230,13 @@ def get_query_date(ticker):
 
 def bring_if_connected(ticker):
     if main_vars.connected:
-        if ticker not in const.NO_OPTIONS:
+        if ticker not in const.NO_OPTIONS and util.contract_type(ticker) == "STK":
             max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting IV data for ticker {ticker}...")
                 main_vars.data_handler.request_historical_data("IV", ticker)
 
-        if ticker not in const.NO_OPTIONS:
+        if ticker not in const.NO_OPTIONS and util.contract_type(ticker) == "STK":
             max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
             if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
                 print(f"Getting HV data for ticker {ticker}...")
