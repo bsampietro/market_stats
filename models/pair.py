@@ -103,15 +103,21 @@ class Pair:
 
 
     def output_chart(self):
-        line_chart = pygal.Line()
+        line_chart = pygal.Line(truncate_label=-1)
         line_chart.title = f"{self.ticker1}-{self.ticker2}"
         line_chart.x_title = f"Ratio: {format(self.stdev_ratio(365), '.2f')} - Corr: {format(self.correlation(365), '.2f')}"
-        # line_chart.show_dots = False
-        # line_chart.x_labels = map(str, range(0, 50))
-        # line_chart.add("50", self.closes(50))
+        x_labels = []
+        for i in range(len(self.parallel_accumulative_percentage_changes(365)[0])):
+            if i % 20 == 0:
+                x_labels.append(i)
+            else:
+                x_labels.append('')
+        x_labels.reverse()
+        line_chart.x_labels = x_labels
         line_chart.add("365", self.closes(365))
         line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(365)[0])
         line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(365)[1])
+        # line_chart.show_dots = False
         line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
 
 
