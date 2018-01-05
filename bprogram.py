@@ -68,6 +68,7 @@ if __name__ == "__main__":
                 print("st file.txt [ord]")
                 print("hvol file.txt|symbol")
                 print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
+                print("print symbol")
                 continue
 
             elif command[0] == "delete":
@@ -119,6 +120,26 @@ if __name__ == "__main__":
                     pair = Pair(main_vars.data_handler, command[2].upper(), command[3].upper(), command[4])
                     pair.output_chart()
                 continue
+
+            elif command[0] == "print":
+                try:
+                    header = ['Date', 'Price'] * 8
+                    values_printed = 0
+                    row = None
+                    rows = []
+                    for key, value in main_vars.data_handler.stock[command[1].upper()].items():
+                        if values_printed % 8 == 0:
+                            if row is not None:
+                                rows.append(row)
+                            row = []
+                        row.append(key)
+                        row.append(value)
+                        values_printed += 1
+                    for i in range(16 - len(row)):
+                        row.append('x')
+                    rows.append(row)
+                except KeyError:
+                    print("Ticker not found")
 
             elif command[0] == "vol":
 

@@ -29,7 +29,7 @@ AAPL
 
 ---
 
-GOOG
+GOOGL
 IBM
 ORCL
 MMM
@@ -43,5 +43,3 @@ TWTR
 NVDA
 AMD
 MU
-
-ABT
