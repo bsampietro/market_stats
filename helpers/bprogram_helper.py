@@ -228,28 +228,28 @@ def get_query_date(ticker):
             return util.date_in_string(max_stored_date)
 
 
-def bring_if_connected(ticker):
-    if main_vars.connected:
-        if ticker not in const.NO_OPTIONS and util.contract_type(ticker) == "STK":
-            max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
-            if (max_stored_date is None) or max_stored_date.date() < date.today():
-                print(f"Getting IV data for ticker {ticker}...")
-                main_vars.data_handler.request_historical_data("IV", ticker)
-
-        if ticker not in const.NO_OPTIONS and util.contract_type(ticker) == "STK":
-            max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
-            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-                print(f"Getting HV data for ticker {ticker}...")
-                main_vars.data_handler.request_historical_data("HV", ticker)
-
-        max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
+def bring_if_connected(ticker, full):
+    if not main_vars.connected:
+        return
+    if full and util.contract_type(ticker) == "STK":
+        max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting STOCK data for ticker {ticker}...")
-            main_vars.data_handler.request_historical_data("STOCK", ticker)
+            print(f"Getting IV data for ticker {ticker}...")
+            main_vars.data_handler.request_historical_data("IV", ticker)
+
+        max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
+        if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+            print(f"Getting HV data for ticker {ticker}...")
+            main_vars.data_handler.request_historical_data("HV", ticker)
+
+    max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
+    if (max_stored_date is None) or max_stored_date.date() < date.today():
+        print(f"Getting STOCK data for ticker {ticker}...")
+        main_vars.data_handler.request_historical_data("STOCK", ticker)
 
 
 def read_symbol_file_and_process(command, get_row_method, back_days = None):
-    text_file = "./input/" + command + ".txt"
+    text_file = "./input/" + command[1] + ".txt"
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
@@ -258,13 +258,13 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
                 if len(rows) > 0:
                     rows.append(['-'] * len(rows[0]))
                 continue
-            bring_if_connected(ticker)
+            bring_if_connected(ticker, command[0] == "vol")
             row = get_row_method(ticker, get_query_date(ticker), back_days)
             if len(row) > 0:
                 rows.append(row)
     else:
-        ticker = command.upper()
-        bring_if_connected(ticker)
+        ticker = command[1].upper()
+        bring_if_connected(ticker, command[0] == "vol")
         row = get_row_method(ticker, get_query_date(ticker), back_days)
         if len(row) > 0:
             rows.append(row)
@@ -283,15 +283,15 @@ def read_pairs_file_and_process(command, get_row_method):
                 continue
             data = pair.split('-') + [None] * 5
             ticker1 = data[0]; ticker2 = data[1]; stdev_ratio = data[2]
-            bring_if_connected(ticker1)
-            bring_if_connected(ticker2)
+            bring_if_connected(ticker1, False)
+            bring_if_connected(ticker2, False)
             row = get_row_method(ticker1, ticker2, stdev_ratio)
             if len(row) > 0:
                 rows.append(row)
     else:
         ticker1 = command[1].upper(); ticker2 = command[2].upper(); stdev_ratio = command[3]
-        bring_if_connected(ticker1)
-        bring_if_connected(ticker2)
+        bring_if_connected(ticker1, False)
+        bring_if_connected(ticker2, False)
         row = get_row_method(ticker1, ticker2, stdev_ratio)
         if len(row) > 0:
             rows.append(row)

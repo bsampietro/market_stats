@@ -81,13 +81,13 @@ class IBData(IBDataWrapper, IBDataClient):
 
         # Setting query variables
         duration_string = "1 Y"
+        
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
         elif requested_data == "HV":
             what_to_show = "HISTORICAL_VOLATILITY"
         elif requested_data == "STOCK":
             what_to_show = "ASK"
-            duration_string = "2 Y"
         else:
             raise RuntimeError("Unknown requested_data parameter")
 

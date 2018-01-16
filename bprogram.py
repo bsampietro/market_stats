@@ -155,7 +155,7 @@ if __name__ == "__main__":
                     except ValueError:
                         pass
 
-                rows = read_symbol_file_and_process(command[1], get_iv_row, back_days)
+                rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
                 if command[3] == "ord" or command[3] != "":
                     try:
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
                 header = get_stock_header()
 
-                rows = read_symbol_file_and_process(command[1], get_stock_row)
+                rows = read_symbol_file_and_process(command, get_stock_row)
 
                 if command[2] == "ord":
                     # order by MA50%
@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
                 header = get_hv_header()
 
-                rows = read_symbol_file_and_process(command[1], get_hv_row)
+                rows = read_symbol_file_and_process(command, get_hv_row)
 
                 if command[2] == "ord" or command[2] != "":
                     try:

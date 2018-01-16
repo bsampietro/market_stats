@@ -8,63 +8,50 @@ HYG
 
 GLD
 SLV
-GDX
-#GDXJ
+#GDX
+GDXJ
 
 XOP
-OIH
+#OIH
 USO
 
 VXX
 
 FXE
 
-IYR
-XLU
+#IYR
+#XLU
 
-EFA
-EEM
+#EFA
+#EEM
 FXI
 EWZ
 EWW
-RSX
 
 XRT
-XLF
+#XLF
 XLE
 
 ---
 
 TBT
 
-XLY
+#XLY
+#XLP
+
 XLI
 XLB
 XLV
 XBI
 XME
-XLP
 
 UNG
 KRE
 
 #Not very liquid
-FEZ
-EWY
+#FEZ
+#EWY
 FXY
-FXB
-EWJ
-
-#special
-PPLT
-DBA
-URA
-JJC
-JJG
-IEF
-SHY
-
-#XLK
-#UUP
-
-#VXF8
+#FXB
+#EWJ
+#RSX
