@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import calendar
+import statistics
 
 from functools import lru_cache
 
@@ -26,4 +27,6 @@ class HV:
 
     @lru_cache(maxsize=None)
     def period_average(self, back_days):
-        return sum(self.period_list(back_days)) / len(self.period_list(back_days))
+        if self.period_list(back_days) is None:
+            return -1
+        return statistics.mean(self.period_list(back_days))

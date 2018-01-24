@@ -33,10 +33,6 @@ class MixedVs:
         return differences
 
 
-    def difference_average(self, back_days):
-        return sum(self.iv_hv_difference(back_days)) / len(self.iv_hv_difference(back_days))
-
-
     # returns percentage of success of daily one month volatility trading
     def negative_difference_ratio(self, back_days):
         negative_count = 0

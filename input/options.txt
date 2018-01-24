@@ -4,16 +4,20 @@ IWM
 DIA
 
 TLT
-HYG
+#HYG
 
 GLD
 SLV
 #GDX
 GDXJ
 
+JJC
+#HGH8
+
 XOP
 #OIH
 USO
+XLE
 
 VXX
 
@@ -21,6 +25,7 @@ FXE
 
 #IYR
 #XLU
+#XHB
 
 #EFA
 #EEM
@@ -28,25 +33,26 @@ FXI
 EWZ
 EWW
 
-XRT
-#XLF
-XLE
-
 ---
 
-TBT
-
-#XLY
-#XLP
-
-XLI
-XLB
 XLV
 XBI
 XME
 
 UNG
 KRE
+
+#Too small
+#XLF
+#TBT
+#XLY
+#XLP
+XRT
+
+
+#Too correlated with SPY
+#XLI
+#XLB
 
 #Not very liquid
 #FEZ

@@ -231,7 +231,7 @@ def get_query_date(ticker):
 def bring_if_connected(ticker, full):
     if not main_vars.connected:
         return
-    if full and util.contract_type(ticker) == "STK":
+    if full: # and util.contract_type(ticker) == "STK":
         max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
             print(f"Getting IV data for ticker {ticker}...")
