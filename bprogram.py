@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
-                symbols = util.read_symbol_list(command[1] + '.txt')
+                symbols = util.read_symbol_list("./input/" + command[1] + '.txt')
                 text_output_file = open(f"/media/ramd/{'-'.join(command)}", "w")
                 for symbol1 in symbols:
                     print(symbol1)
@@ -102,11 +102,11 @@ if __name__ == "__main__":
                             pair = Pair(main_vars.data_handler, symbol2, symbol1)
                             out_string = f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}"
                             if command[0] == "corrs":
-                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(365) > 0.60 or pair.correlation(365) < -0.60):
+                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(365) > const.MIN_CORRELATED_CORRELATION or pair.correlation(365) < -const.MIN_CORRELATED_CORRELATION):
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                             else:
-                                if pair.correlation(365) > -0.20 and pair.correlation(365) < 0.20:
+                                if pair.correlation(365) > -const.MAX_UNCORRELATED_CORRELATION and pair.correlation(365) < const.MAX_UNCORRELATED_CORRELATION:
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                         except GettingInfoError as e:
@@ -161,8 +161,8 @@ if __name__ == "__main__":
                     try:
                         order_column = int(command[3])
                     except (ValueError, TypeError) as e:
-                        order_column = 12 # order by WRnk
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 25, reverse = True)
+                        order_column = const.VOL_ORDER_COLUMN # order by WRnk
+                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else const.MIN_VOL_LINE, reverse = True)
 
             elif command[0] == "st":
 

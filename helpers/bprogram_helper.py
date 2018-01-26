@@ -24,6 +24,7 @@ def get_iv_header():
         'IV2HVavg',
         'Avg2Avg',
         'IV2HV-',
+        'I2HAvg',
         'SPYCrr',
         'SPY R',
         'SPY RIV',
@@ -51,6 +52,7 @@ def get_iv_row(ticker, date, back_days):
             mixed_vs.iv_current_to_hv_average(date, back_days),
             mixed_vs.iv_average_to_hv_average(back_days),
             mixed_vs.negative_difference_ratio(back_days),
+            mixed_vs.difference_average(back_days),
             spy_pair.correlation(back_days),
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
@@ -231,21 +233,24 @@ def get_query_date(ticker):
 def bring_if_connected(ticker, full):
     if not main_vars.connected:
         return
-    if full: # and util.contract_type(ticker) == "STK":
-        max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
+    try:
+        if full: # and util.contract_type(ticker) == "STK":
+            max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
+            if (max_stored_date is None) or max_stored_date.date() < date.today():
+                print(f"Getting IV data for ticker {ticker}...")
+                main_vars.data_handler.request_historical_data("IV", ticker)
+
+            max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
+            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+                print(f"Getting HV data for ticker {ticker}...")
+                main_vars.data_handler.request_historical_data("HV", ticker)
+
+        max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting IV data for ticker {ticker}...")
-            main_vars.data_handler.request_historical_data("IV", ticker)
-
-        max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
-        if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-            print(f"Getting HV data for ticker {ticker}...")
-            main_vars.data_handler.request_historical_data("HV", ticker)
-
-    max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
-    if (max_stored_date is None) or max_stored_date.date() < date.today():
-        print(f"Getting STOCK data for ticker {ticker}...")
-        main_vars.data_handler.request_historical_data("STOCK", ticker)
+            print(f"Getting STOCK data for ticker {ticker}...")
+            main_vars.data_handler.request_historical_data("STOCK", ticker)
+    except InputError as e:
+        print(e)
 
 
 def read_symbol_file_and_process(command, get_row_method, back_days = None):

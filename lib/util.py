@@ -1,9 +1,12 @@
 import sys
 sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
-from ibapi.contract import *
 
 from datetime import datetime, timedelta
 import statistics
+
+from ibapi.contract import *
+
+from lib.errors import *
 
 def get_contract(symbol):
     ctype = contract_type(symbol)
@@ -137,7 +140,7 @@ def get_futures_date(fdcode):
     elif fdcode[0] == "Z":
         month = "12"
     else:
-        raise RuntimeError("Unknown futures month")
+        raise InputError("Unknown futures month")
 
     if fdcode[1] == "8":
         year = "2018"
@@ -145,7 +148,7 @@ def get_futures_date(fdcode):
         year = "2019"
     # more elifs...
     else:
-        raise RuntimeError("Unknown futures year")
+        raise InputError("Unknown futures year")
 
     return year + month
 

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
+import statistics
 
 class MixedVs:
 
@@ -41,3 +42,7 @@ class MixedVs:
                 negative_count += 1
         available_hv_period = len(self.iv_hv_difference(back_days)) # similar to (back_days - 30 - unavailable days)
         return (float(available_hv_period - negative_count) / available_hv_period) * 100
+
+
+    def difference_average(self, back_days):
+        return statistics.mean(self.iv_hv_difference(back_days))
