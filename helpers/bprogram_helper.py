@@ -2,6 +2,7 @@ import sys
 import logging
 from datetime import datetime, date, timedelta
 import os.path
+import statistics
 
 from lib import util
 from lib.errors import *
@@ -62,7 +63,7 @@ def get_iv_row(ticker, date, back_days):
         row += ['-']
         row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
         return row
-    except GettingInfoError as e:
+    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
         return []
 
@@ -118,7 +119,7 @@ def get_stock_row(ticker, date, back_days = None):
             stock.consecutive_nr(15, up = False)
             ]
         return row
-    except GettingInfoError as e:
+    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
         return []
 
@@ -155,7 +156,7 @@ def get_hv_row(ticker, date, back_days = None):
             stock.percentage_hv_average(),
             max(stock.percentage_period_hvs())]
         return row
-    except GettingInfoError as e:
+    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
         return []
 
@@ -203,9 +204,9 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
             pair.current_rank(50),
             pair.ma(50),
             '-',
-            pair.stdev_ratio(365),
-            pair.correlation(365),
-            pair.stdev(365) / Stock(main_vars.data_handler, 'SPY').stdev(365),
+            pair.stdev_ratio(main_vars.back_days),
+            pair.correlation(main_vars.back_days),
+            pair.stdev(main_vars.back_days) / Stock(main_vars.data_handler, 'SPY').stdev(main_vars.back_days),
             '-']
         # ranks = pair.period_ranks(50)[-5:]
         # ranks.reverse()
@@ -214,7 +215,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         closes.reverse()
         row += closes
         return row
-    except GettingInfoError as e:
+    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
         return []
 

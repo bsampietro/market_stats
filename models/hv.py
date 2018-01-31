@@ -14,7 +14,7 @@ class HV:
     def period_list(self, back_days):
         max_date = self.data_handler.get_max_stored_date("HV", self.ticker)
         if max_date is None:
-            return None
+            return []
 
         hv_list = []
         for i in range(back_days):
@@ -27,6 +27,4 @@ class HV:
 
     @lru_cache(maxsize=None)
     def period_average(self, back_days):
-        if self.period_list(back_days) is None:
-            return -1
         return statistics.mean(self.period_list(back_days))

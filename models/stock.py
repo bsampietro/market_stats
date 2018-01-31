@@ -4,6 +4,8 @@ from functools import lru_cache
 import statistics
 import math
 
+from config import main_vars
+
 def calculate_hv(closes):
     # return (statistics.stdev(closes) / closes[-1]) * 100 * math.sqrt(252/len(closes))
     return (statistics.stdev(closes) / statistics.mean(closes)) * 100 * math.sqrt(252/len(closes))
@@ -23,7 +25,7 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def period_hvs(self):
-        closes = self.closes(365)
+        closes = self.closes(main_vars.back_days)
         hvs = []
         for i in range(len(closes) - 21):
             monthly_closes = closes[i:i+21]
@@ -66,7 +68,7 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def percentage_period_hvs(self):
-        percentage_changes = self.percentage_changes(365)
+        percentage_changes = self.percentage_changes(main_vars.back_days)
         hvs = []
         for i in range(len(percentage_changes) - 21):
             monthly_percentage_changes = percentage_changes[i:i+21]

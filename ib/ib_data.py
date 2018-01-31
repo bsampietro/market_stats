@@ -80,7 +80,7 @@ class IBData(IBDataWrapper, IBDataClient):
             self.session_requested_data.add(requested_data_key)
 
         # Setting query variables
-        duration_string = "1 Y"
+        duration_string = "2 Y"
         
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"

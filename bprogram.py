@@ -26,10 +26,15 @@ if __name__ == "__main__":
     logger.addHandler(logging.FileHandler("./log/_bprogram.log"))
     ## logging.basicConfig(level=logging.INFO)
 
-    main_vars.connected = False
-    if len(sys.argv) > 1:
-        main_vars.connected = (sys.argv[1] == "connect")
+    parameters = sys.argv + 5 * ['']
+
+    main_vars.connected = (parameters[1] == "connect")
     main_vars.data_handler = DataHandler(main_vars.connected)
+    try:
+        main_vars.back_days = int(parameters[2]) * 30
+    except ValueError as e:
+        main_vars.back_days = 365
+
 
     last_command = []
 
@@ -47,7 +52,6 @@ if __name__ == "__main__":
             last_command = command
 
         try:
-
             if command[0] == "exit" or command[0] == "e":
                 try:
                     main_vars.data_handler.stop()
@@ -84,9 +88,9 @@ if __name__ == "__main__":
 
             elif command[0] == "corr":
                 pair = Pair(main_vars.data_handler, command[1].upper(), command[2].upper())
-                print(f"  Correlation: {format(pair.correlation(365), '.2f')}")
-                print(f"  Beta:        {format(pair.beta(365), '.2f')}")
-                print(f"  Volat ratio: {format(pair.stdev_ratio(365), '.2f')}")
+                print(f"  Correlation: {format(pair.correlation(main_vars.back_days), '.2f')}")
+                print(f"  Beta:        {format(pair.beta(main_vars.back_days), '.2f')}")
+                print(f"  Volat ratio: {format(pair.stdev_ratio(main_vars.back_days), '.2f')}")
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
@@ -100,13 +104,13 @@ if __name__ == "__main__":
                             continue
                         try:
                             pair = Pair(main_vars.data_handler, symbol2, symbol1)
-                            out_string = f"  {symbol2}: {format(pair.correlation(365), '.2f')} | {format(pair.stdev_ratio(365), '.2f')}"
+                            out_string = f"  {symbol2}: {format(pair.correlation(main_vars.back_days), '.2f')} | {format(pair.stdev_ratio(main_vars.back_days), '.2f')}"
                             if command[0] == "corrs":
-                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(365) > const.MIN_CORRELATED_CORRELATION or pair.correlation(365) < -const.MIN_CORRELATED_CORRELATION):
+                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(main_vars.back_days) > const.MIN_CORRELATED_CORRELATION or pair.correlation(main_vars.back_days) < -const.MIN_CORRELATED_CORRELATION):
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                             else:
-                                if pair.correlation(365) > -const.MAX_UNCORRELATED_CORRELATION and pair.correlation(365) < const.MAX_UNCORRELATED_CORRELATION:
+                                if pair.correlation(main_vars.back_days) > -const.MAX_UNCORRELATED_CORRELATION and pair.correlation(main_vars.back_days) < const.MAX_UNCORRELATED_CORRELATION:
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                         except GettingInfoError as e:
@@ -145,13 +149,10 @@ if __name__ == "__main__":
 
                 header = get_iv_header()
 
-                back_days = const.BACK_DAYS
+                back_days = main_vars.back_days
                 if command[2] != "":
                     try:
-                        back_days = int(command[2])
-                        if back_days <= 30:
-                            # take it as months if less than 30
-                            back_days *= 30
+                        back_days = int(command[2]) * 30
                     except ValueError:
                         pass
 
