@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
             elif command[0] == "help":
                 print("HELP")
-                print("delete [nr_of_back_days] => deletes current date or number of back days")
+                print("delete [nr_of_back_days] => deletes current date, or number of back days, or entry")
                 print("corr symbol1 symbol2")
                 print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
                 print("chart pair symbol1 symbol2 fixed_stdev_ratio")
@@ -78,12 +78,14 @@ if __name__ == "__main__":
             elif command[0] == "delete":
                 if command[1] == "":
                     main_vars.data_handler.delete_at(util.today_in_string())
+                    print("Today deleted")
                 else:
                     try:
                         main_vars.data_handler.delete_back(int(command[1]))
+                        print("Back days deleted")
                     except (ValueError, TypeError) as e:
                         main_vars.data_handler.delete_ticker(command[1].upper())
-                print("Entries deleted")
+                        print("Ticker deleted")
                 continue
 
             elif command[0] == "corr":
@@ -126,24 +128,33 @@ if __name__ == "__main__":
                 continue
 
             elif command[0] == "print":
-                try:
-                    header = ['Date', 'Price'] * 8
-                    values_printed = 0
-                    row = None
-                    rows = []
-                    for key, value in main_vars.data_handler.stock[command[1].upper()].items():
-                        if values_printed % 8 == 0:
-                            if row is not None:
-                                rows.append(row)
-                            row = []
-                        row.append(key)
-                        row.append(value)
-                        values_printed += 1
-                    for i in range(16 - len(row)):
-                        row.append('x')
-                    rows.append(row)
-                except KeyError:
-                    print("Ticker not found")
+                if command[1] == "price":
+                    try:
+                        header = ['Date', 'Price'] * 8
+                        values_printed = 0
+                        row = None
+                        rows = []
+                        for key, value in main_vars.data_handler.stock[command[2].upper()].items():
+                            if values_printed % 8 == 0:
+                                if row is not None:
+                                    rows.append(row)
+                                row = []
+                            row.append(key)
+                            row.append(value)
+                            values_printed += 1
+                        for i in range(16 - len(row)):
+                            row.append('x')
+                        rows.append(row)
+                    except KeyError:
+                        print("Ticker not found")
+                elif command[1] == "keys":
+                    print("IV:")
+                    print(main_vars.data_handler.implied_volatility.keys())
+                    print("HV:")
+                    print(main_vars.data_handler.historical_volatility.keys())
+                    print("STOCK:")
+                    print(main_vars.data_handler.stock.keys())
+                    continue
 
             elif command[0] == "vol":
 

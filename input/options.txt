@@ -8,14 +8,11 @@ TLT
 
 GLD
 SLV
-#GDX
 GDXJ
 
 JJC
-#HGH8
 
 XOP
-#OIH
 USO
 XLE
 
@@ -23,31 +20,33 @@ VXX
 
 FXE
 
-#IYR
-#XLU
+IYR
+XLU
 #XHB
 
-#EFA
-#EEM
+EFA
 FXI
 EWZ
 EWW
+#EEM
 
 ---
 
 XLV
 XBI
 XME
+XRT
 
 UNG
 KRE
 
 #Too small
+#GDX
+#OIH
 #XLF
 #TBT
 #XLY
 #XLP
-XRT
 
 
 #Too correlated with SPY

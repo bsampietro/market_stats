@@ -85,6 +85,8 @@ def get_stock_header():
         'Min200',
         'Max200',
         '-',
+        'SPYcrr',
+        'SPY R',
         'UpCl15',
         'DoCl15',
         'ConsUp15',
@@ -97,6 +99,7 @@ def get_stock_header():
 def get_stock_row(ticker, date, back_days = None):
     try:
         stock = Stock(main_vars.data_handler, ticker)
+        spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
         row = [ticker,
             date,
             stock.get_close_at(date),
@@ -113,6 +116,8 @@ def get_stock_row(ticker, date, back_days = None):
             stock.min(200),
             stock.max(200),
             '-',
+            spy_pair.correlation(365),
+            spy_pair.stdev_ratio(365),
             stock.closes_nr(15, up = True),
             stock.closes_nr(15, up = False),
             stock.consecutive_nr(15, up = True),
@@ -181,7 +186,7 @@ def get_pairs_header():
         'Corr',
         'SPYVRat',
         '-']
-    header += ['-'] * 4
+    header += ['-'] * 3
     return header
 
 
@@ -211,7 +216,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         # ranks = pair.period_ranks(50)[-5:]
         # ranks.reverse()
         # row += ranks
-        closes = pair.closes(50)[-4:]
+        closes = pair.closes(50)[-3:]
         closes.reverse()
         row += closes
         return row

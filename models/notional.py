@@ -1,7 +1,7 @@
 MIN_IVR = 25
-MIN_MONEY = 25 # minimum money (25 thousand) to put starting on 25 IVR
+MIN_MONEY = 15 # minimum money (in thousands) to put starting on 25 IVR
 # MULTIPLIER has to be so that with ivr of 85 or more,
-# the money is the triple of MIN_MONEY
+# the max money is the triple of MIN_MONEY
 # check quantity method
 MULTIPLIER = 2 * MIN_MONEY / 60.0 # 60 because: 85 ivr - 25 ivr
 

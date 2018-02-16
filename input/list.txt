@@ -9,7 +9,7 @@ HYG
 GLD
 SLV
 GDX
-#GDXJ
+GDXJ
 
 XOP
 OIH
