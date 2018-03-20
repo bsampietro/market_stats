@@ -10,10 +10,12 @@ GDX-GLD
 SLV-GLD
 GLD-PPLT
 GLD-TLT
-SPY-VXX
+#SPY-VXX
 FXY-GLD
 FXE-GLD
 FXY-FXE
+FXB-FXY
+#6C-6A (canada - aussie)
 # curve spreads (NOB, etc)
 #IEF-TLT-0.41
 #SHY-IEF-0.5
@@ -28,8 +30,21 @@ CLM8-CLH8-1
 # 2 months
 #CLK8-CLH8-1
 
+# Credit quality
+#(3 GE(2 years from now) - 2 ZT)
+# GEZ9-ZTM8-0.58
+
+# Credit quality + TUF
+GEZ9-IEI-0.23
+
+# CAD-CL
+# AUD-GC
+# CAD-AUD
+
 #GCJ8-GCZ8-1
 #HGH8-HGU8-1
+
+ZCK8-ZSK8
 
 #ZWH8-ZWN8-1
 #ZCH8-ZCZ8-1

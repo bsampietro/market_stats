@@ -90,9 +90,17 @@ if __name__ == "__main__":
 
             elif command[0] == "corr":
                 pair = Pair(main_vars.data_handler, command[1].upper(), command[2].upper())
-                print(f"  Correlation: {format(pair.correlation(main_vars.back_days), '.2f')}")
-                print(f"  Beta:        {format(pair.beta(main_vars.back_days), '.2f')}")
-                print(f"  Volat ratio: {format(pair.stdev_ratio(main_vars.back_days), '.2f')}")
+
+                back_days = main_vars.back_days
+                if command[3] != "":
+                    try:
+                        back_days = int(command[3])
+                    except ValueError:
+                        pass
+
+                print(f"  Correlation: {format(pair.correlation(back_days), '.2f')}")
+                print(f"  Beta:        {format(pair.beta(back_days), '.2f')}")
+                print(f"  Volat ratio: {format(pair.stdev_ratio(back_days), '.2f')}")
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
@@ -182,9 +190,12 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command, get_stock_row)
 
-                if command[2] == "ord":
-                    # order by MA50%
-                    rows.sort(key = lambda row: row[8] if isinstance(row[8], (int, float)) else 0)
+                try:
+                    order_column = int(command[2])
+                except (ValueError, TypeError) as e:
+                    order_column = const.ST_ORDER_COLUMN # order by MA50%
+
+                rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 0)
 
             elif command[0] == "hvol":
 
