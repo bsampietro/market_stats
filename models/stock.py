@@ -65,6 +65,11 @@ class Stock:
     def percentage_hv(self, back_days):
         return calculate_percentage_hv(self.percentage_changes(back_days))
 
+    
+    @lru_cache(maxsize=None)
+    def accumulative_percentage_hv(self, back_days):
+        return calculate_percentage_hv(self.accumulative_percentage_changes(back_days))
+
 
     @lru_cache(maxsize=None)
     def percentage_period_hvs(self):
@@ -109,8 +114,8 @@ class Stock:
         return max_consecutive
 
 
-    def stdev(self, back_days):
-        return statistics.stdev(self.accumulative_percentage_changes(back_days))
+    def to_10_ratio(self, back_days):
+        return self.percentage_hv(back_days) / 0.50 # 0.50 is the 10% percentage_hv with "my math"
 
 
     # private
@@ -139,7 +144,6 @@ class Stock:
         for i in range(len(closes)):
             if i == 0:
                 continue
-            # percentage_change += (closes[i] / closes[i-1] - 1) * 100 # accumulative
             percentage_change = (closes[i] / closes[i-1] - 1) * 100 # non accumulative
             percentage_changes.append(percentage_change)
         return percentage_changes

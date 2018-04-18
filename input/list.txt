@@ -35,7 +35,7 @@ XLE
 
 ---
 
-TBT
+#TBT
 
 XLY
 XLI
@@ -61,7 +61,9 @@ DBA
 URA
 JJC
 JJG
+JJU
 IEF
+IEI
 SHY
 
 #XLK

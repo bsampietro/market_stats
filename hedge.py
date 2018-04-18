@@ -13,10 +13,7 @@ HEDGER_STRIKE = 230 # SPY:230 / ES:2300 # and use same last_trade_date than futu
 
 # Main method
 if __name__ == "__main__":
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.addHandler(logging.FileHandler("./log/_hedge.log"))
-    ## logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(filename='./log/_hedge.log', level=logging.INFO)
     
     try:
         ib_hedge = IBHedge()

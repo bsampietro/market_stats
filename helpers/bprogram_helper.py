@@ -20,15 +20,17 @@ from config import main_vars
 def get_iv_header():
     header = ['Ticker',
         'Date',
+        'Close',
+        'MA50%',
         'IV',
-        'IV2IVavg',
-        'IV2HVavg',
+        'I2Iavg',
+        'I2Havg',
         'Avg2Avg',
         'IV2HV-',
         'I2HAvg',
         'SPYCrr',
-        'SPY R',
-        'SPY RIV',
+        'SPY-R',
+        'SPY-RIV',
         'Ntnl',
         '%Rnk',
         'WRnk',
@@ -48,6 +50,8 @@ def get_iv_row(ticker, date, back_days):
 
         row = [ticker,
             date,
+            stock.get_close_at(date),
+            stock.current_to_ma_percentage(date, 50),
             iv.get_at(date),
             iv.current_to_average_ratio(date, back_days),
             mixed_vs.iv_current_to_hv_average(date, back_days),
@@ -134,13 +138,13 @@ def get_hv_header():
         'Date',
         'HV30',
         'HV365',
-        'HVavg',
-        'MaxHV',
         '-',
         'HV30%',
         'HV365%',
-        'HVavg%',
-        'MaxHV%']
+        'HV365to10',
+        '-',
+        'HVacc30%',
+        'HVacc365%']
     return header
 
 
@@ -153,13 +157,17 @@ def get_hv_row(ticker, date, back_days = None):
             date,
             stock.hv(30),
             stock.hv(365),
-            stock.hv_average(),
-            max(stock.period_hvs()),
+            #stock.hv_average(),
+            #max(stock.period_hvs()),
             '-',
             stock.percentage_hv(30),
             stock.percentage_hv(365),
-            stock.percentage_hv_average(),
-            max(stock.percentage_period_hvs())]
+            stock.to_10_ratio(365),
+            #stock.percentage_hv_average(),
+            #max(stock.percentage_period_hvs()),
+            '-',
+            stock.accumulative_percentage_hv(30),
+            stock.accumulative_percentage_hv(365)]
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)

@@ -10,23 +10,13 @@ from models.hft_monitor import HftMonitor
 if __name__ == "__main__":
     logging.basicConfig(filename='./log/_hft.log', level=logging.INFO)
     
-    # logger = logging.getLogger()
-    # logger.setLevel(logging.INFO)
-    # logger.addHandler(logging.FileHandler("./log/_hft.log"))
-    # # logging.basicConfig(level=logging.INFO)
-    
     try:
         ib_hft = IBHft()
-        monitor1 = HftMonitor(sys.argv[1], ib_hft)
         # ib_hft.wait_for_readiness()
-        # ib_hft.start_monitoring(sys.argv[1])
-        
-        # when having ticker list:
-        # client_id = 100
-        # monitors = []
-        # for ticker in tickers:
-        #     client_id += 1
-        #     monitors.append(IBHft(ticker, client_id))
+        monitors = []
+        tickers = [sys.argv[1]] # can be taken from list in the future
+        for ticker in tickers:
+            monitors.append(HftMonitor(ticker, ib_hft))
 
         # Waiting indefinitely to catch the program termination exception
         time.sleep(999999999)

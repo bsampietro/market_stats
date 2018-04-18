@@ -10,7 +10,7 @@ GLD
 SLV
 GDXJ
 
-JJC
+#JJC
 
 XOP
 USO
@@ -22,13 +22,13 @@ FXE
 
 IYR
 XLU
-#XHB
+XHB
 
 EFA
 FXI
 EWZ
 EWW
-#EEM
+EEM
 
 ---
 
@@ -40,18 +40,22 @@ XRT
 UNG
 KRE
 
+
 #Too small
 #GDX
 #OIH
 #XLF
 #TBT
-#XLY
-#XLP
+XLY
+XLP
 
 
 #Too correlated with SPY
 #XLI
 #XLB
+
+#Too correlated with QQQ
+#SMH
 
 #Not very liquid
 #FEZ
