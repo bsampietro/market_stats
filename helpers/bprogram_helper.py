@@ -91,10 +91,11 @@ def get_stock_header():
         '-',
         'SPYcrr',
         'SPY R',
+        'To10rat',
         'UpCl15',
         'DoCl15',
-        'ConsUp15',
-        'ConsDwn15']
+        'CnUp15',
+        'CnDn15']
     return header
 
 
@@ -122,6 +123,7 @@ def get_stock_row(ticker, date, back_days = None):
             '-',
             spy_pair.correlation(365),
             spy_pair.stdev_ratio(365),
+            stock.to_10_ratio(365),
             stock.closes_nr(15, up = True),
             stock.closes_nr(15, up = False),
             stock.consecutive_nr(15, up = True),
@@ -237,7 +239,7 @@ def get_query_date(ticker):
     if main_vars.connected:
         return util.today_in_string()
     else:
-        max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
+        max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
         if max_stored_date is None:
             return util.today_in_string()
         else:
