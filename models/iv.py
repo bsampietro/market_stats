@@ -69,7 +69,7 @@ class IV:
     # weighted (or not) average between min-max rank and percentile rank
     @lru_cache(maxsize=None)
     def current_weighted_iv_rank(self, back_days):
-        return round((self.current_mm_iv_rank(back_days) + self.current_percentile_iv_rank(back_days)) / 2.0)
+        return round((2 * self.current_mm_iv_rank(back_days) + self.current_percentile_iv_rank(back_days)) / 3.0)
     
 
     
