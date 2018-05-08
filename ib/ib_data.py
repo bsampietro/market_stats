@@ -6,7 +6,7 @@ import logging
 import time
 from datetime import datetime
 
-from ibapi import wrapper
+from ibapi.wrapper import EWrapper
 from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
@@ -14,23 +14,9 @@ from ibapi.common import *
 from lib import util
 
 
-class IBDataWrapper(wrapper.EWrapper):
-    def __init__(self):
-        wrapper.EWrapper.__init__(self)
-
-class IBDataClient(EClient):
-    def __init__(self, wrapper):
-        EClient.__init__(self, wrapper)
-
-    def keyboardInterrupt(self):
-        self.disconnect()
-
-
-
-class IBData(IBDataWrapper, IBDataClient):
+class IBData(EClient, EWrapper):
     def __init__(self, data_handler):
-        IBDataWrapper.__init__(self)
-        IBDataClient.__init__(self, wrapper=self)
+        EClient.__init__(self, wrapper = self)
 
         self.data_handler = data_handler
 
@@ -42,10 +28,8 @@ class IBData(IBDataWrapper, IBDataClient):
 
         self.connect("127.0.0.1", 7496, 0)
 
-        # Try without calling self.run() ??
-        thread = Thread(target = self.run)
-        thread.start()
-        # self.run()
+        self.message_loop = Thread(target = self.run)
+        self.message_loop.start()
 
 
     # Overridden wrapper responses
@@ -110,19 +94,20 @@ class IBData(IBDataWrapper, IBDataClient):
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
 
-    # App functions
-    def get_next_req_id(self, next = True):
-        if next:
-            self.next_req_id += 1
-        return self.next_req_id
-
-
     def wait_for_async_request(self):
         for i in range(120):
             if len(self.req_id_to_stock_ticker_map) == 0:
                 break
             else:
                 time.sleep(1)
+
+
+    # Private
+    
+    def get_next_req_id(self, next = True):
+        if next:
+            self.next_req_id += 1
+        return self.next_req_id
 
 
     def reset_session_requested_data(self):
@@ -134,3 +119,7 @@ class IBData(IBDataWrapper, IBDataClient):
         
         self.req_id_to_stock_ticker_map.pop(reqId, None)
         logging.getLogger().info(f"Bruno says: Error logged with reqId: {reqId}")
+
+
+    def keyboardInterrupt(self):
+        self.disconnect()
