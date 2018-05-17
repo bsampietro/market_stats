@@ -47,6 +47,7 @@ XLP
 
 UNG
 KRE
+XHB
 
 #Not very liquid
 FEZ
@@ -59,17 +60,20 @@ EWJ
 PPLT
 DBA
 URA
-JJC
-JJG
-JJU
+#JJC
+#JJG
+#JJU
 IEF
 IEI
 SHY
+
+CPER
+AA
+SOYB
+CORN
+WEAT
 
 #XLK
 #UUP
 
 #VXF8
-
-XHB
-AA

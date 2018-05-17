@@ -51,7 +51,7 @@ XLP
 
 
 #Too correlated with SPY
-#XLI
+XLI
 #XLB
 
 #Too correlated with QQQ
