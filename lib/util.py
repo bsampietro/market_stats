@@ -2,6 +2,7 @@ import sys
 sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
 
 from datetime import datetime, timedelta
+import math
 import statistics
 
 from ibapi.contract import *
@@ -58,6 +59,13 @@ def covariance(data1, data2):
 
     return sum / (len(data1) - 1)
 
+def calculate_hv(closes):
+    # return (statistics.stdev(closes) / closes[-1]) * 100 * math.sqrt(252/len(closes))
+    return (statistics.stdev(closes) / statistics.mean(closes)) * 100 * math.sqrt(252/len(closes))
+
+def calculate_percentage_hv(percentage_changes):
+    return statistics.stdev(percentage_changes) * math.sqrt(252/len(percentage_changes))
+
 
 # ------ Private ------
 
@@ -82,7 +90,7 @@ def get_stock_contract(symbol):
     contract = get_basic_contract()
     contract.symbol = symbol
     contract.secType = "STK"
-    if symbol in ("GLD", "GDX", "GDXJ"):
+    if symbol in ("GLD", "GDX", "GDXJ", "SOYB", "CORN", "WEAT"):
         contract.exchange = "ARCA"
     elif symbol in ("MSFT", "INTC", "CSCO"):
         contract.exchange = "ISLAND"

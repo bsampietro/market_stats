@@ -5,13 +5,9 @@ import statistics
 import math
 
 from config import main_vars
+from config import constants
 
-def calculate_hv(closes):
-    # return (statistics.stdev(closes) / closes[-1]) * 100 * math.sqrt(252/len(closes))
-    return (statistics.stdev(closes) / statistics.mean(closes)) * 100 * math.sqrt(252/len(closes))
-
-def calculate_percentage_hv(percentage_changes):
-    return statistics.stdev(percentage_changes) * math.sqrt(252/len(percentage_changes))
+from lib import util
 
 class Stock:
     def __init__(self, data_handler, ticker):
@@ -20,7 +16,7 @@ class Stock:
 
 
     def hv(self, back_days):
-        return calculate_hv(self.closes(back_days))
+        return util.calculate_hv(self.closes(back_days))
 
 
     @lru_cache(maxsize=None)
@@ -29,7 +25,7 @@ class Stock:
         hvs = []
         for i in range(len(closes) - 21):
             monthly_closes = closes[i:i+21]
-            hvs.append(calculate_hv(monthly_closes))
+            hvs.append(util.calculate_hv(monthly_closes))
         return hvs
 
 
@@ -63,12 +59,12 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def percentage_hv(self, back_days):
-        return calculate_percentage_hv(self.percentage_changes(back_days))
+        return util.calculate_percentage_hv(self.percentage_changes(back_days))
 
     
     @lru_cache(maxsize=None)
     def accumulative_percentage_hv(self, back_days):
-        return calculate_percentage_hv(self.accumulative_percentage_changes(back_days))
+        return util.calculate_percentage_hv(self.accumulative_percentage_changes(back_days))
 
 
     @lru_cache(maxsize=None)
@@ -77,7 +73,7 @@ class Stock:
         hvs = []
         for i in range(len(percentage_changes) - 21):
             monthly_percentage_changes = percentage_changes[i:i+21]
-            hvs.append(calculate_percentage_hv(monthly_percentage_changes))
+            hvs.append(util.calculate_percentage_hv(monthly_percentage_changes))
         return hvs
 
 
@@ -113,9 +109,13 @@ class Stock:
                     consecutive = 0
         return max_consecutive
 
+    
+    def stdev(self, back_days):
+        return statistics.stdev(self.accumulative_percentage_changes(back_days))
+
 
     def to_10_ratio(self, back_days):
-        return self.percentage_hv(back_days) / 0.50 # 0.50 is the 10% percentage_hv with "my math"
+        return self.percentage_hv(back_days) / constants.TEN_PERCENTAGE_HV
 
 
     # private
