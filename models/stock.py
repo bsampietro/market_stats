@@ -49,6 +49,10 @@ class Stock:
         return self.data_handler.find_in_data("STOCK", self.ticker, date)
 
 
+    def get_last_percentage_change(self):
+        return self.percentage_changes(main_vars.back_days)[-1]
+
+
     def min(self, back_days):
         return min(self.closes(back_days))
 
@@ -120,6 +124,7 @@ class Stock:
 
     # private
 
+    # Last list element is the most recent value, achieved by closes.reverse() statement
     @lru_cache(maxsize=None)
     def closes(self, back_days):
         max_date = self.data_handler.get_max_stored_date("STOCK", self.ticker)
