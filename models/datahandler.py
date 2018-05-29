@@ -185,6 +185,13 @@ class DataHandler:
             self.remote.reset_session_requested_data()
 
 
+    # Async
+
     def wait_for_async_request(self):
         if self.connected():
             self.remote.wait_for_async_request()
+
+
+    def wait_for_api_ready(self):
+        if self.connected():
+            self.remote.wait_for_api_ready()

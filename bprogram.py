@@ -30,6 +30,7 @@ if __name__ == "__main__":
 
     main_vars.connected = (parameters[1] == "connect")
     main_vars.data_handler = DataHandler(main_vars.connected)
+    main_vars.data_handler.wait_for_api_ready()
     try:
         main_vars.back_days = int(parameters[2]) * 30
     except ValueError as e:

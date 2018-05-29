@@ -25,6 +25,7 @@ class IBData(EClient, EWrapper):
         self.req_id_to_stock_ticker_map = {}
         self.req_id_to_requested_historical_data = {}
         self.session_requested_data = set()
+        self.api_ready = False
 
         self.connect("127.0.0.1", 7496, 0)
 
@@ -94,9 +95,19 @@ class IBData(EClient, EWrapper):
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
 
+    # Async
+
     def wait_for_async_request(self):
         for i in range(120):
             if len(self.req_id_to_stock_ticker_map) == 0:
+                break
+            else:
+                time.sleep(1)
+
+
+    def wait_for_api_ready(self):
+        for i in range(120):
+            if self.api_ready:
                 break
             else:
                 time.sleep(1)
@@ -120,6 +131,13 @@ class IBData(EClient, EWrapper):
         self.req_id_to_stock_ticker_map.pop(reqId, None)
         logging.getLogger().info(f"Bruno says: Error logged with reqId: {reqId}")
 
+    
+    # Overwritten
 
     def keyboardInterrupt(self):
         self.disconnect()
+
+
+    def nextValidId(self, orderId:int):
+        super().nextValidId(orderId)
+        self.api_ready = True
