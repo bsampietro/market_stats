@@ -313,3 +313,15 @@ def read_pairs_file_and_process(command, get_row_method):
         if len(row) > 0:
             rows.append(row)
     return rows
+
+
+def update_stock(command):
+    text_file = "./input/" + command[1] + ".txt"
+    if os.path.isfile(text_file):
+        tickers = util.read_symbol_list(text_file)
+        for ticker in tickers:
+            if ticker != '---':
+                main_vars.data_handler.request_market_data("STOCK", ticker)
+    else:
+        ticker = command[1].upper()
+        main_vars.data_handler.request_market_data("STOCK", ticker)

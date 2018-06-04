@@ -10,8 +10,6 @@ GLD
 SLV
 GDXJ
 
-#JJC
-
 XOP
 USO
 XLE

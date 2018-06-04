@@ -21,10 +21,7 @@ from texttable import Texttable
 
 # Main method
 if __name__ == "__main__":
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.addHandler(logging.FileHandler("./log/_bprogram.log"))
-    ## logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(filename="./log/bprogram.log", level=logging.INFO)
 
     parameters = sys.argv + 5 * ['']
 
@@ -220,6 +217,12 @@ if __name__ == "__main__":
                 if "ord" in command:
                     # order by rank
                     rows.sort(key = lambda row: row[12] if isinstance(row[12], (int, float)) else 0)
+
+            elif command[0] == "update":
+                update_stock(command)
+                print("Updating stock values...")
+                main_vars.data_handler.wait_for_async_request()
+                continue
 
             else:
                 print("Command not recognized")

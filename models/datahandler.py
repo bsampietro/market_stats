@@ -118,6 +118,10 @@ class DataHandler:
 
     def request_historical_data(self, requested_data, ticker):
         self.remote.request_historical_data(requested_data, ticker)
+
+
+    def request_market_data(self, requested_data, ticker):
+        self.remote.request_market_data(requested_data, ticker)
     
 
     def find_in_data(self, requested_data, ticker, the_day = None, silent = False):
