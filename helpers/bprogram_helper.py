@@ -18,20 +18,21 @@ import config.constants as const
 from config import main_vars
 
 def get_iv_header():
-    header = ['Ticker',
+    header = ['Tckr',
         'Date',
         'Last',
         'MA50%',
         'IV',
-        'I2Iavg',
-        'I2Havg',
-        'Avg2Avg',
+        'I2Iav',
+        'I2Hav',
+        'Av2Av',
         'IV2HV-',
-        'I2HAvg',
+        'I2HAv',
         'SPYCrr',
         'SPY-R',
         'SPY-RIV',
         'Ntnl',
+        'Jmp',
         '%Rnk',
         'WRnk',
         '-', 
@@ -62,6 +63,7 @@ def get_iv_row(ticker, date, back_days):
             spy_pair.stdev_ratio(back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
             notional.quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
+            notional.jumps(stock.get_close_at(date), spy_pair.stdev_ratio(back_days)),
             iv.current_percentile_iv_rank(back_days),
             iv.current_weighted_iv_rank(back_days)]
         row += ['-']

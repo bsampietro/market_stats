@@ -1,7 +1,7 @@
 SPY
 QQQ
 IWM
-DIA
+#DIA
 
 TLT
 #HYG
@@ -9,34 +9,35 @@ TLT
 GLD
 SLV
 GDXJ
+UNG
 
 XOP
 USO
-XLE
+#XLE
 
 VXX
 
 FXE
 
-IYR
+#IYR
 XLU
 XHB
+XME
+XRT
+XLP
 
 EFA
-FXI
-EWZ
-EWW
 EEM
+#FXI
+#EWW
+#EWZ
 
 ---
 
-XLV
-XBI
-XME
-XRT
+#XLV
+#XBI
+#KRE
 
-UNG
-KRE
 
 
 #Too small
@@ -44,13 +45,13 @@ KRE
 #OIH
 #XLF
 #TBT
-XLY
-XLP
+
 
 
 #Too correlated with SPY
-XLI
+#XLI
 #XLB
+#XLY
 
 #Too correlated with QQQ
 #SMH
@@ -58,7 +59,7 @@ XLI
 #Not very liquid
 #FEZ
 #EWY
-FXY
+#FXY
 #FXB
 #EWJ
 #RSX
