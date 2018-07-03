@@ -5,7 +5,7 @@ from threading import Thread
 import logging
 import time
 
-from ibapi import wrapper
+from ibapi.wrapper import EWrapper
 from ibapi.client import EClient
 from ibapi.contract import *
 from ibapi.common import *
@@ -13,24 +13,17 @@ from ibapi.order import *
 
 from lib import util
 
-
-class IBHftWrapper(wrapper.EWrapper):
-    def __init__(self):
-        wrapper.EWrapper.__init__(self)
-
-class IBHftClient(EClient):
-    def __init__(self, wrapper):
-        EClient.__init__(self, wrapper)
+from models.hft_monitor import HftMonitor
 
 
-
-class IBHft(IBHftWrapper, IBHftClient):
+class IBHft(EClient, EWrapper):
     SPEED_RATIO_THRESHOLD = 1.5
     MAX_STORED_SPEEDS = 10
 
     def __init__(self, test_mode=False):
-        IBHftWrapper.__init__(self)
-        IBHftClient.__init__(self, wrapper=self)
+        EClient.__init__(self, wrapper = self)
+
+        self.monitors = []
 
         # state variables
         self.req_id_to_monitor_map = {}
@@ -43,14 +36,31 @@ class IBHft(IBHftWrapper, IBHftClient):
         # state variables
         self.test_mode = test_mode
 
-        self.connect("127.0.0.1", 7496, 2)
+        if self.test_mode:
+            self.test_thread = Thread(target = self.connectAck)
+            self.test_thread.start()
+            self.test_thread.join()
+        else:
+            self.connect("127.0.0.1", 7496, 2)
 
-        # Try without calling self.run() ??
-        thread = Thread(target = self.run)
-        thread.start()
-        # self.run()
+            # Try without calling self.run() ??
+            # thread = Thread(target = self.run)
+            # thread.start()
+            self.run()
 
-        self.wait_for_readiness()
+            self.wait_for_readiness()
+
+
+    def connectAck(self):
+        """ callback signifying completion of successful connection """
+        # self.logAnswer(current_fn_name(), vars())
+
+        # tickers = [sys.argv[1]] # can be taken from list in the future
+        tickers = ["GCQ8"]
+        for ticker in tickers:
+            monitor = HftMonitor(ticker, self)
+            self.start_monitoring(monitor)
+            self.monitors.append(monitor)
 
 
     def keyboardInterrupt(self):
@@ -60,9 +70,10 @@ class IBHft(IBHftWrapper, IBHftClient):
     def clear_all(self):
         print("Clearing all...")
         
-        for req_id in self.req_id_to_monitor_map.keys():
+        for req_id, monitor in self.req_id_to_monitor_map.items():
             self.cancelMktData(req_id)
-        time.sleep(5)
+            monitor.close()
+            time.sleep(3)
         self.disconnect()
 
         print("Finished clearing.")
@@ -75,7 +86,19 @@ class IBHft(IBHftWrapper, IBHftClient):
 
 
     def request_market_data(self, req_id, contract):
-        self.reqMktData(req_id, contract, "", False, False, [])
+        if self.test_mode:
+            # Manually call tickPrice
+            for i in range(400):
+                if i % 2 == 0:
+                    self.tickPrice(self.current_req_id, 4, 1250.00, {"time": i})
+                else:
+                    self.tickPrice(self.current_req_id, 4, 1250.10, {"time": i})
+                time.sleep(10)
+            
+            for req_id, monitor in self.req_id_to_monitor_map.items():
+                monitor.close()
+        else:
+            self.reqMktData(req_id, contract, "", False, False, [])
 
 
     def tickPrice(self, reqId, tickType, price:float, attrib):
@@ -149,11 +172,11 @@ class IBHft(IBHftWrapper, IBHftClient):
         # self.order_id_to_monitor_map[orderId].order_change()
 
 
-    # Overload methods for test mode
-    def reqMktData(self, reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions):
-        if self.test_mode:
-            # manually call tickPrice
-            pass
-        else:
-            super().reqMktData(reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions)
+    # # Overload methods for test mode
+    # def reqMktData(self, reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions):
+    #     if self.test_mode:
+    #         # manually call tickPrice
+    #         pass
+    #     else:
+    #         super().reqMktData(reqId, contract, genericTickList, snapshot, regulatorySnapshot, mktDataOptions)
 

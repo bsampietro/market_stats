@@ -17,10 +17,8 @@ GLD-PPLT
 #ZTH8-ZNH8-0.57
 #ZFH8-ZBH8-0.31
 
-# 3 months starting april
-#CLN8-CLJ8-1
-# 2 months
-#CLK8-CLH8-1
+CLU8-CLQ8-1
+CLU8-CLQ8-0.5
 
 # Credit quality
 #(3 GE(2 years from now) - 2 ZT)
