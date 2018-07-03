@@ -19,7 +19,7 @@ VXX
 
 FXE
 
-#IYR
+IYR
 XLU
 XHB
 XME
