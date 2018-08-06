@@ -18,6 +18,7 @@ USO
 VXX
 
 FXE
+FXY
 
 IYR
 XLU
@@ -29,14 +30,19 @@ XLP
 EFA
 EEM
 #FXI
-#EWW
-#EWZ
 
 ---
 
+EWZ
+EWW
+XBI
+KRE
 #XLV
-#XBI
-#KRE
+
+#Too correlated with SPY
+XLI
+XLY
+#XLB
 
 
 
@@ -46,20 +52,12 @@ EEM
 #XLF
 #TBT
 
-
-
-#Too correlated with SPY
-#XLI
-#XLB
-#XLY
-
 #Too correlated with QQQ
 #SMH
 
 #Not very liquid
 #FEZ
 #EWY
-#FXY
 #FXB
 #EWJ
 #RSX
