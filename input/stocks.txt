@@ -9,6 +9,7 @@ HD
 INTC
 JNJ
 JPM
+GS
 KO
 MCD
 MSFT
@@ -17,7 +18,7 @@ PG
 V
 WFC
 WMT
-#XOM
+XOM
 
 ---
 
@@ -34,12 +35,12 @@ NFLX
 IBM
 ORCL
 MMM
-#VZ
+VZ
 BA
 BABA
 UPS
 #MO
-#QCOM
+QCOM
 NKE
 
 TWTR
@@ -48,3 +49,11 @@ X
 #AMD
 #MU
 CAT
+
+# NEW
+ATVI
+COST
+CVS
+BAC
+DE
+TGT

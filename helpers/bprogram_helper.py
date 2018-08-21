@@ -4,7 +4,7 @@ from datetime import datetime, date, timedelta
 import os.path
 import statistics
 
-from lib import util
+from lib import util, core
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -28,9 +28,9 @@ def get_iv_header():
         'Av2Av',
         'IV2HV-',
         'I2HAv',
-        'SPYCrr',
-        'SPY-R',
-        'SPY-RIV',
+        'SPCrr',
+        'SP-R',
+        'SP-RIV',
         'Ntnl',
         'Jmp',
         '%Rnk',
@@ -59,11 +59,11 @@ def get_iv_row(ticker, date, back_days):
             mixed_vs.iv_average_to_hv_average(back_days),
             mixed_vs.negative_difference_ratio(back_days),
             mixed_vs.difference_average(back_days),
-            spy_pair.correlation(back_days),
-            spy_pair.stdev_ratio(back_days),
+            core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
+            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
             iv.period_average(back_days) / spy_iv.period_average(back_days),
-            notional.quantity(iv.current_weighted_iv_rank(back_days), spy_pair.stdev_ratio(back_days)),
-            notional.jumps(stock.get_close_at(date), spy_pair.stdev_ratio(back_days)),
+            notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
+            notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
             iv.current_percentile_iv_rank(back_days),
             iv.current_weighted_iv_rank(back_days)]
         row += ['-']

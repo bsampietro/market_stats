@@ -8,6 +8,7 @@ XLE-USO
 GLD-GDX
 GLD-SLV
 GLD-PPLT
+GLD-FXE
 #6C-6A (canada - aussie)
 # curve spreads (NOB, etc)
 #IEF-TLT-0.41
@@ -16,9 +17,9 @@ GLD-PPLT
 #ZNH8-ZBH8-0.40
 #ZTH8-ZNH8-0.57
 #ZFH8-ZBH8-0.31
+#SPY-IEI-0.25
 
-CLU8-CLQ8-1
-CLU8-CLQ8-0.5
+#CLU8-CLQ8-1
 
 # Credit quality
 #(3 GE(2 years from now) - 2 ZT)

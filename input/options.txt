@@ -29,7 +29,7 @@ XLP
 
 EFA
 EEM
-#FXI
+FXI
 
 ---
 
