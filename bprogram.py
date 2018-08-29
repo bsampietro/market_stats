@@ -4,6 +4,7 @@ from datetime import datetime, date
 import os.path
 
 from lib import util
+from lib import html
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -66,8 +67,7 @@ if __name__ == "__main__":
                 print("corr symbol1 symbol2")
                 print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
                 print("chart pair symbol1 symbol2 fixed_stdev_ratio")
-                print("vol file.txt|symbol [back_days] [ord]")
-                print("st file.txt [ord]")
+                print("vp file.txt|symbol [back_days] [ord]")
                 print("hvol file.txt|symbol")
                 print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
                 print("print symbol")
@@ -162,7 +162,7 @@ if __name__ == "__main__":
                     print(main_vars.data_handler.stock.keys())
                     continue
 
-            elif command[0] == "vol":
+            elif command[0] == "vp":
 
                 header = get_iv_header()
 
@@ -175,25 +175,13 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
-                if command[3] == "ord" or command[3] != "":
-                    try:
-                        order_column = int(command[3])
-                    except (ValueError, TypeError) as e:
-                        order_column = const.VOL_ORDER_COLUMN # order by WRnk
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else const.MIN_VOL_LINE, reverse = True)
-
-            elif command[0] == "st":
-
-                header = get_stock_header()
-
-                rows = read_symbol_file_and_process(command, get_stock_row)
-
-                try:
-                    order_column = int(command[2])
-                except (ValueError, TypeError) as e:
-                    order_column = const.ST_ORDER_COLUMN # order by MA50%
-
-                rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 0)
+                if command[3] in const.VOL_ORD:
+                    def key_select(row):
+                        if isinstance(row[const.VOL_ORD[command[3]]], (int, float)):
+                            return row[const.VOL_ORD[command[3]]]
+                        else:
+                            return const.VOL_DEFAULT_ORD[command[3]]
+                    rows.sort(key = key_select, reverse = True)
 
             elif command[0] == "hvol":
 
@@ -238,8 +226,14 @@ if __name__ == "__main__":
             main_vars.data_handler.wait_for_async_request()
             print(t.draw())
 
-            with open(f"/media/ramd/{'-'.join(command)}", "w") as f:
-                f.write(t.draw())
+            command = filter(lambda c: c != '', command)
+            with open(f"/media/ramd/{'-'.join(command)}.html", "w") as f:
+                for row in rows:
+                    for i in range(len(row)):
+                        if isinstance(row[i], float):
+                            row[i] = round(row[i], 2)
+                f.write(html.table(rows, header_row=header,
+                    style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
 
         except GettingInfoError as e:
             print(e)

@@ -18,10 +18,9 @@ import config.constants as const
 from config import main_vars
 
 def get_iv_header():
-    header = ['Tckr',
+    header = [
+        'Tckr',
         'Date',
-        'Last',
-        'MA50%',
         'IV',
         'I2Iav',
         'I2Hav',
@@ -35,9 +34,19 @@ def get_iv_header():
         'Jmp',
         '%Rnk',
         'WRnk',
-        '-', 
-        'IVR']
+        'IVR'
+    ]
     header += ['-'] * (const.IVR_RESULTS - 1) # 1 is the IVR title
+    header += [
+        'Last',
+        'MA50',
+        'MA200',
+        'Min200',
+        'Max200',
+        'MA50%',
+        'L%chg',
+        'UD15'
+    ]
     return header
 
 def get_iv_row(ticker, date, back_days):
@@ -48,89 +57,41 @@ def get_iv_row(ticker, date, back_days):
         stock = Stock(main_vars.data_handler, ticker)
         spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
         spy_iv = IV(main_vars.data_handler, "SPY")
+        row = [ticker, date]
 
-        row = [ticker,
-            date,
+        # Volatility related data
+        try:
+            row += [
+                iv.get_at(date),
+                iv.current_to_average_ratio(date, back_days),
+                mixed_vs.iv_current_to_hv_average(date, back_days),
+                mixed_vs.iv_average_to_hv_average(back_days),
+                mixed_vs.negative_difference_ratio(back_days),
+                mixed_vs.difference_average(back_days),
+                core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
+                core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
+                iv.period_average(back_days) / spy_iv.period_average(back_days),
+                notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
+                notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
+                iv.current_percentile_iv_rank(back_days),
+                iv.current_weighted_iv_rank(back_days)
+            ]
+            row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
+        except GettingInfoError as e:
+            result_row_len = 13
+            row += ['-'] * (result_row_len + const.IVR_RESULTS)
+
+        # Price related data
+        row += [
             stock.get_close_at(date),
-            stock.current_to_ma_percentage(date, 50),
-            iv.get_at(date),
-            iv.current_to_average_ratio(date, back_days),
-            mixed_vs.iv_current_to_hv_average(date, back_days),
-            mixed_vs.iv_average_to_hv_average(back_days),
-            mixed_vs.negative_difference_ratio(back_days),
-            mixed_vs.difference_average(back_days),
-            core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
-            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
-            iv.period_average(back_days) / spy_iv.period_average(back_days),
-            notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
-            notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
-            iv.current_percentile_iv_rank(back_days),
-            iv.current_weighted_iv_rank(back_days)]
-        row += ['-']
-        row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
-        return row
-    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
-        print(e)
-        return []
-
-
-def get_stock_header():
-    header = ['Ticker',
-        'Date',
-        'Last',
-        'L%chg',
-        '-',
-        'MA50',
-        'MA50%',
-        '-',
-        'MA200',
-        'MA200%',
-        '-',
-        'Min200',
-        'Max200',
-        '-',
-        'SPYcrr',
-        'SPY R',
-        'To10rat',
-        'Jmp',
-        '-',
-        'UpCl15',
-        'DoCl15',
-        'CnUp15',
-        'CnDn15']
-    return header
-
-
-# back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_symbol_file_and_process
-def get_stock_row(ticker, date, back_days = None):
-    try:
-        stock = Stock(main_vars.data_handler, ticker)
-        spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
-        row = [ticker,
-            date,
-            stock.get_close_at(date),
-            stock.get_last_percentage_change(),
-            '-',
             stock.ma(50),
-            stock.current_to_ma_percentage(date, 50),
-            '-',
             stock.ma(200),
-            stock.current_to_ma_percentage(date, 200),
-            '-',
             stock.min(200),
             stock.max(200),
-            '-',
-            spy_pair.correlation(365),
-            spy_pair.stdev_ratio(365),
-            stock.to_10_ratio(365),
-            notional.jumps(stock.get_close_at(date), spy_pair.stdev_ratio(365)),
-            '-',
-            stock.closes_nr(15, up = True),
-            stock.closes_nr(15, up = False),
-            stock.consecutive_nr(15, up = True),
-            stock.consecutive_nr(15, up = False)
-            ]
+            stock.current_to_ma_percentage(date, 50),
+            stock.get_last_percentage_change(),
+            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False)
+        ]
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
@@ -161,14 +122,10 @@ def get_hv_row(ticker, date, back_days = None):
             date,
             stock.hv(30),
             stock.hv(365),
-            #stock.hv_average(),
-            #max(stock.period_hvs()),
             '-',
             stock.percentage_hv(30),
             stock.percentage_hv(365),
             stock.to_10_ratio(365),
-            #stock.percentage_hv_average(),
-            #max(stock.percentage_period_hvs()),
             '-',
             stock.accumulative_percentage_hv(30),
             stock.accumulative_percentage_hv(365)]
@@ -248,11 +205,11 @@ def get_query_date(ticker):
             return util.date_in_string(max_stored_date)
 
 
-def bring_if_connected(ticker, full):
+def bring_if_connected(ticker, bring_volatility):
     if not main_vars.connected:
         return
     try:
-        if full: # and util.contract_type(ticker) == "STK":
+        if bring_volatility:
             max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting IV data for ticker {ticker}...")
@@ -273,6 +230,7 @@ def bring_if_connected(ticker, full):
 
 def read_symbol_file_and_process(command, get_row_method, back_days = None):
     text_file = "./input/" + command[1] + ".txt"
+    v_tickers = util.read_symbol_list("./input/options.txt") + util.read_symbol_list("./input/stocks.txt")
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
@@ -281,13 +239,13 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
                 if len(rows) > 0:
                     rows.append(['-'] * len(rows[0]))
                 continue
-            bring_if_connected(ticker, command[0] == "vol")
+            bring_if_connected(ticker, ticker in v_tickers)
             row = get_row_method(ticker, get_query_date(ticker), back_days)
             if len(row) > 0:
                 rows.append(row)
     else:
         ticker = command[1].upper()
-        bring_if_connected(ticker, command[0] == "vol")
+        bring_if_connected(ticker, ticker in v_tickers)
         row = get_row_method(ticker, get_query_date(ticker), back_days)
         if len(row) > 0:
             rows.append(row)
