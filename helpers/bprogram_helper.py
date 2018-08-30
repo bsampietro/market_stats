@@ -18,9 +18,17 @@ import config.constants as const
 from config import main_vars
 
 def get_iv_header():
-    header = [
-        'Tckr',
-        'Date',
+    header = ['Tckr', 'Date']
+    header += [
+        'Last',
+        'MM200',
+        'MM200Rnk',
+        'MA50',
+        'MA50%',
+        'L%chg',
+        'UD15'
+    ]
+    header += [
         'IV',
         'I2Iav',
         'I2Hav',
@@ -37,15 +45,6 @@ def get_iv_header():
         'IVR'
     ]
     header += ['-'] * (const.IVR_RESULTS - 1) # 1 is the IVR title
-    header += [
-        'Last',
-        'MM200',
-        'MM200Rnk',
-        'MA50',
-        'MA50%',
-        'L%chg',
-        'UD15'
-    ]
     return header
 
 def get_iv_row(ticker, date, back_days):
@@ -57,7 +56,16 @@ def get_iv_row(ticker, date, back_days):
         spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
         spy_iv = IV(main_vars.data_handler, "SPY")
         row = [ticker, date]
-
+        # Price related data
+        row += [
+            stock.get_close_at(date),
+            f"{stock.min(200)} - {stock.max(200)}",
+            stock.min_max_rank(date, 200),
+            stock.ma(50),
+            stock.current_to_ma_percentage(date, 50),
+            stock.get_last_percentage_change(),
+            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False)
+        ]
         # Volatility related data
         try:
             row += [
@@ -79,18 +87,7 @@ def get_iv_row(ticker, date, back_days):
         except GettingInfoError as e:
             result_row_len = 13
             row += ['-'] * (result_row_len + const.IVR_RESULTS)
-            row[9] = stock.to_10_ratio(back_days) # when no IV difference, add to_10_ratio
-
-        # Price related data
-        row += [
-            stock.get_close_at(date),
-            f"{stock.min(200)} - {stock.max(200)}",
-            stock.min_max_rank(date, 200),
-            stock.ma(50),
-            stock.current_to_ma_percentage(date, 50),
-            stock.get_last_percentage_change(),
-            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False)
-        ]
+            row[16] = stock.to_10_ratio(back_days) # when no IV difference, add to_10_ratio
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)

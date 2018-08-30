@@ -35,7 +35,6 @@ if __name__ == "__main__":
     except ValueError as e:
         main_vars.back_days = 365
 
-
     last_command = []
 
     while True:
@@ -68,7 +67,7 @@ if __name__ == "__main__":
                 print("corr symbol1 symbol2")
                 print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
                 print("chart pair symbol1 symbol2 fixed_stdev_ratio")
-                print("vp file.txt|symbol [back_days] [ord]")
+                print("prvol file.txt|symbol [back_days] [ord]")
                 print("hvol file.txt|symbol")
                 print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
                 print("print symbol")
@@ -163,7 +162,7 @@ if __name__ == "__main__":
                     print(main_vars.data_handler.stock.keys())
                     continue
 
-            elif command[0] == "vp":
+            elif command[0] == "prvol":
 
                 header = get_iv_header()
 
@@ -226,7 +225,6 @@ if __name__ == "__main__":
             # for row in rows:
             #     t.add_row(row)
             # print(t.draw())
-            print("Finished. Stored report on /media/ramd.")
 
             command = filter(lambda c: c != '', command)
             with open(f"/media/ramd/{'-'.join(command)}.html", "w") as f:
@@ -236,6 +234,8 @@ if __name__ == "__main__":
                             row[i] = round(row[i], 2)
                 f.write(html.table(rows, header_row=header,
                     style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
+
+            print("Finished. Stored report on /media/ramd.")
 
         except GettingInfoError as e:
             print(e)
