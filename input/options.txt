@@ -1,3 +1,4 @@
+# Tickers (from list) that should bring options data
 SPY
 QQQ
 IWM

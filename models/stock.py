@@ -61,6 +61,10 @@ class Stock:
         return max(self.closes(back_days))
 
 
+    def min_max_rank(self, date, back_days):
+        return (self.get_close_at(date) - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
+
+
     @lru_cache(maxsize=None)
     def percentage_hv(self, back_days):
         return util.calculate_percentage_hv(self.percentage_changes(back_days))

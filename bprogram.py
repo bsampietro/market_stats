@@ -2,6 +2,7 @@ import sys
 import logging
 from datetime import datetime, date
 import os.path
+import readline
 
 from lib import util
 from lib import html
@@ -216,15 +217,16 @@ if __name__ == "__main__":
                 print("Command not recognized")
                 continue
 
-            t = Texttable(max_width = 0)
-            t.set_precision(2)
-            t.add_row(header)
-            for row in rows:
-                t.add_row(row)
-
             print("Waiting for async request...")
             main_vars.data_handler.wait_for_async_request()
-            print(t.draw())
+
+            # t = Texttable(max_width = 0)
+            # t.set_precision(2)
+            # t.add_row(header)
+            # for row in rows:
+            #     t.add_row(row)
+            # print(t.draw())
+            print("Finished. Stored report on /media/ramd.")
 
             command = filter(lambda c: c != '', command)
             with open(f"/media/ramd/{'-'.join(command)}.html", "w") as f:

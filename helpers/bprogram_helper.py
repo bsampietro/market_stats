@@ -39,10 +39,9 @@ def get_iv_header():
     header += ['-'] * (const.IVR_RESULTS - 1) # 1 is the IVR title
     header += [
         'Last',
+        'MM200',
+        'MM200Rnk',
         'MA50',
-        'MA200',
-        'Min200',
-        'Max200',
         'MA50%',
         'L%chg',
         'UD15'
@@ -80,14 +79,14 @@ def get_iv_row(ticker, date, back_days):
         except GettingInfoError as e:
             result_row_len = 13
             row += ['-'] * (result_row_len + const.IVR_RESULTS)
+            row[9] = stock.to_10_ratio(back_days) # when no IV difference, add to_10_ratio
 
         # Price related data
         row += [
             stock.get_close_at(date),
+            f"{stock.min(200)} - {stock.max(200)}",
+            stock.min_max_rank(date, 200),
             stock.ma(50),
-            stock.ma(200),
-            stock.min(200),
-            stock.max(200),
             stock.current_to_ma_percentage(date, 50),
             stock.get_last_percentage_change(),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False)
