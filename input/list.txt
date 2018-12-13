@@ -12,7 +12,7 @@ GDX
 GDXJ
 
 XOP
-OIH
+#OIH
 USO
 
 VXX
@@ -52,23 +52,25 @@ XHB
 #Not very liquid
 FEZ
 EWY
-FXY
-FXB
 EWJ
 EWG
-
+EWU
 ARGT
 EWI
 EWQ
 EWP
+TUR
+
+FXY
+FXB
 
 #special
 PPLT
 DBA
 URA
-IEF
-IEI
-SHY
+#IEF
+#IEI
+#SHY
 
 CPER
 COPX

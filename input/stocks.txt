@@ -22,7 +22,7 @@ XOM
 
 ---
 
-#AMZN
+AMZN
 TSLA
 SNAP
 SBUX
@@ -31,7 +31,7 @@ NFLX
 
 ---
 
-#GOOGL
+GOOGL
 IBM
 #ORCL
 MMM
@@ -46,7 +46,7 @@ NKE
 TWTR
 NVDA
 X
-#AMD
+AMD
 #MU
 CAT
 
@@ -57,3 +57,4 @@ CVS
 BAC
 DE
 TGT
+FCX

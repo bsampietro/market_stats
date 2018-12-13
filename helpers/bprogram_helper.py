@@ -23,21 +23,21 @@ def get_iv_header():
         'Last',
         'MM200',
         'MM200Rnk',
-        'MA50',
+        'MA200%',
         'MA50%',
         'L%chg',
-        'UD15'
+        'UD15',
+        'SPCrr',
+        'SP-R'
     ]
     header += [
+        'SP-RIV',
         'IV',
         'I2Iav',
         'I2Hav',
         'Av2Av',
         'IV2HV-',
         'I2HAv',
-        'SPCrr',
-        'SP-R',
-        'SP-RIV',
         'Ntnl',
         'Jmp',
         '%Rnk',
@@ -61,33 +61,32 @@ def get_iv_row(ticker, date, back_days):
             stock.get_close_at(date),
             f"{stock.min(200)} - {stock.max(200)}",
             stock.min_max_rank(date, 200),
-            stock.ma(50),
+            stock.current_to_ma_percentage(date, 200),
             stock.current_to_ma_percentage(date, 50),
             stock.get_last_percentage_change(),
-            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False)
+            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
+            core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
+            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)
         ]
         # Volatility related data
         try:
             row += [
+                iv.period_average(back_days) / spy_iv.period_average(back_days),
                 iv.get_at(date),
                 iv.current_to_average_ratio(date, back_days),
                 mixed_vs.iv_current_to_hv_average(date, back_days),
                 mixed_vs.iv_average_to_hv_average(back_days),
                 mixed_vs.negative_difference_ratio(back_days),
                 mixed_vs.difference_average(back_days),
-                core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
-                core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
-                iv.period_average(back_days) / spy_iv.period_average(back_days),
                 notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
                 notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
                 iv.current_percentile_iv_rank(back_days),
                 iv.current_weighted_iv_rank(back_days)
             ]
             row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
-        except GettingInfoError as e:
-            result_row_len = 13
+        except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
+            result_row_len = 11
             row += ['-'] * (result_row_len + const.IVR_RESULTS)
-            row[16] = stock.to_10_ratio(back_days) # when no IV difference, add to_10_ratio
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
