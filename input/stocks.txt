@@ -47,7 +47,7 @@ TWTR
 NVDA
 X
 AMD
-#MU
+MU
 CAT
 
 # NEW
@@ -58,3 +58,15 @@ BAC
 DE
 TGT
 FCX
+
+EBAY
+T
+WBA
+YUM
+
+SQ
+C
+LOW
+MRK
+PFE
+AXP

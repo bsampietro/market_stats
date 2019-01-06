@@ -119,7 +119,7 @@ class IBData(EClient, EWrapper):
     # Async
 
     def wait_for_async_request(self):
-        for i in range(120):
+        for i in range(300):
             if len(self.req_id_to_stock_ticker_map) == 0:
                 break
             else:

@@ -21,11 +21,12 @@ def get_iv_header():
     header = ['Tckr', 'Date']
     header += [
         'Last',
-        'MM200',
-        'MM200Rnk',
-        'MA200%',
-        'MA50%',
         'L%chg',
+        '200',
+        '200Rnk',
+        '200%',
+        'R200%',
+        '50%',
         'UD15',
         'SPCrr',
         'SP-R'
@@ -59,11 +60,12 @@ def get_iv_row(ticker, date, back_days):
         # Price related data
         row += [
             stock.get_close_at(date),
+            stock.get_last_percentage_change(),
             f"{stock.min(200)} - {stock.max(200)}",
             stock.min_max_rank(date, 200),
             stock.current_to_ma_percentage(date, 200),
+            stock.current_to_ma_percentage(date, 200) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.current_to_ma_percentage(date, 50),
-            stock.get_last_percentage_change(),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
             core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)
