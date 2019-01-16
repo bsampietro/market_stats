@@ -70,3 +70,4 @@ LOW
 MRK
 PFE
 AXP
+BMY
