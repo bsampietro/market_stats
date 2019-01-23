@@ -61,11 +61,11 @@ def get_iv_row(ticker, date, back_days):
         row += [
             stock.get_close_at(date),
             stock.get_last_percentage_change(),
-            f"{stock.min(200)} - {stock.max(200)}",
-            stock.min_max_rank(date, 200),
-            stock.current_to_ma_percentage(date, 200) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
-            stock.current_to_ma_percentage(date, 200),
-            stock.current_to_ma_percentage(date, 50),
+            f"{stock.min(280)} - {stock.max(280)}",
+            stock.min_max_rank(date, 280),
+            stock.current_to_ma_percentage(date, 280) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
+            stock.current_to_ma_percentage(date, 280),
+            stock.current_to_ma_percentage(date, 70),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
             core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)
@@ -163,26 +163,23 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
-            pair.get_last_close(200),
-            pair.min(200),
-            pair.max(200),
-            pair.current_rank(200),
-            pair.ma(200),
+            pair.get_last_close(280),
+            pair.min(280),
+            pair.max(280),
+            pair.current_rank(280),
+            pair.ma(280),
             '-',
-            pair.get_last_close(50),
-            pair.min(50),
-            pair.max(50),
-            pair.current_rank(50),
-            pair.ma(50),
+            pair.get_last_close(70),
+            pair.min(70),
+            pair.max(70),
+            pair.current_rank(70),
+            pair.ma(70),
             '-',
             pair.stdev_ratio(main_vars.back_days),
             pair.correlation(main_vars.back_days),
             pair.stdev(main_vars.back_days) / Stock(main_vars.data_handler, 'SPY').stdev(main_vars.back_days),
             '-']
-        # ranks = pair.period_ranks(50)[-5:]
-        # ranks.reverse()
-        # row += ranks
-        closes = pair.closes(50)[-3:]
+        closes = pair.closes(70)[-3:]
         closes.reverse()
         row += closes
         return row
