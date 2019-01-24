@@ -27,6 +27,7 @@ def get_iv_header():
         'R200%',
         '200%',
         '50%',
+        '10%',
         'UD15',
         'SPCrr',
         'SP-R'
@@ -36,7 +37,6 @@ def get_iv_header():
         'IV',
         'I2Iav',
         'I2Hav',
-        'Av2Av',
         'IV2HV-',
         'I2HAv',
         'Ntnl',
@@ -66,6 +66,7 @@ def get_iv_row(ticker, date, back_days):
             stock.current_to_ma_percentage(date, 280) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.current_to_ma_percentage(date, 280),
             stock.current_to_ma_percentage(date, 70),
+            stock.current_to_ma_percentage(date, 14),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
             core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)
@@ -77,7 +78,6 @@ def get_iv_row(ticker, date, back_days):
                 iv.get_at(date),
                 iv.current_to_average_ratio(date, back_days),
                 mixed_vs.iv_current_to_hv_average(date, back_days),
-                mixed_vs.iv_average_to_hv_average(back_days),
                 mixed_vs.negative_difference_ratio(back_days),
                 mixed_vs.difference_average(back_days),
                 notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
@@ -87,7 +87,7 @@ def get_iv_row(ticker, date, back_days):
             ]
             row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
         except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
-            result_row_len = 11
+            result_row_len = 10
             row += ['-'] * (result_row_len + const.IVR_RESULTS)
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:

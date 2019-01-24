@@ -175,12 +175,13 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
-                if command[3] in const.VOL_ORD:
+                if command[3] in header:
+                    order_column = header.index(command[3])
                     def key_select(row):
-                        if isinstance(row[const.VOL_ORD[command[3]]], (int, float)):
-                            return row[const.VOL_ORD[command[3]]]
+                        if isinstance(row[order_column], (int, float)):
+                            return row[order_column]
                         else:
-                            return const.VOL_DEFAULT_ORD[command[3]]
+                            return 0
                     rows.sort(key = key_select, reverse = True)
 
             elif command[0] == "hvol":
@@ -231,7 +232,8 @@ if __name__ == "__main__":
                 for row in rows:
                     for i in range(len(row)):
                         if isinstance(row[i], float):
-                            row[i] = round(row[i], 2)
+                            # row[i] = round(row[i], 2)
+                            row[i] = f"{row[i]:.2f}"
                 f.write(html.table(rows, header_row=header,
                     style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
 
