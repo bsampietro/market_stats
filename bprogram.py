@@ -6,8 +6,7 @@ import readline
 import urllib.request
 import time
 
-from lib import util
-from lib import html
+from lib import util, html, core
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -168,12 +167,8 @@ if __name__ == "__main__":
 
                 header = get_iv_header()
 
-                back_days = main_vars.back_days
-                if command[2] != "":
-                    try:
-                        back_days = int(command[2]) * 30
-                    except ValueError:
-                        pass
+                back_days = core.safe_execute(main_vars.back_days, ValueError, int, command[2])
+                back_days = back_days * 30 if back_days < 30 else back_days
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
@@ -191,8 +186,8 @@ if __name__ == "__main__":
 
                 # Filter
                 if 'filter' in command:
-                    vol_column = header.index("R200%")
-                    rank_column = header.index("200Rnk")
+                    vol_column = header.index("LngV%")
+                    rank_column = header.index("LngRnk")
                     assert vol_column >= 0 and rank_column >= 0, "Probably renamed some column..."
                     options_list = util.read_symbol_list(f"./input/options.txt") + util.read_symbol_list(f"./input/stocks.txt")
                     rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
@@ -202,14 +197,14 @@ if __name__ == "__main__":
                 # Sorting
                 order_column = command[3]
                 if order_column not in header:
-                    order_column = "R200%"
+                    order_column = "LngRnk"
                 order_column = header.index(order_column)
                 assert order_column >= 0, "Probably renamed some column..."
                 def key_select(row):
                     if isinstance(row[order_column], (int, float)):
                         return row[order_column]
                     else:
-                        return 0
+                        return core.safe_execute(50, ValueError, int, command[4])
                 rows.sort(key = key_select, reverse = True)
 
             elif command[0] == "hvol":
