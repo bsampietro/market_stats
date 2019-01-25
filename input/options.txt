@@ -40,13 +40,10 @@ EWW
 
 ---
 
-
 #Too correlated with SPY
 XLI
 XLY
-#XLB
-
-
+XLB
 
 #Too small
 #GDX
@@ -62,3 +59,5 @@ XLY
 #EWY
 #EWJ
 #RSX
+
+AA

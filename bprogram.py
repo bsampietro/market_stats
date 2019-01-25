@@ -3,6 +3,8 @@ import logging
 from datetime import datetime, date
 import os.path
 import readline
+import urllib.request
+import time
 
 from lib import util
 from lib import html
@@ -175,14 +177,40 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
-                if command[3] in header:
-                    order_column = header.index(command[3])
-                    def key_select(row):
-                        if isinstance(row[order_column], (int, float)):
-                            return row[order_column]
-                        else:
-                            return 0
-                    rows.sort(key = key_select, reverse = True)
+                # Earnings data
+                earnings_data = load_earnings()
+                earnings_column = header.index("Erngs")
+                assert earnings_column >= 0, "Probably renamed some column..."
+                for row in rows:
+                    if row[0] in earnings_data:
+                        row[earnings_column] = earnings_data[row[0]].replace(f"/{time.strftime('%Y')}", "")
+
+                # Remove year from date
+                for row in rows:
+                    row[1] = row[1].replace(time.strftime('%Y'), "")
+
+                # Filter
+                if 'filter' in command:
+                    vol_column = header.index("R200%")
+                    rank_column = header.index("200Rnk")
+                    assert vol_column >= 0 and rank_column >= 0, "Probably renamed some column..."
+                    options_list = util.read_symbol_list(f"./input/options.txt") + util.read_symbol_list(f"./input/stocks.txt")
+                    rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
+                            isinstance(row[vol_column], (int, float)) and 25 < row[rank_column] < 75 and
+                            -5 < row[vol_column] < 5 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
+
+                # Sorting
+                order_column = command[3]
+                if order_column not in header:
+                    order_column = "R200%"
+                order_column = header.index(order_column)
+                assert order_column >= 0, "Probably renamed some column..."
+                def key_select(row):
+                    if isinstance(row[order_column], (int, float)):
+                        return row[order_column]
+                    else:
+                        return 0
+                rows.sort(key = key_select, reverse = True)
 
             elif command[0] == "hvol":
 
@@ -211,6 +239,19 @@ if __name__ == "__main__":
                 update_stock(command)
                 print("Updating stock values...")
                 main_vars.data_handler.wait_for_async_request()
+                continue
+
+
+            elif command[0] == "earnings":
+                # store earnings
+                earnings_data = {}
+                for ticker in util.read_symbol_list(f"./input/{command[1]}.txt"):
+                    f = urllib.request.urlopen(f"https://www.nasdaq.com/earnings/report/{ticker}")
+                    page_bytes = f.read()
+                    location = page_bytes.find(b"earnings on")
+                    if location != -1:
+                        earnings_data[ticker] = page_bytes[location+13:location+25].decode()
+                save_earnings(earnings_data)
                 continue
 
             else:

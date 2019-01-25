@@ -3,6 +3,8 @@ import logging
 from datetime import datetime, date, timedelta
 import os.path
 import statistics
+import json
+from json.decoder import JSONDecodeError
 
 from lib import util, core
 from lib.errors import *
@@ -25,16 +27,14 @@ def get_iv_header():
         '200',
         '200Rnk',
         'R200%',
-        '200%',
         '50%',
         '10%',
         'UD15',
         'SPCrr',
-        'SP-R'
+        'SP-R',
+        'Erngs'
     ]
     header += [
-        'SP-RIV',
-        'IV',
         'I2Iav',
         'I2Hav',
         'IV2HV-',
@@ -42,7 +42,6 @@ def get_iv_header():
         'Ntnl',
         'Jmp',
         '%Rnk',
-        'WRnk',
         'IVR'
     ]
     header += ['-'] * (const.IVR_RESULTS - 1) # 1 is the IVR title
@@ -64,30 +63,27 @@ def get_iv_row(ticker, date, back_days):
             f"{stock.min(280)} - {stock.max(280)}",
             stock.min_max_rank(date, 280),
             stock.current_to_ma_percentage(date, 280) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
-            stock.current_to_ma_percentage(date, 280),
             stock.current_to_ma_percentage(date, 70),
             stock.current_to_ma_percentage(date, 14),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
             core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
-            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)
+            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
+            '-'
         ]
         # Volatility related data
         try:
             row += [
-                iv.period_average(back_days) / spy_iv.period_average(back_days),
-                iv.get_at(date),
                 iv.current_to_average_ratio(date, back_days),
                 mixed_vs.iv_current_to_hv_average(date, back_days),
                 mixed_vs.negative_difference_ratio(back_days),
                 mixed_vs.difference_average(back_days),
                 notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
                 notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
-                iv.current_percentile_iv_rank(back_days),
-                iv.current_weighted_iv_rank(back_days)
+                iv.current_percentile_iv_rank(back_days)
             ]
             row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
         except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
-            result_row_len = 10
+            result_row_len = 7
             row += ['-'] * (result_row_len + const.IVR_RESULTS)
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
@@ -283,3 +279,17 @@ def update_stock(command):
     else:
         ticker = command[1].upper()
         main_vars.data_handler.request_market_data("STOCK", ticker)
+
+
+def load_earnings():
+    try:
+        with open('./data/earnings.json', 'r') as f:
+            earnings_data = json.load(f)
+    except (JSONDecodeError, FileNotFoundError) as e:
+        earnings_data = {}
+    return earnings_data
+
+
+def save_earnings(data):
+    with open('./data/earnings.json', 'w') as f:
+        json.dump(data, f, indent=4)
