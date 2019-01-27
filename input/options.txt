@@ -55,7 +55,7 @@ XLB
 #SMH
 
 #Not very liquid
-#FEZ
+FEZ
 #EWY
 #EWJ
 #RSX
