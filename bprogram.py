@@ -178,7 +178,7 @@ if __name__ == "__main__":
                 assert earnings_column >= 0, "Probably renamed some column..."
                 for row in rows:
                     if row[0] in earnings_data:
-                        row[earnings_column] = earnings_data[row[0]].replace(f"/{time.strftime('%Y')}", "")
+                        row[earnings_column] = earnings_data[row[0]]
 
                 # Remove year from date
                 for row in rows:

@@ -5,6 +5,7 @@ import os.path
 import statistics
 import json
 from json.decoder import JSONDecodeError
+import time
 
 from lib import util, core
 from lib.errors import *
@@ -280,11 +281,22 @@ def update_stock(command):
 
 
 def load_earnings():
+    earnings_data = None
     try:
         with open('./data/earnings.json', 'r') as f:
             earnings_data = json.load(f)
     except (JSONDecodeError, FileNotFoundError) as e:
         earnings_data = {}
+    # Try to parse and see if earnings are in the past
+    for ticker in earnings_data.keys():
+        try:
+            e_date = time.strptime(earnings_data[ticker][:10], "%m/%d/%Y")
+            if e_date > time.localtime():
+                earnings_data[ticker] = earnings_data[ticker].replace(f"/{time.strftime('%Y')}", "")
+            else:
+                earnings_data[ticker] = "P"
+        except ValueError:
+            pass
     return earnings_data
 
 
