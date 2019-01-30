@@ -32,7 +32,9 @@ def get_iv_header():
         'UD15',
         'SPCrr',
         'SP-R',
-        'Erngs'
+        'DrcQt',
+        'Erngs',
+        'Chart'
     ]
     header += [
         'I2Iav',
@@ -55,6 +57,7 @@ def get_iv_row(ticker, date, back_days):
         stock = Stock(main_vars.data_handler, ticker)
         spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
         spy_iv = IV(main_vars.data_handler, "SPY")
+        earnings_data = load_earnings()
         row = [ticker, date]
         # Price related data
         row += [
@@ -65,9 +68,11 @@ def get_iv_row(ticker, date, back_days):
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
             stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
-            core.safe_execute(1, GettingInfoError, spy_pair.correlation, back_days),
-            core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
-            '-'
+            core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
+            core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
+            notional.directional_quantity(core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
+            earnings_data.get(ticker, "-"),
+            chart_link(ticker)
         ]
         # Volatility related data
         try:
@@ -281,25 +286,34 @@ def update_stock(command):
 
 
 def load_earnings():
-    earnings_data = None
+    data = None
     try:
         with open('./data/earnings.json', 'r') as f:
-            earnings_data = json.load(f)
+            data = json.load(f)
     except (JSONDecodeError, FileNotFoundError) as e:
-        earnings_data = {}
-    # Try to parse and see if earnings are in the past
-    for ticker in earnings_data.keys():
+        data = {}
+    today = datetime.today().date()
+    yesterday = (datetime.today() - timedelta(days=1)).date()
+    for ticker in data.keys():
         try:
-            e_date = time.strptime(earnings_data[ticker][:10], "%m/%d/%Y")
-            if e_date > time.localtime():
-                earnings_data[ticker] = earnings_data[ticker].replace(f"/{time.strftime('%Y')}", "")
+            earnings_date = datetime.strptime(data[ticker][:10], "%m/%d/%Y").date()
+            if earnings_date == today:
+                data[ticker] = "T" + data[ticker][10:]
+            elif earnings_date == yesterday:
+                data[ticker] = "Y" + data[ticker][10:]
+            elif earnings_date < yesterday:
+                data[ticker] = "P"
             else:
-                earnings_data[ticker] = "P"
+                data[ticker] = data[ticker].replace(f"/{time.strftime('%Y')}", "")
         except ValueError:
             pass
-    return earnings_data
+    return data
 
 
 def save_earnings(data):
     with open('./data/earnings.json', 'w') as f:
         json.dump(data, f, indent=4)
+
+
+def chart_link(ticker):
+    return f"<a href=\"https://finance.yahoo.com/chart/{ticker}\" target=\"_blank\">--&gt;</a>"

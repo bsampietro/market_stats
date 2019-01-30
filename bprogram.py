@@ -6,7 +6,7 @@ import readline
 import urllib.request
 import time
 
-from lib import util, html, core
+from lib import util, core
 from lib.errors import *
 from models.datahandler import DataHandler
 from models.iv import IV
@@ -20,7 +20,8 @@ from helpers.bprogram_helper import *
 import config.constants as const
 from config import main_vars
 
-from texttable import Texttable
+#from texttable import Texttable
+from lib import html
 
 # Main method
 if __name__ == "__main__":
@@ -172,17 +173,10 @@ if __name__ == "__main__":
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
 
-                # Earnings data
-                earnings_data = load_earnings()
-                earnings_column = header.index("Erngs")
-                assert earnings_column >= 0, "Probably renamed some column..."
-                for row in rows:
-                    if row[0] in earnings_data:
-                        row[earnings_column] = earnings_data[row[0]]
-
                 # Remove year from date
+                current_year = time.strftime('%Y')
                 for row in rows:
-                    row[1] = row[1].replace(time.strftime('%Y'), "")
+                    row[1] = row[1].replace(current_year, "")
 
                 # Filter
                 if 'filter' in command:
@@ -195,9 +189,7 @@ if __name__ == "__main__":
                             -5 < row[vol_column] < 5 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
 
                 # Sorting
-                order_column = command[3]
-                if order_column not in header:
-                    order_column = "LngRnk"
+                order_column = command[3] if command[3] in header else "LngRnk"
                 order_column = header.index(order_column)
                 assert order_column >= 0, "Probably renamed some column..."
                 def key_select(row):
