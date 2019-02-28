@@ -8,15 +8,15 @@ TLT
 #HYG
 
 GLD
-SLV
+#SLV
 GDXJ
 #UNG
 
 XOP
-#USO
+USO
 #XLE
 
-VXX
+VXXB
 
 FXE
 FXY
@@ -35,7 +35,7 @@ XLV
 EFA
 EEM
 EWZ
-#FXI
+FXI
 EWW
 
 ---

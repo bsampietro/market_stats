@@ -180,13 +180,13 @@ if __name__ == "__main__":
 
                 # Filter
                 if 'filter' in command:
-                    vol_column = header.index("LngV%")
+                    # vol_column = header.index("LngV%")
                     rank_column = header.index("LngRnk")
-                    assert vol_column >= 0 and rank_column >= 0, "Probably renamed some column..."
+                    # assert vol_column >= 0
+                    assert rank_column >= 0
                     options_list = util.read_symbol_list(f"./input/options.txt") + util.read_symbol_list(f"./input/stocks.txt")
                     rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
-                            isinstance(row[vol_column], (int, float)) and 25 < row[rank_column] < 75 and
-                            -5 < row[vol_column] < 5 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
+                            35 < row[rank_column] < 65 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
 
                 # Sorting
                 order_column = command[3] if command[3] in header else "LngRnk"

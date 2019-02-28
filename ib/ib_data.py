@@ -106,9 +106,9 @@ class IBData(EClient, EWrapper):
 
         if price <= 0:
             return
-
-        if tickType == 2:
-            self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], util.today_in_string(), price)
+        if tickType != 4:
+            return
+        self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], util.today_in_string(), price)
 
 
     def tickSnapshotEnd(self, reqId:int):
