@@ -236,8 +236,11 @@ if __name__ == "__main__":
                     f = urllib.request.urlopen(f"https://www.nasdaq.com/earnings/report/{ticker}")
                     page_bytes = f.read()
                     location = page_bytes.find(b"earnings on")
-                    if location != -1:
+                    if location == -1:
+                        print(f"Couldn't find earnings for {ticker}")
+                    else:
                         earnings_data[ticker] = page_bytes[location+13:location+25].decode()
+                        print(f"Stored earnings for {ticker}")
                 save_earnings(earnings_data)
                 continue
 

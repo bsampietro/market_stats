@@ -66,6 +66,9 @@ def calculate_hv(closes):
 def calculate_percentage_hv(percentage_changes):
     return statistics.stdev(percentage_changes) * math.sqrt(252/len(percentage_changes))
 
+def int_round_to(number, rounder):
+    return round(number / rounder) * rounder
+
 
 # ------ Private ------
 

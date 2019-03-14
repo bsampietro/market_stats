@@ -24,7 +24,13 @@ def jumps(stock_price, spy_vol_ratio):
 	return stock_price * ((SPY_JUMPS * spy_vol_ratio) / 100.0)
 
 
-SPY_DIRECTIONAL_DOLLARS = 12000
+SPY_DIRECTIONAL_DOLLARS = 12500
 
 def directional_quantity(spy_vol_ratio):
 	return round((SPY_DIRECTIONAL_DOLLARS / spy_vol_ratio) * 0.33) # 0.33 is mid between average credit spread 0.25 and debit spread 0.40
+
+
+SPY_NEUTRAL_DOLLARS = 25000
+
+def contract_number(stock_price, spy_vol_ratio):
+	return SPY_NEUTRAL_DOLLARS / (stock_price * 100 * spy_vol_ratio)

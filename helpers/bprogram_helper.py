@@ -29,10 +29,11 @@ def get_iv_header():
         'LngV%',
         'Shrt%',
         'L%chg',
-        'UD15',
+        'UD7',
         'SPCrr',
         'SP-R',
         'DrcQt',
+        'CtrNr',
         'Erngs',
         'Chart'
     ]
@@ -62,15 +63,16 @@ def get_iv_row(ticker, date, back_days):
         # Price related data
         row += [
             stock.get_close_at(date),
-            f"{stock.min(365)} - {stock.max(365)}",
-            stock.min_max_rank(date, 365),
-            stock.current_to_ma_percentage(date, 365) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
+            f"{stock.min(back_days)} - {stock.max(back_days)}",
+            stock.min_max_rank(date, back_days),
+            stock.current_to_ma_percentage(date, back_days) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
-            stock.closes_nr(15, up = True) - stock.closes_nr(15, up = False),
+            stock.closes_nr(7, up = True) - stock.closes_nr(7, up = False),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
-            notional.directional_quantity(core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
+            util.int_round_to(notional.directional_quantity(core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 100),
+            round(notional.contract_number(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 1),
             earnings_data.get(ticker, "-"),
             chart_link(ticker)
         ]
@@ -304,9 +306,9 @@ def load_earnings():
             elif earnings_date < yesterday:
                 data[ticker] = "P"
             else:
-                data[ticker] = data[ticker].replace(f"/{time.strftime('%Y')}", "")
+                data[ticker] = data[ticker].replace(f"/{today.year}", "")
         except ValueError:
-            pass
+            data[ticker] = "PrsErr"
     return data
 
 
