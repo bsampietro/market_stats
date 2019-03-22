@@ -4,8 +4,7 @@ from functools import lru_cache
 import statistics
 import math
 
-from config import main_vars
-from config import constants
+import gcnv
 
 from lib import util
 
@@ -21,7 +20,7 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def period_hvs(self):
-        closes = self.closes(main_vars.back_days)
+        closes = self.closes(gcnv.back_days)
         hvs = []
         for i in range(len(closes) - 21):
             monthly_closes = closes[i:i+21]
@@ -50,7 +49,7 @@ class Stock:
 
 
     def get_last_percentage_change(self):
-        return self.percentage_changes(main_vars.back_days)[-1]
+        return self.percentage_changes(gcnv.back_days)[-1]
 
 
     def min(self, back_days):
@@ -77,7 +76,7 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def percentage_period_hvs(self):
-        percentage_changes = self.percentage_changes(main_vars.back_days)
+        percentage_changes = self.percentage_changes(gcnv.back_days)
         hvs = []
         for i in range(len(percentage_changes) - 21):
             monthly_percentage_changes = percentage_changes[i:i+21]
@@ -123,7 +122,7 @@ class Stock:
 
 
     def to_10_ratio(self, back_days):
-        return self.percentage_hv(back_days) / constants.TEN_PERCENTAGE_HV
+        return self.percentage_hv(back_days) / gcnv.TEN_PERCENTAGE_HV
 
 
     # private

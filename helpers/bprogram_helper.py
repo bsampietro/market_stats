@@ -1,7 +1,8 @@
 import sys
+import os
+#print(os.path.abspath(sys.argv[0]))
 import logging
 from datetime import datetime, date, timedelta
-import os.path
 import statistics
 import json
 from json.decoder import JSONDecodeError
@@ -17,8 +18,7 @@ from models.stock import Stock
 from models.pair import Pair
 from models import notional
 
-import config.constants as const
-from config import main_vars
+import gcnv
 
 def get_iv_header():
     header = ['Tckr', 'Date']
@@ -47,17 +47,17 @@ def get_iv_header():
         '%Rnk',
         'IVR'
     ]
-    header += ['-'] * (const.IVR_RESULTS - 1) # 1 is the IVR title
+    header += ['-'] * (gcnv.IVR_RESULTS - 1) # 1 is the IVR title
     return header
 
 def get_iv_row(ticker, date, back_days):
     try:
-        iv = IV(main_vars.data_handler, ticker)
-        hv = HV(main_vars.data_handler, ticker)
-        mixed_vs = MixedVs(main_vars.data_handler, iv, hv)
-        stock = Stock(main_vars.data_handler, ticker)
-        spy_pair = Pair(main_vars.data_handler, ticker, "SPY")
-        spy_iv = IV(main_vars.data_handler, "SPY")
+        iv = IV(gcnv.data_handler, ticker)
+        hv = HV(gcnv.data_handler, ticker)
+        mixed_vs = MixedVs(gcnv.data_handler, iv, hv)
+        stock = Stock(gcnv.data_handler, ticker)
+        spy_pair = Pair(gcnv.data_handler, ticker, "SPY")
+        spy_iv = IV(gcnv.data_handler, "SPY")
         earnings_data = load_earnings()
         row = [ticker, date]
         # Price related data
@@ -87,10 +87,10 @@ def get_iv_row(ticker, date, back_days):
                 notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
                 iv.current_percentile_iv_rank(back_days)
             ]
-            row += iv.period_iv_ranks(back_days, max_results = const.IVR_RESULTS)
+            row += iv.period_iv_ranks(back_days, max_results = gcnv.IVR_RESULTS)
         except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
             result_row_len = 7
-            row += ['-'] * (result_row_len + const.IVR_RESULTS)
+            row += ['-'] * (result_row_len + gcnv.IVR_RESULTS)
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
@@ -116,7 +116,7 @@ def get_hv_header():
 # as they are passed as parameter to read_symbol_file_and_process
 def get_hv_row(ticker, date, back_days = None):
     try:
-        stock = Stock(main_vars.data_handler, ticker)
+        stock = Stock(gcnv.data_handler, ticker)
         row = [ticker,
             date,
             stock.hv(30),
@@ -160,8 +160,8 @@ def get_pairs_header():
 
 def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
     try:
-        pair = Pair(main_vars.data_handler, ticker1, ticker2, fixed_stdev_ratio)
-        date = '-' if main_vars.data_handler.get_max_stored_date("STOCK", ticker1) is None else util.date_in_string(main_vars.data_handler.get_max_stored_date("STOCK", ticker1))
+        pair = Pair(gcnv.data_handler, ticker1, ticker2, fixed_stdev_ratio)
+        date = '-' if gcnv.data_handler.get_max_stored_date("STOCK", ticker1) is None else util.date_in_string(gcnv.data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
@@ -177,9 +177,9 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
             pair.current_rank(70),
             pair.ma(70),
             '-',
-            pair.stdev_ratio(main_vars.back_days),
-            pair.correlation(main_vars.back_days),
-            pair.stdev(main_vars.back_days) / Stock(main_vars.data_handler, 'SPY').stdev(main_vars.back_days),
+            pair.stdev_ratio(gcnv.back_days),
+            pair.correlation(gcnv.back_days),
+            pair.stdev(gcnv.back_days) / Stock(gcnv.data_handler, 'SPY').stdev(gcnv.back_days),
             '-']
         closes = pair.closes(70)[-3:]
         closes.reverse()
@@ -191,10 +191,10 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
 
 
 def get_query_date(ticker):
-    if main_vars.connected:
+    if gcnv.connected:
         return util.today_in_string()
     else:
-        max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
         if max_stored_date is None:
             return util.today_in_string()
         else:
@@ -202,31 +202,31 @@ def get_query_date(ticker):
 
 
 def bring_if_connected(ticker, bring_volatility):
-    if not main_vars.connected:
+    if not gcnv.connected:
         return
     try:
         if bring_volatility:
-            max_stored_date = main_vars.data_handler.get_max_stored_date("IV", ticker)
+            max_stored_date = gcnv.data_handler.get_max_stored_date("IV", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting IV data for ticker {ticker}...")
-                main_vars.data_handler.request_historical_data("IV", ticker)
+                gcnv.data_handler.request_historical_data("IV", ticker)
 
-            max_stored_date = main_vars.data_handler.get_max_stored_date("HV", ticker)
+            max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
             if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
                 print(f"Getting HV data for ticker {ticker}...")
-                main_vars.data_handler.request_historical_data("HV", ticker)
+                gcnv.data_handler.request_historical_data("HV", ticker)
 
-        max_stored_date = main_vars.data_handler.get_max_stored_date("STOCK", ticker)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
             print(f"Getting STOCK data for ticker {ticker}...")
-            main_vars.data_handler.request_historical_data("STOCK", ticker)
+            gcnv.data_handler.request_historical_data("STOCK", ticker)
     except InputError as e:
         print(e)
 
 
 def read_symbol_file_and_process(command, get_row_method, back_days = None):
-    text_file = "./input/" + command[1] + ".txt"
-    v_tickers = util.read_symbol_list("./input/options.txt") + util.read_symbol_list("./input/stocks.txt")
+    text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
+    v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
@@ -249,7 +249,7 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
 
 
 def read_pairs_file_and_process(command, get_row_method):
-    text_file = "./input/" + command[1] + ".txt"
+    text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     rows = []
     if os.path.isfile(text_file):
         pairs = util.read_symbol_list(text_file)
@@ -276,21 +276,21 @@ def read_pairs_file_and_process(command, get_row_method):
 
 
 def update_stock(command):
-    text_file = "./input/" + command[1] + ".txt"
+    text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
             if ticker != '---':
-                main_vars.data_handler.request_market_data("STOCK", ticker)
+                gcnv.data_handler.request_market_data("STOCK", ticker)
     else:
         ticker = command[1].upper()
-        main_vars.data_handler.request_market_data("STOCK", ticker)
+        gcnv.data_handler.request_market_data("STOCK", ticker)
 
 
 def load_earnings():
     data = None
     try:
-        with open('./data/earnings.json', 'r') as f:
+        with open(f"{gcnv.APP_PATH}/data/earnings.json", "r") as f:
             data = json.load(f)
     except (JSONDecodeError, FileNotFoundError) as e:
         data = {}
@@ -313,7 +313,7 @@ def load_earnings():
 
 
 def save_earnings(data):
-    with open('./data/earnings.json', 'w') as f:
+    with open(f"{gcnv.APP_PATH}/data/earnings.json", "w") as f:
         json.dump(data, f, indent=4)
 
 

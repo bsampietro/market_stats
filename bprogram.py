@@ -1,7 +1,6 @@
-import sys
+import sys, os
 import logging
 from datetime import datetime, date
-import os.path
 import readline
 import urllib.request
 import time
@@ -17,25 +16,24 @@ from models.pair import Pair
 
 from helpers.bprogram_helper import *
 
-import config.constants as const
-from config import main_vars
+import gcnv
 
 #from texttable import Texttable
 from lib import html
 
 # Main method
 if __name__ == "__main__":
-    logging.basicConfig(filename="./log/bprogram.log", level=logging.INFO)
+    logging.basicConfig(filename=f"{gcnv.APP_PATH}/log/bprogram.log", level=logging.INFO)
 
     parameters = sys.argv + 5 * ['']
 
-    main_vars.connected = (parameters[1] == "connect")
-    main_vars.data_handler = DataHandler(main_vars.connected)
-    main_vars.data_handler.wait_for_api_ready()
+    gcnv.connected = (parameters[1] == "connect")
+    gcnv.data_handler = DataHandler(gcnv.connected)
+    gcnv.data_handler.wait_for_api_ready()
     try:
-        main_vars.back_days = int(parameters[2]) * 30
+        gcnv.back_days = int(parameters[2]) * 30
     except ValueError as e:
-        main_vars.back_days = 365
+        gcnv.back_days = 365
 
     last_command = []
 
@@ -55,7 +53,7 @@ if __name__ == "__main__":
         try:
             if command[0] == "exit" or command[0] == "e":
                 try:
-                    main_vars.data_handler.stop()
+                    gcnv.data_handler.stop()
                 except KeyError as e:
                     print(f"Exit with error: {e}")
                 break
@@ -77,21 +75,21 @@ if __name__ == "__main__":
 
             elif command[0] == "delete":
                 if command[1] == "":
-                    main_vars.data_handler.delete_at(util.today_in_string())
+                    gcnv.data_handler.delete_at(util.today_in_string())
                     print("Today deleted")
                 else:
                     try:
-                        main_vars.data_handler.delete_back(int(command[1]))
+                        gcnv.data_handler.delete_back(int(command[1]))
                         print("Back days deleted")
                     except (ValueError, TypeError) as e:
-                        main_vars.data_handler.delete_ticker(command[1].upper())
+                        gcnv.data_handler.delete_ticker(command[1].upper())
                         print("Ticker deleted")
                 continue
 
             elif command[0] == "corr":
-                pair = Pair(main_vars.data_handler, command[1].upper(), command[2].upper())
+                pair = Pair(gcnv.data_handler, command[1].upper(), command[2].upper())
 
-                back_days = main_vars.back_days
+                back_days = gcnv.back_days
                 if command[3] != "":
                     try:
                         back_days = int(command[3])
@@ -104,7 +102,7 @@ if __name__ == "__main__":
                 continue
 
             elif command[0] == "corrs" or command[0] == "uncorrs":
-                symbols = util.read_symbol_list("./input/" + command[1] + '.txt')
+                symbols = util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt")
                 text_output_file = open(f"/media/ramd/{'-'.join(command)}", "w")
                 for symbol1 in symbols:
                     print(symbol1)
@@ -113,14 +111,14 @@ if __name__ == "__main__":
                         if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
                             continue
                         try:
-                            pair = Pair(main_vars.data_handler, symbol2, symbol1)
-                            out_string = f"  {symbol2}: {format(pair.correlation(main_vars.back_days), '.2f')} | {format(pair.stdev_ratio(main_vars.back_days), '.2f')}"
+                            pair = Pair(gcnv.data_handler, symbol2, symbol1)
+                            out_string = f"  {symbol2}: {format(pair.correlation(gcnv.back_days), '.2f')} | {format(pair.stdev_ratio(gcnv.back_days), '.2f')}"
                             if command[0] == "corrs":
-                                if symbol1 in const.BETA_REFERENCES or (pair.correlation(main_vars.back_days) > const.MIN_CORRELATED_CORRELATION or pair.correlation(main_vars.back_days) < -const.MIN_CORRELATED_CORRELATION):
+                                if symbol1 in gcnv.BETA_REFERENCES or (pair.correlation(gcnv.back_days) > gcnv.MIN_CORRELATED_CORRELATION or pair.correlation(gcnv.back_days) < -gcnv.MIN_CORRELATED_CORRELATION):
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                             else:
-                                if pair.correlation(main_vars.back_days) > -const.MAX_UNCORRELATED_CORRELATION and pair.correlation(main_vars.back_days) < const.MAX_UNCORRELATED_CORRELATION:
+                                if pair.correlation(gcnv.back_days) > -gcnv.MAX_UNCORRELATED_CORRELATION and pair.correlation(gcnv.back_days) < gcnv.MAX_UNCORRELATED_CORRELATION:
                                     print(out_string)
                                     text_output_file.write(f"{out_string}\n")
                         except GettingInfoError as e:
@@ -131,7 +129,7 @@ if __name__ == "__main__":
             elif command[0] == "chart":
                 if command[1] == "pair":
                     print("Remember to bring data before with the 'pair' command (if needed).")
-                    pair = Pair(main_vars.data_handler, command[2].upper(), command[3].upper(), command[4])
+                    pair = Pair(gcnv.data_handler, command[2].upper(), command[3].upper(), command[4])
                     pair.output_chart()
                 continue
 
@@ -142,7 +140,7 @@ if __name__ == "__main__":
                         values_printed = 0
                         row = None
                         rows = []
-                        for key, value in main_vars.data_handler.stock[command[2].upper()].items():
+                        for key, value in gcnv.data_handler.stock[command[2].upper()].items():
                             if values_printed % 8 == 0:
                                 if row is not None:
                                     rows.append(row)
@@ -157,18 +155,18 @@ if __name__ == "__main__":
                         print("Ticker not found")
                 elif command[1] == "keys":
                     print("IV:")
-                    print(main_vars.data_handler.implied_volatility.keys())
+                    print(gcnv.data_handler.implied_volatility.keys())
                     print("HV:")
-                    print(main_vars.data_handler.historical_volatility.keys())
+                    print(gcnv.data_handler.historical_volatility.keys())
                     print("STOCK:")
-                    print(main_vars.data_handler.stock.keys())
+                    print(gcnv.data_handler.stock.keys())
                     continue
 
             elif command[0] == "prvol":
 
                 header = get_iv_header()
 
-                back_days = core.safe_execute(main_vars.back_days, ValueError, int, command[2])
+                back_days = core.safe_execute(gcnv.back_days, ValueError, int, command[2])
                 back_days = back_days * 30 if back_days < 30 else back_days
 
                 rows = read_symbol_file_and_process(command, get_iv_row, back_days)
@@ -184,7 +182,7 @@ if __name__ == "__main__":
                     rank_column = header.index("LngRnk")
                     # assert vol_column >= 0
                     assert rank_column >= 0
-                    options_list = util.read_symbol_list(f"./input/options.txt") + util.read_symbol_list(f"./input/stocks.txt")
+                    options_list = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
                     rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
                             35 < row[rank_column] < 65 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
 
@@ -225,14 +223,14 @@ if __name__ == "__main__":
             elif command[0] == "update":
                 update_stock(command)
                 print("Updating stock values...")
-                main_vars.data_handler.wait_for_async_request()
+                gcnv.data_handler.wait_for_async_request()
                 continue
 
 
             elif command[0] == "earnings":
                 # store earnings
                 earnings_data = {}
-                for ticker in util.read_symbol_list(f"./input/{command[1]}.txt"):
+                for ticker in util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
                     f = urllib.request.urlopen(f"https://www.nasdaq.com/earnings/report/{ticker}")
                     page_bytes = f.read()
                     location = page_bytes.find(b"earnings on")
@@ -249,7 +247,7 @@ if __name__ == "__main__":
                 continue
 
             print("Waiting for async request...")
-            main_vars.data_handler.wait_for_async_request()
+            gcnv.data_handler.wait_for_async_request()
 
             # t = Texttable(max_width = 0)
             # t.set_precision(2)
@@ -277,5 +275,5 @@ if __name__ == "__main__":
             print(f"Didn't find file: {e}")
 
         except:
-            main_vars.data_handler.disconnect()
+            gcnv.data_handler.disconnect()
             raise

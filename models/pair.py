@@ -7,7 +7,7 @@ import pygal
 
 from lib import util
 from lib.errors import *
-from config import main_vars
+import gcnv
 
 class Pair:
     def __init__(self, data_handler, ticker1, ticker2, fixed_stdev_ratio = None):
@@ -53,12 +53,12 @@ class Pair:
         percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
         substraction_closes = []
         suma = 0
-        positively_correlated = self.correlation(main_vars.back_days) >= 0
+        positively_correlated = self.correlation(gcnv.back_days) >= 0
         for i in range(len(percentage_changes1)):
             if positively_correlated:
-                suma += percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(main_vars.back_days)
+                suma += percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
             else:
-                suma += percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(main_vars.back_days)
+                suma += percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
             substraction_closes.append(suma)
         return substraction_closes
 
@@ -106,18 +106,18 @@ class Pair:
     def output_chart(self):
         line_chart = pygal.Line(truncate_label=-1)
         line_chart.title = f"{self.ticker1}-{self.ticker2}"
-        line_chart.x_title = f"Ratio: {format(self.stdev_ratio(main_vars.back_days), '.2f')} - Corr: {format(self.correlation(main_vars.back_days), '.2f')}"
+        line_chart.x_title = f"Ratio: {format(self.stdev_ratio(gcnv.back_days), '.2f')} - Corr: {format(self.correlation(gcnv.back_days), '.2f')}"
         x_labels = []
-        for i in range(len(self.parallel_accumulative_percentage_changes(main_vars.back_days)[0])):
+        for i in range(len(self.parallel_accumulative_percentage_changes(gcnv.back_days)[0])):
             if i % 20 == 0:
                 x_labels.append(i)
             else:
                 x_labels.append('')
         x_labels.reverse()
         line_chart.x_labels = x_labels
-        line_chart.add(str(main_vars.back_days), self.closes(main_vars.back_days))
-        line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(main_vars.back_days)[0])
-        line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(main_vars.back_days)[1])
+        line_chart.add(str(gcnv.back_days), self.closes(gcnv.back_days))
+        line_chart.add(self.ticker1, self.parallel_accumulative_percentage_changes(gcnv.back_days)[0])
+        line_chart.add(self.ticker2, self.parallel_accumulative_percentage_changes(gcnv.back_days)[1])
         # line_chart.show_dots = False
         line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
 
