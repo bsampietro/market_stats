@@ -79,7 +79,6 @@ LULU
 
 AMAT
 MGM
-#CELG liquidity sucks
 EA
 GILD
 MDLZ
@@ -95,3 +94,8 @@ DAL
 BBY
 AAL
 M
+AA
+
+#Liquidity?
+#CELG
+XLNX

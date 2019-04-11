@@ -52,12 +52,10 @@ XLB
 #TBT
 
 #Too correlated with QQQ
-#SMH
+SMH
 
 #Not very liquid
 FEZ
 #EWY
 #EWJ
 #RSX
-
-AA

@@ -7,6 +7,7 @@ import statistics
 import json
 from json.decoder import JSONDecodeError
 import time
+from collections import defaultdict
 
 from lib import util, core
 from lib.errors import *
@@ -35,6 +36,7 @@ def get_iv_header():
         'DrcQt',
         'CtrNr',
         'Erngs',
+        'D2Ern',
         'Chart'
     ]
     header += [
@@ -42,8 +44,6 @@ def get_iv_header():
         'I2Hav',
         'IV2HV-',
         'I2HAv',
-        'Ntnl',
-        'Jmp',
         '%Rnk',
         'IVR'
     ]
@@ -73,7 +73,8 @@ def get_iv_row(ticker, date, back_days):
             core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
             util.int_round_to(notional.directional_quantity(core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 100),
             round(notional.contract_number(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 1),
-            earnings_data.get(ticker, "-"),
+            earnings_data[ticker][0],
+            earnings_data[ticker][1],
             chart_link(ticker)
         ]
         # Volatility related data
@@ -83,13 +84,11 @@ def get_iv_row(ticker, date, back_days):
                 mixed_vs.iv_current_to_hv_average(date, back_days),
                 mixed_vs.negative_difference_ratio(back_days),
                 mixed_vs.difference_average(back_days),
-                notional.quantity(iv.current_weighted_iv_rank(back_days), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
-                notional.jumps(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)),
                 iv.current_percentile_iv_rank(back_days)
             ]
             row += iv.period_iv_ranks(back_days, max_results = gcnv.IVR_RESULTS)
         except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
-            result_row_len = 7
+            result_row_len = 5 # Number of rows above
             row += ['-'] * (result_row_len + gcnv.IVR_RESULTS)
         return row
     except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
@@ -294,8 +293,9 @@ def load_earnings():
             data = json.load(f)
     except (JSONDecodeError, FileNotFoundError) as e:
         data = {}
-    today = datetime.today().date()
-    yesterday = (datetime.today() - timedelta(days=1)).date()
+    data = defaultdict(lambda: ["-", "-"], data)
+    today = date.today()
+    yesterday = today - timedelta(days=1)
     for ticker in data.keys():
         try:
             earnings_date = datetime.strptime(data[ticker][:10], "%m/%d/%Y").date()
@@ -307,8 +307,9 @@ def load_earnings():
                 data[ticker] = "P"
             else:
                 data[ticker] = data[ticker].replace(f"/{today.year}", "")
+            data[ticker] = [data[ticker], (earnings_date - today).days]
         except ValueError:
-            data[ticker] = "PrsErr"
+            data[ticker] = ["PrsErr", "-"]
     return data
 
 
