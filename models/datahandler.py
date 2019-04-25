@@ -13,8 +13,12 @@ import gcnv
 class DataHandler:
     def __init__(self, connect:bool):
         
-        self.load()
-        # implied_volatility and historical_volatility variables are loaded now...
+        # Path variables
+        self.implied_volatility_data_file_path = f"{gcnv.APP_PATH}/data/data_implied_volatility.json"
+        self.historical_volatility_data_file_path = f"{gcnv.APP_PATH}/data/data_historical_volatility.json"
+        self.stock_data_file_path = f"{gcnv.APP_PATH}/data/stock.json"
+
+        self.load() # Load data variables
 
         self.remote = None
         if connect:
@@ -25,37 +29,30 @@ class DataHandler:
         self.modified_hv = False
         self.modified_stock = False
 
+
     def save_data_json(self):
         if self.modified_iv:
-            with open(f"{gcnv.APP_PATH}/data/data_implied_volatility.json", "w") as f:
+            with open(self.implied_volatility_data_file_path, "w") as f:
                 json.dump(self.implied_volatility, f)
 
         if self.modified_hv:
-            with open(f"{gcnv.APP_PATH}/data/data_historical_volatility.json", "w") as f:
+            with open(self.historical_volatility_data_file_path, "w") as f:
                 json.dump(self.historical_volatility, f)
 
         if self.modified_stock:
-            with open(f"{gcnv.APP_PATH}/data/stock.json", "w") as f:
+            with open(self.stock_data_file_path, "w") as f:
                 json.dump(self.stock, f)
 
+
     def load_data_json(self):
-        try:
-            with open(f"{gcnv.APP_PATH}/data/data_implied_volatility.json", "r") as f:
-                self.implied_volatility = json.load(f)
-        except (JSONDecodeError, FileNotFoundError) as e:
-            self.implied_volatility = {}
+        with open(self.implied_volatility_data_file_path, "r") as f:
+            self.implied_volatility = json.load(f)
 
-        try:
-            with open(f"{gcnv.APP_PATH}/data/data_historical_volatility.json", "r") as f:
-                self.historical_volatility = json.load(f)
-        except (JSONDecodeError, FileNotFoundError) as e:
-            self.historical_volatility = {}
+        with open(self.historical_volatility_data_file_path, "r") as f:
+            self.historical_volatility = json.load(f)
 
-        try:
-            with open(f"{gcnv.APP_PATH}/data/stock.json", "r") as f:
-                self.stock = json.load(f)
-        except (JSONDecodeError, FileNotFoundError) as e:
-            self.stock = {}
+        with open(self.stock_data_file_path, "r") as f:
+            self.stock = json.load(f)
 
 
     def connected(self):

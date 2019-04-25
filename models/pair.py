@@ -90,17 +90,10 @@ class Pair:
         return max(self.closes(back_days))
 
 
-    @lru_cache(maxsize=None)
     def current_rank(self, back_days):
-        return self.calculate_rank(self.get_last_close(back_days), back_days)
-
-
-    @lru_cache(maxsize=None)
-    def period_ranks(self, back_days):
-        ranks = []
-        for close in self.closes(back_days):
-            ranks.append(self.calculate_rank(close, back_days))
-        return ranks
+        midpoint = (self.max(back_days) + self.min(back_days)) / 2
+        min_max_midpoint_distance = self.max(back_days) - midpoint
+        return ((self.get_last_close(back_days) - midpoint) / min_max_midpoint_distance) * 100
 
 
     def output_chart(self):
@@ -125,7 +118,7 @@ class Pair:
     # PRIVATE
 
     @lru_cache(maxsize=None)
-    def parallel_percentage_changes(self, back_days):
+    def parallel_closes(self, back_days):
         max_date_ticker1 = self.data_handler.get_max_stored_date("STOCK", self.ticker1)
         max_date_ticker2 = self.data_handler.get_max_stored_date("STOCK", self.ticker2)
         if max_date_ticker1 is None or max_date_ticker2 is None or max_date_ticker1 != max_date_ticker2:
@@ -140,42 +133,52 @@ class Pair:
             if close_ticker1 is not None and close_ticker2 is not None:
                 closes_ticker1.append(close_ticker1)
                 closes_ticker2.append(close_ticker2)
-
         closes_ticker1.reverse()
         closes_ticker2.reverse()
 
+        return (closes_ticker1, closes_ticker2)
+
+
+    @lru_cache(maxsize=None)
+    def parallel_percentage_changes(self, back_days):
+        closes_ticker1 = self.parallel_closes(back_days)[0]
+        closes_ticker2 = self.parallel_closes(back_days)[1]
+
         percentage_changes_ticker1 = []
         percentage_changes_ticker2 = []
-
-        for i in range(len(closes_ticker1)):
-            if i == 0:
-                continue
+        for i in range(1, len(closes_ticker1)):
             percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1[i-1] - 1) * 100)
             percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2[i-1] - 1) * 100)
 
         return (percentage_changes_ticker1, percentage_changes_ticker2)
 
-
     @lru_cache(maxsize=None)
     def parallel_accumulative_percentage_changes(self, back_days):
-        percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
-        percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
-        acc1 = []; acc2 = []
-        sum1 = 0; sum2 = 0
-        for change in percentage_changes1:
-            sum1 += change
-            acc1.append(sum1)
-        for change in percentage_changes2:
-            sum2 += change
-            acc2.append(sum2)
-        return (acc1, acc2)
+        closes_ticker1 = self.parallel_closes(back_days)[0]
+        closes_ticker2 = self.parallel_closes(back_days)[1]
+
+        closes_ticker1_base = closes_ticker1[0]
+        closes_ticker2_base = closes_ticker2[0]
+
+        percentage_changes_ticker1 = [0] # starts with 0 change
+        percentage_changes_ticker2 = [0] # starts with 0 change
+        for i in range(1, len(closes_ticker1)):
+            percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1_base - 1) * 100)
+            percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2_base - 1) * 100)
+
+        return (percentage_changes_ticker1, percentage_changes_ticker2)
 
 
-    def calculate_rank(self, close, back_days):
-        min_max_midpoint_distance = self.max(back_days) - self.midpoint(back_days) # = self.midpoint(back_days) - self.min(back_days)
-        return ((close - self.midpoint(back_days)) / min_max_midpoint_distance) * 100
-
-
-    @lru_cache(maxsize=None)
-    def midpoint(self, back_days):
-        return (self.max(back_days) + self.min(back_days)) / 2
+    # @lru_cache(maxsize=None)
+    # def parallel_accumulative_percentage_changes(self, back_days):
+    #     percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
+    #     percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
+    #     acc1 = []; acc2 = []
+    #     sum1 = 0; sum2 = 0
+    #     for change in percentage_changes1:
+    #         sum1 += change
+    #         acc1.append(sum1)
+    #     for change in percentage_changes2:
+    #         sum2 += change
+    #         acc2.append(sum2)
+    #     return (acc1, acc2)

@@ -1,6 +1,5 @@
 import sys
 import os
-#print(os.path.abspath(sys.argv[0]))
 import logging
 from datetime import datetime, date, timedelta
 import statistics
@@ -33,6 +32,7 @@ def get_iv_header():
         'UD7',
         'SPCrr',
         'SP-R',
+        '210R',
         'DrcQt',
         'CtrNr',
         'Erngs',
@@ -71,8 +71,9 @@ def get_iv_row(ticker, date, back_days):
             stock.closes_nr(7, up = True) - stock.closes_nr(7, up = False),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
-            util.int_round_to(notional.directional_quantity(core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 100),
-            round(notional.contract_number(stock.get_close_at(date), core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days)), 1),
+            stock.hv_to_10_ratio(back_days),
+            util.int_round_to(notional.directional_quantity(stock.hv_to_10_ratio(back_days)), 100),
+            round(notional.contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days)), 1),
             earnings_data[ticker][0],
             earnings_data[ticker][1],
             chart_link(ticker)
@@ -96,58 +97,15 @@ def get_iv_row(ticker, date, back_days):
         return []
 
 
-def get_hv_header():
-    header = ['Ticker',
-        'Date',
-        'HV30',
-        'HV365',
-        '-',
-        'HV30%',
-        'HV365%',
-        'HV365to10',
-        '-',
-        'HVacc30%',
-        'HVacc365%']
-    return header
-
-
-# back_days parameter added for compliance with get_xxx_row methods
-# as they are passed as parameter to read_symbol_file_and_process
-def get_hv_row(ticker, date, back_days = None):
-    try:
-        stock = Stock(gcnv.data_handler, ticker)
-        row = [ticker,
-            date,
-            stock.hv(30),
-            stock.hv(365),
-            '-',
-            stock.percentage_hv(30),
-            stock.percentage_hv(365),
-            stock.to_10_ratio(365),
-            '-',
-            stock.accumulative_percentage_hv(30),
-            stock.accumulative_percentage_hv(365)]
-        return row
-    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
-        print(e)
-        return []
-
-
 def get_pairs_header():
     header = ['Pair',
         'Date',
         '-',
-        'Last200',
-        'Min200',
-        'Max200',
-        'Rank200',
-        'MA200',
-        '-',
-        'Last50',
-        'Min50',
-        'Max50',
-        'Rank50',
-        'MA50',
+        'Last',
+        'Min365',
+        'Max365',
+        'Rank365',
+        'MA365',
         '-',
         'VRat',
         'Corr',
@@ -164,17 +122,11 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
-            pair.get_last_close(280),
-            pair.min(280),
-            pair.max(280),
-            pair.current_rank(280),
-            pair.ma(280),
-            '-',
-            pair.get_last_close(70),
-            pair.min(70),
-            pair.max(70),
-            pair.current_rank(70),
-            pair.ma(70),
+            pair.get_last_close(365),
+            pair.min(365),
+            pair.max(365),
+            pair.current_rank(365),
+            pair.ma(365),
             '-',
             pair.stdev_ratio(gcnv.back_days),
             pair.correlation(gcnv.back_days),

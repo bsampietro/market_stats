@@ -14,25 +14,6 @@ class Stock:
         self.ticker = ticker
 
 
-    def hv(self, back_days):
-        return util.calculate_hv(self.closes(back_days))
-
-
-    @lru_cache(maxsize=None)
-    def period_hvs(self):
-        closes = self.closes(gcnv.back_days)
-        hvs = []
-        for i in range(len(closes) - 21):
-            monthly_closes = closes[i:i+21]
-            hvs.append(util.calculate_hv(monthly_closes))
-        return hvs
-
-
-    @lru_cache(maxsize=None)
-    def hv_average(self):
-        return statistics.mean(self.period_hvs())
-
-
     @lru_cache(maxsize=None)
     def ma(self, back_days):
         if len(self.closes(back_days)) == 0:
@@ -64,31 +45,6 @@ class Stock:
         return (self.get_close_at(date) - self.min(back_days)) / (self.max(back_days) - self.min(back_days)) * 100
 
 
-    @lru_cache(maxsize=None)
-    def percentage_hv(self, back_days):
-        return util.calculate_percentage_hv(self.percentage_changes(back_days))
-
-    
-    @lru_cache(maxsize=None)
-    def accumulative_percentage_hv(self, back_days):
-        return util.calculate_percentage_hv(self.accumulative_percentage_changes(back_days))
-
-
-    @lru_cache(maxsize=None)
-    def percentage_period_hvs(self):
-        percentage_changes = self.percentage_changes(gcnv.back_days)
-        hvs = []
-        for i in range(len(percentage_changes) - 21):
-            monthly_percentage_changes = percentage_changes[i:i+21]
-            hvs.append(util.calculate_percentage_hv(monthly_percentage_changes))
-        return hvs
-
-
-    @lru_cache(maxsize=None)
-    def percentage_hv_average(self):
-        return statistics.mean(self.percentage_period_hvs())
-
-
     def closes_nr(self, back_days, up):
         if up:
             return self.up_down_closes(back_days).count(1)
@@ -97,32 +53,32 @@ class Stock:
 
 
     def consecutive_nr(self, back_days, up):
+        assert up in (1,-1)
         consecutive = 0
         max_consecutive = 0
         for i in self.up_down_closes(back_days):
-            if up:
-                if i == 1:
-                    consecutive += 1
-                else:
-                    if consecutive > max_consecutive:
-                        max_consecutive = consecutive
-                    consecutive = 0
+            if i * up == 1:
+                consecutive += 1
             else:
-                if i == -1:
-                    consecutive += 1
-                else:
-                    if consecutive > max_consecutive:
-                        max_consecutive = consecutive
-                    consecutive = 0
+                if consecutive > max_consecutive:
+                    max_consecutive = consecutive
+                consecutive = 0
         return max_consecutive
 
     
     def stdev(self, back_days):
         return statistics.stdev(self.accumulative_percentage_changes(back_days))
 
+    
+    # Gets the daily standard deviation of backdays and multiplies by sqrt of 
+    # year days to get the aggregated value
+    def hv(self, back_days):
+        return statistics.stdev(self.percentage_changes(back_days)) * math.sqrt(252)
 
-    def to_10_ratio(self, back_days):
-        return self.percentage_hv(back_days) / gcnv.TEN_PERCENTAGE_HV
+
+    @lru_cache(maxsize=None)
+    def hv_to_10_ratio(self, back_days):
+        return self.hv(back_days) / 10
 
 
     # private
@@ -149,9 +105,7 @@ class Stock:
         closes = self.closes(back_days)
         percentage_changes = []
         percentage_change = 0
-        for i in range(len(closes)):
-            if i == 0:
-                continue
+        for i in range(1, len(closes)):
             percentage_change = (closes[i] / closes[i-1] - 1) * 100 # non accumulative
             percentage_changes.append(percentage_change)
         return percentage_changes
@@ -159,12 +113,22 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def accumulative_percentage_changes(self, back_days):
-        accumulative_percentage_changes = []
-        suma = 0
-        for change in self.percentage_changes(back_days):
-            suma += change
-            accumulative_percentage_changes.append(suma)
-        return accumulative_percentage_changes
+        closes = self.closes(back_days)
+        percentage_changes = [0]
+        base = closes[0]
+        for i in range(1, len(closes)):
+            percentage_changes.append((closes[i] / base - 1) * 100)
+        return percentage_changes
+
+
+    # @lru_cache(maxsize=None)
+    # def accumulative_percentage_changes(self, back_days):
+    #     accumulative_percentage_changes = []
+    #     suma = 0
+    #     for change in self.percentage_changes(back_days):
+    #         suma += change
+    #         accumulative_percentage_changes.append(suma)
+    #     return accumulative_percentage_changes
 
 
     @lru_cache(maxsize=None)

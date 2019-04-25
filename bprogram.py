@@ -21,20 +21,33 @@ import gcnv
 #from texttable import Texttable
 from lib import html
 
-# Main method
-if __name__ == "__main__":
-    logging.basicConfig(filename=f"{gcnv.APP_PATH}/log/bprogram.log", level=logging.INFO)
 
-    parameters = sys.argv + 5 * ['']
+# INITIALIZATION
+# Detects if it is executed as the main file/import OR through a console exec to 
+# make import available and initialize variables
+# __file__ variable is not available in python console
+exec_in_console = '__file__' not in vars()
 
-    gcnv.connected = (parameters[1] == "connect")
-    gcnv.data_handler = DataHandler(gcnv.connected)
-    gcnv.data_handler.wait_for_api_ready()
-    try:
-        gcnv.back_days = int(parameters[2]) * 30
-    except ValueError as e:
-        gcnv.back_days = 365
+# Set root path
+if exec_in_console:
+    gcnv.APP_PATH = os.path.abspath("")
+else:
+    gcnv.APP_PATH = os.path.dirname(os.path.abspath(__file__))
 
+logging.basicConfig(filename=f"{gcnv.APP_PATH}/log/bprogram.log", level=logging.INFO)
+
+parameters = sys.argv + 5 * ['']
+gcnv.connected = (parameters[1] == "connect")
+gcnv.data_handler = DataHandler(gcnv.connected)
+gcnv.data_handler.wait_for_api_ready()
+try:
+    gcnv.back_days = int(parameters[2]) * 30
+except ValueError as e:
+    gcnv.back_days = 365
+
+
+# MAIN METHOD
+if __name__ == "__main__" and not exec_in_console:
     last_command = []
 
     while True:
@@ -68,7 +81,6 @@ if __name__ == "__main__":
                 print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
                 print("chart pair symbol1 symbol2 fixed_stdev_ratio")
                 print("prvol file.txt|symbol [back_days] [ord]")
-                print("hvol file.txt|symbol")
                 print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
                 print("print symbol")
                 continue
@@ -197,35 +209,28 @@ if __name__ == "__main__":
                         return core.safe_execute(50, ValueError, int, command[4])
                 rows.sort(key = key_select, reverse = True)
 
-            elif command[0] == "hvol":
-
-                header = get_hv_header()
-
-                rows = read_symbol_file_and_process(command, get_hv_row)
-
-                if command[2] == "ord" or command[2] != "":
-                    try:
-                        order_column = int(command[2])
-                    except (ValueError, TypeError) as e:
-                        order_column = 2 # order by HV30
-                    rows.sort(key = lambda row: row[order_column] if isinstance(row[order_column], (int, float)) else 5, reverse = True)
-
             elif command[0] == "pair":
 
                 header = get_pairs_header()
 
                 rows = read_pairs_file_and_process(command, get_pairs_row)
 
-                if "ord" in command:
-                    # order by rank
-                    rows.sort(key = lambda row: row[12] if isinstance(row[12], (int, float)) else 0)
+                # Sorting
+                order_column = command[2] if command[2] in header else "Rank365"
+                order_column = header.index(order_column)
+                assert order_column >= 0, "Probably renamed some column..."
+                def key_select(row):
+                    if isinstance(row[order_column], (int, float)):
+                        return row[order_column]
+                    else:
+                        return core.safe_execute(50, ValueError, int, command[4])
+                rows.sort(key = key_select, reverse = True)
 
             elif command[0] == "update":
                 update_stock(command)
                 print("Updating stock values...")
                 gcnv.data_handler.wait_for_async_request()
                 continue
-
 
             elif command[0] == "earnings":
                 # store earnings

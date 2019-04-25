@@ -59,13 +59,6 @@ def covariance(data1, data2):
 
     return sum / (len(data1) - 1)
 
-def calculate_hv(closes):
-    # return (statistics.stdev(closes) / closes[-1]) * 100 * math.sqrt(252/len(closes))
-    return (statistics.stdev(closes) / statistics.mean(closes)) * 100 * math.sqrt(252/len(closes))
-
-def calculate_percentage_hv(percentage_changes):
-    return statistics.stdev(percentage_changes) * math.sqrt(252/len(percentage_changes))
-
 def int_round_to(number, rounder):
     return round(number / rounder) * rounder
 

@@ -18,19 +18,13 @@ def quantity(ivr, spy_vol_ratio):
     return round(ratio)
 
 
-SPY_JUMPS = 2
+DIRECTIONAL_DOLLARS = 20000 # for a 10 volatility ratio
 
-def jumps(stock_price, spy_vol_ratio):
-	return stock_price * ((SPY_JUMPS * spy_vol_ratio) / 100.0)
-
-
-SPY_DIRECTIONAL_DOLLARS = 12500
-
-def directional_quantity(spy_vol_ratio):
-	return round((SPY_DIRECTIONAL_DOLLARS / spy_vol_ratio) * 0.33) # 0.33 is mid between average credit spread 0.25 and debit spread 0.40
+def directional_quantity(vol_ratio):
+	return round(DIRECTIONAL_DOLLARS / vol_ratio)
 
 
-SPY_NEUTRAL_DOLLARS = 25000
+NEUTRAL_DOLLARS = DIRECTIONAL_DOLLARS * 2
 
-def contract_number(stock_price, spy_vol_ratio):
-	return SPY_NEUTRAL_DOLLARS / (stock_price * 100 * spy_vol_ratio)
+def contract_number(stock_price, vol_ratio):
+	return NEUTRAL_DOLLARS / (stock_price * 100 * vol_ratio)
