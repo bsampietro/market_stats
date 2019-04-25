@@ -43,7 +43,7 @@ gcnv.data_handler.wait_for_api_ready()
 try:
     gcnv.back_days = int(parameters[2]) * 30
 except ValueError as e:
-    gcnv.back_days = 365
+    gcnv.back_days = 365 * 2
 
 
 # MAIN METHOD

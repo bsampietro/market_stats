@@ -68,7 +68,7 @@ def get_iv_row(ticker, date, back_days):
             stock.current_to_ma_percentage(date, back_days) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
-            stock.closes_nr(7, up = True) - stock.closes_nr(7, up = False),
+            stock.closes_nr(7, 1) - stock.closes_nr(7, -1),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.hv_to_10_ratio(back_days),
@@ -109,7 +109,7 @@ def get_pairs_header():
         '-',
         'VRat',
         'Corr',
-        'SPYVRat',
+        '210R',
         '-']
     header += ['-'] * 3
     return header
@@ -122,15 +122,15 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
-            pair.get_last_close(365),
-            pair.min(365),
-            pair.max(365),
-            pair.current_rank(365),
-            pair.ma(365),
+            pair.get_last_close(gcnv.back_days),
+            pair.min(gcnv.back_days),
+            pair.max(gcnv.back_days),
+            pair.current_rank(gcnv.back_days),
+            pair.ma(gcnv.back_days),
             '-',
             pair.stdev_ratio(gcnv.back_days),
             pair.correlation(gcnv.back_days),
-            pair.stdev(gcnv.back_days) / Stock(gcnv.data_handler, 'SPY').stdev(gcnv.back_days),
+            pair.hv_to_10_ratio(gcnv.back_days),
             '-']
         closes = pair.closes(70)[-3:]
         closes.reverse()

@@ -41,26 +41,52 @@ class Pair:
         return (statistics.stdev(changes[0]) / statistics.stdev(changes[1]))
 
 
-    def stdev(self, back_days):
-        return statistics.stdev(self.closes(back_days))
+    # Gets the daily standard deviation of backdays and multiplies by sqrt of 
+    # year days to get the aggregated value
+    def hv(self, back_days):
+        changes_metric = self.percentage_changes(back_days) # simple percentage change
+        return statistics.stdev(changes_metric) * math.sqrt(252)
+
+
+    @lru_cache(maxsize=None)
+    def hv_to_10_ratio(self, back_days):
+        return self.hv(back_days) / 10
 
 
     # -------- Pairs part ----------
 
+    # Could also be called accumulative_percentage_changes
+    # Sum of percentage changes of the pair as a whole
     @lru_cache(maxsize=None)
     def closes(self, back_days):
+        closes = []
+        suma = 0
+        # for change in self.log_changes(back_days):
+        for change in self.percentage_changes(back_days):
+            suma += change
+            closes.append(suma)
+        return closes
+
+
+    # Percentage changes of the pair as a whole
+    @lru_cache(maxsize=None)
+    def percentage_changes(self, back_days):
         percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
         percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
-        substraction_closes = []
-        suma = 0
+        percentage_changes = []
         positively_correlated = self.correlation(gcnv.back_days) >= 0
         for i in range(len(percentage_changes1)):
             if positively_correlated:
-                suma += percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
+                change = percentage_changes1[i] - percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
             else:
-                suma += percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
-            substraction_closes.append(suma)
-        return substraction_closes
+                change = percentage_changes1[i] + percentage_changes2[i] * self.stdev_ratio(gcnv.back_days)
+            percentage_changes.append(change)
+        return percentage_changes
+
+
+    @lru_cache(maxsize=None)
+    def log_changes(self, back_days):
+        return [math.log((change / 100) + 1) for change in self.percentage_changes(back_days)]
 
 
     def get_last_close(self, back_days):
@@ -167,18 +193,3 @@ class Pair:
             percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2_base - 1) * 100)
 
         return (percentage_changes_ticker1, percentage_changes_ticker2)
-
-
-    # @lru_cache(maxsize=None)
-    # def parallel_accumulative_percentage_changes(self, back_days):
-    #     percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
-    #     percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
-    #     acc1 = []; acc2 = []
-    #     sum1 = 0; sum2 = 0
-    #     for change in percentage_changes1:
-    #         sum1 += change
-    #         acc1.append(sum1)
-    #     for change in percentage_changes2:
-    #         sum2 += change
-    #         acc2.append(sum2)
-    #     return (acc1, acc2)

@@ -8,10 +8,11 @@ BETA_REFERENCES = ["SPY"]
 MIN_CORRELATED_CORRELATION = 0.40
 MAX_UNCORRELATED_CORRELATION = 0.20
 
+# Declared constants and variables. They will be set on initialization.
 # Constants
 APP_PATH = None
 
 # Variables
 data_handler = None
-connected = False
-back_days = 365
+connected = None
+back_days = None

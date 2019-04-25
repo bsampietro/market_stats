@@ -37,7 +37,7 @@ class IBData(EClient, EWrapper):
         # Remember queries in this session
         requested_data_key = f"{requested_data},{ticker}"
         if requested_data_key in self.session_requested_data:
-            logging.info(f"{requested_data_key} already requested")
+            print(f"{requested_data_key} already requested")
             return
         else:
             self.session_requested_data.add(requested_data_key)
@@ -69,6 +69,7 @@ class IBData(EClient, EWrapper):
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
         self.req_id_to_requested_historical_data[next_req_id] = requested_data
 
+        time.sleep(1)
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
 
@@ -124,6 +125,9 @@ class IBData(EClient, EWrapper):
                 break
             else:
                 time.sleep(1)
+                # debug
+                if i == 299:
+                    print("Timeout!!")
 
 
     def wait_for_api_ready(self):
