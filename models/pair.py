@@ -14,10 +14,7 @@ class Pair:
         self.data_handler = data_handler
         self.ticker1 = ticker1
         self.ticker2 = ticker2
-        try:
-            self.fixed_stdev_ratio = float(fixed_stdev_ratio)
-        except (ValueError, TypeError) as e:
-            self.fixed_stdev_ratio = None
+        self.fixed_stdev_ratio = fixed_stdev_ratio
 
 
     # -------- Correlation part -------

@@ -17,8 +17,6 @@ USO
 
 VXXB
 
-FXE
-
 IYR
 XLU
 
@@ -61,6 +59,7 @@ EWQ
 EWP
 TUR
 
+FXE
 FXY
 FXB
 #FXC (doesn't work)
@@ -82,3 +81,8 @@ WEAT
 
 #XLK
 #UUP
+
+#EPOL Poland
+#EWS Singapore
+#EWM Malaysia
+#EIS Israel

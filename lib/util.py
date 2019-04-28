@@ -102,8 +102,6 @@ def get_futures_contract(symbol):
         contract.exchange = "GLOBEX"
     elif symbol[0:2] in ("UB" ,"ZB", "ZN", "ZF", "ZT", "ZS", "ZC", "ZW", "YM"):
         contract.exchange = "ECBOT"
-    elif symbol[0:2] in ("VX"):
-        contract.exchange = "CFE"
     elif symbol[0:3] in ("EUR", "JPY"):
         contract.exchange = "GLOBEX"
     elif symbol[0:3] in ("VIX"):

@@ -141,7 +141,8 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "chart":
                 if command[1] == "pair":
                     print("Remember to bring data before with the 'pair' command (if needed).")
-                    pair = Pair(gcnv.data_handler, command[2].upper(), command[3].upper(), command[4])
+                    ps = process_pair_string(command[2])
+                    pair = Pair(gcnv.data_handler, ps.ticker1, ps.ticker2, ps.stdev_ratio)
                     pair.output_chart()
                 continue
 
@@ -177,11 +178,8 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "prvol":
 
                 header = get_iv_header()
-
-                back_days = core.safe_execute(gcnv.back_days, ValueError, int, command[2])
-                back_days = back_days * 30 if back_days < 30 else back_days
-
-                rows = read_symbol_file_and_process(command, get_iv_row, back_days)
+                
+                rows = read_symbol_file_and_process(command, get_iv_row)
 
                 # Remove year from date
                 current_year = time.strftime('%Y')
@@ -190,10 +188,7 @@ if __name__ == "__main__" and not exec_in_console:
 
                 # Filter
                 if 'filter' in command:
-                    # vol_column = header.index("LngV%")
                     rank_column = header.index("LngRnk")
-                    # assert vol_column >= 0
-                    assert rank_column >= 0
                     options_list = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
                     rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
                             35 < row[rank_column] < 65 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
@@ -201,7 +196,6 @@ if __name__ == "__main__" and not exec_in_console:
                 # Sorting
                 order_column = command[3] if command[3] in header else "LngRnk"
                 order_column = header.index(order_column)
-                assert order_column >= 0, "Probably renamed some column..."
                 def key_select(row):
                     if isinstance(row[order_column], (int, float)):
                         return row[order_column]
@@ -216,9 +210,8 @@ if __name__ == "__main__" and not exec_in_console:
                 rows = read_pairs_file_and_process(command, get_pairs_row)
 
                 # Sorting
-                order_column = command[2] if command[2] in header else "Rank365"
+                order_column = command[2] if command[2] in header else "Rank"
                 order_column = header.index(order_column)
-                assert order_column >= 0, "Probably renamed some column..."
                 def key_select(row):
                     if isinstance(row[order_column], (int, float)):
                         return row[order_column]

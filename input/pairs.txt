@@ -19,7 +19,7 @@ SHY-IEF-0.5
 #ZTH8-ZNH8-0.57
 #ZFZ8-ZBZ8-0.32
 
-#CLU8-CLQ8-1
+CLM9-CLN9-1
 
 # Credit quality
 #(3 GE(2 years from now) - 2 ZT)
@@ -31,7 +31,7 @@ SHY-IEF-0.5
 #ZCK8-ZSK8
 #ZWK8-ZCK8
 
-#VXQ8-VXU8
+#VIXK9-VIXM9-1
 
 # CAD-CL
 # AUD-GC

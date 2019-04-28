@@ -31,7 +31,6 @@ def get_iv_header():
         'L%chg',
         'UD7',
         'SPCrr',
-        'SP-R',
         '210R',
         'DrcQt',
         'CtrNr',
@@ -65,12 +64,11 @@ def get_iv_row(ticker, date, back_days):
             stock.get_close_at(date),
             f"{stock.min(back_days)} - {stock.max(back_days)}",
             stock.min_max_rank(date, back_days),
-            stock.current_to_ma_percentage(date, back_days) / core.safe_execute(1, GettingInfoError, spy_pair.stdev_ratio, back_days),
+            stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
             stock.closes_nr(7, 1) - stock.closes_nr(7, -1),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
-            core.safe_execute('-', GettingInfoError, spy_pair.stdev_ratio, back_days),
             stock.hv_to_10_ratio(back_days),
             util.int_round_to(notional.directional_quantity(stock.hv_to_10_ratio(back_days)), 100),
             round(notional.contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days)), 1),
@@ -102,10 +100,10 @@ def get_pairs_header():
         'Date',
         '-',
         'Last',
-        'Min365',
-        'Max365',
-        'Rank365',
-        'MA365',
+        'Min',
+        'Max',
+        'Rank',
+        'MA',
         '-',
         'VRat',
         'Corr',
@@ -115,22 +113,22 @@ def get_pairs_header():
     return header
 
 
-def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio = None):
+def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio, back_days):
     try:
         pair = Pair(gcnv.data_handler, ticker1, ticker2, fixed_stdev_ratio)
         date = '-' if gcnv.data_handler.get_max_stored_date("STOCK", ticker1) is None else util.date_in_string(gcnv.data_handler.get_max_stored_date("STOCK", ticker1))
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
-            pair.get_last_close(gcnv.back_days),
-            pair.min(gcnv.back_days),
-            pair.max(gcnv.back_days),
-            pair.current_rank(gcnv.back_days),
-            pair.ma(gcnv.back_days),
+            pair.get_last_close(back_days),
+            pair.min(back_days),
+            pair.max(back_days),
+            pair.current_rank(back_days),
+            pair.ma(back_days),
             '-',
-            pair.stdev_ratio(gcnv.back_days),
-            pair.correlation(gcnv.back_days),
-            pair.hv_to_10_ratio(gcnv.back_days),
+            pair.stdev_ratio(back_days),
+            pair.correlation(back_days),
+            pair.hv_to_10_ratio(back_days),
             '-']
         closes = pair.closes(70)[-3:]
         closes.reverse()
@@ -175,7 +173,9 @@ def bring_if_connected(ticker, bring_volatility):
         print(e)
 
 
-def read_symbol_file_and_process(command, get_row_method, back_days = None):
+def read_symbol_file_and_process(command, get_row_method):
+    months = core.safe_execute(-1, ValueError, int, command[2])
+    back_days = gcnv.back_days if months == -1 else months * 30
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
     rows = []
@@ -200,6 +200,8 @@ def read_symbol_file_and_process(command, get_row_method, back_days = None):
 
 
 def read_pairs_file_and_process(command, get_row_method):
+    months = core.safe_execute(-1, ValueError, int, command[2])
+    back_days = gcnv.back_days if months == -1 else months * 30
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     rows = []
     if os.path.isfile(text_file):
@@ -209,18 +211,17 @@ def read_pairs_file_and_process(command, get_row_method):
                 if len(rows) > 0:
                     rows.append(['-'] * len(rows[0]))
                 continue
-            data = pair.split('-') + [None] * 5
-            ticker1 = data[0]; ticker2 = data[1]; stdev_ratio = data[2]
-            bring_if_connected(ticker1, False)
-            bring_if_connected(ticker2, False)
-            row = get_row_method(ticker1, ticker2, stdev_ratio)
+            ps = process_pair_string(pair)
+            bring_if_connected(ps.ticker1, False)
+            bring_if_connected(ps.ticker2, False)
+            row = get_row_method(ps.ticker1, ps.ticker2, ps.stdev_ratio, back_days)
             if len(row) > 0:
                 rows.append(row)
     else:
-        ticker1 = command[1].upper(); ticker2 = command[2].upper(); stdev_ratio = command[3]
-        bring_if_connected(ticker1, False)
-        bring_if_connected(ticker2, False)
-        row = get_row_method(ticker1, ticker2, stdev_ratio)
+        ps = process_pair_string(command[1])
+        bring_if_connected(ps.ticker1, False)
+        bring_if_connected(ps.ticker2, False)
+        row = get_row_method(ps.ticker1, ps.ticker2, ps.stdev_ratio, back_days)
         if len(row) > 0:
             rows.append(row)
     return rows
@@ -272,3 +273,12 @@ def save_earnings(data):
 
 def chart_link(ticker):
     return f"<a href=\"https://finance.yahoo.com/chart/{ticker}\" target=\"_blank\">--&gt;</a>"
+
+
+def process_pair_string(pair_string):
+    data = core.Struct()
+    data.ticker1, data.ticker2, data.stdev_ratio, *_ = pair_string.split('-') + [None]
+    data.ticker1 = data.ticker1.upper()
+    data.ticker2 = data.ticker2.upper()
+    data.stdev_ratio = core.safe_execute(None, (ValueError, TypeError), float, data.stdev_ratio)
+    return data
