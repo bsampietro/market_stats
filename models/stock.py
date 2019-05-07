@@ -63,6 +63,17 @@ class Stock:
                 consecutive = 0
         return max_consecutive
 
+
+    @lru_cache(maxsize=None)
+    def up_down_closes(self, back_days):
+        result = []
+        for change in self.percentage_changes(back_days):
+            if change >= 0:
+                result.append(1)
+            else:
+                result.append(-1)
+        return result
+
     
     # Gets the daily standard deviation of backdays and multiplies by sqrt of 
     # year days to get the aggregated value
@@ -122,16 +133,3 @@ class Stock:
         for i in range(1, len(closes)):
             percentage_changes.append(math.log(closes[i] / closes[i-1]) * 100)
         return percentage_changes
-
-
-    @lru_cache(maxsize=None)
-    def up_down_closes(self, back_days):
-        up_down_closes = []
-        for change in self.percentage_changes(back_days):
-            if change >= 0.15:
-                up_down_closes.append(1)
-            elif change <= -0.15:
-                up_down_closes.append(-1)
-            else:
-                up_down_closes.append(0)
-        return up_down_closes

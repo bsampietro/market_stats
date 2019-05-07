@@ -4,29 +4,19 @@ SPY-QQQ
 SPY-EFA
 SPY-EEM
 XOP-USO
-#GLD-GDX
+GLD-GDXJ
 GLD-SLV
-GLD-PPLT
+SLV-PPLT
 #6C-6A (canada - aussie)
 # curve spreads (NOB, 2-10)
 IEF-TLT-0.41
 SHY-IEF-0.5
-
-#SHY-TLT-0.18
-#SPY-IEI-0.25
-#IEI-TLT-0.32
-#ZNH8-ZBH8-0.40
-#ZTH8-ZNH8-0.57
-#ZFZ8-ZBZ8-0.32
 
 CLM9-CLN9-1
 
 # Credit quality
 #(3 GE(2 years from now) - 2 ZT)
 # GEZ9-ZTM8-0.58
-
-# Credit quality + TUF
-#GEZ9-IEI-0.23
 
 #ZCK8-ZSK8
 #ZWK8-ZCK8
@@ -36,5 +26,3 @@ CLM9-CLN9-1
 # CAD-CL
 # AUD-GC
 # CAD-AUD
-
-#NGH8-NGJ8-1

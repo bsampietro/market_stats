@@ -40,10 +40,7 @@ parameters = sys.argv + 5 * ['']
 gcnv.connected = (parameters[1] == "connect")
 gcnv.data_handler = DataHandler(gcnv.connected)
 gcnv.data_handler.wait_for_api_ready()
-try:
-    gcnv.back_days = int(parameters[2]) * 30
-except ValueError as e:
-    gcnv.back_days = 365 * 2
+gcnv.back_days = core.safe_execute(365 * 2, ValueError, lambda x: int(x) * 30, parameters[2])
 
 
 # MAIN METHOD

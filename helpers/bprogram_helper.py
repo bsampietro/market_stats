@@ -29,7 +29,7 @@ def get_iv_header():
         'LngV%',
         'Shrt%',
         'L%chg',
-        'UD7',
+        'UD14',
         'SPCrr',
         '210R',
         'DrcQt',
@@ -67,7 +67,7 @@ def get_iv_row(ticker, date, back_days):
             stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
-            stock.closes_nr(7, 1) - stock.closes_nr(7, -1),
+            up_down_closes_str(stock, 14),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             stock.hv_to_10_ratio(back_days),
             util.int_round_to(notional.directional_quantity(stock.hv_to_10_ratio(back_days)), 100),
@@ -282,3 +282,9 @@ def process_pair_string(pair_string):
     data.ticker2 = data.ticker2.upper()
     data.stdev_ratio = core.safe_execute(None, (ValueError, TypeError), float, data.stdev_ratio)
     return data
+
+
+def up_down_closes_str(stock, back_days):
+    map = ["+" if udc == 1 else "-" for udc in stock.up_down_closes(back_days)]
+    map.reverse()
+    return str(" ").join(map)
