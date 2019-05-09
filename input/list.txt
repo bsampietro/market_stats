@@ -15,7 +15,7 @@ XOP
 #OIH
 USO
 
-VXXB
+VXX
 
 IYR
 XLU

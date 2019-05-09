@@ -30,7 +30,7 @@ class Stock:
 
 
     def get_last_percentage_change(self):
-        return self.percentage_changes(gcnv.back_days)[-1]
+        return self.percentage_changes(2)[-1]
 
 
     def min(self, back_days):

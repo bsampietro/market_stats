@@ -97,13 +97,7 @@ if __name__ == "__main__" and not exec_in_console:
 
             elif command[0] == "corr":
                 pair = Pair(gcnv.data_handler, command[1].upper(), command[2].upper())
-
-                back_days = gcnv.back_days
-                if command[3] != "":
-                    try:
-                        back_days = int(command[3])
-                    except ValueError:
-                        pass
+                back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[3])
 
                 print(f"  Correlation: {format(pair.correlation(back_days), '.2f')}")
                 print(f"  Beta:        {format(pair.beta(back_days), '.2f')}")
@@ -140,7 +134,8 @@ if __name__ == "__main__" and not exec_in_console:
                     print("Remember to bring data before with the 'pair' command (if needed).")
                     ps = process_pair_string(command[2])
                     pair = Pair(gcnv.data_handler, ps.ticker1, ps.ticker2, ps.stdev_ratio)
-                    pair.output_chart()
+                    back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[3])
+                    pair.output_chart(back_days)
                 continue
 
             elif command[0] == "print":
@@ -165,11 +160,20 @@ if __name__ == "__main__" and not exec_in_console:
                         print("Ticker not found")
                 elif command[1] == "keys":
                     print("IV:")
-                    print(gcnv.data_handler.implied_volatility.keys())
+                    iv = list(gcnv.data_handler.implied_volatility.keys())
+                    iv.sort()
+                    print(iv)
+
                     print("HV:")
-                    print(gcnv.data_handler.historical_volatility.keys())
+                    hv = list(gcnv.data_handler.historical_volatility.keys())
+                    hv.sort()
+                    print(hv)
+
                     print("STOCK:")
-                    print(gcnv.data_handler.stock.keys())
+                    stock = list(gcnv.data_handler.stock.keys())
+                    stock.sort()
+                    print(stock)
+
                     continue
 
             elif command[0] == "prvol":

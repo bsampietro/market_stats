@@ -287,4 +287,5 @@ def process_pair_string(pair_string):
 def up_down_closes_str(stock, back_days):
     map = ["+" if udc == 1 else "-" for udc in stock.up_down_closes(back_days)]
     map.reverse()
+    map = map[1:] # remove first element which is today
     return str(" ").join(map)

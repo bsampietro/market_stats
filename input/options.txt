@@ -16,7 +16,7 @@ XOP
 USO
 #XLE
 
-VXXB
+VXX
 
 FXE
 FXY
