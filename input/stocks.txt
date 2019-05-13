@@ -20,16 +20,12 @@ WFC
 WMT
 XOM
 
----
-
 AMZN
 TSLA
 #SNAP
 SBUX
 AAPL
 NFLX
-
----
 
 GOOGL
 IBM
@@ -98,4 +94,4 @@ AA
 
 #Liquidity?
 #CELG
-XLNX
+#XLNX

@@ -32,8 +32,8 @@ def get_iv_header():
         'UD14',
         'SPCrr',
         '210R',
-        'DrcQt',
-        'CtrNr',
+        'DQtty',
+        'NCtrNr',
         'Erngs',
         'D2Ern',
         'Chart'
@@ -182,10 +182,6 @@ def read_symbol_file_and_process(command, get_row_method):
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
-            if ticker == '---':
-                if len(rows) > 0:
-                    rows.append(['-'] * len(rows[0]))
-                continue
             bring_if_connected(ticker, ticker in v_tickers)
             row = get_row_method(ticker, get_query_date(ticker), back_days)
             if len(row) > 0:
@@ -207,10 +203,6 @@ def read_pairs_file_and_process(command, get_row_method):
     if os.path.isfile(text_file):
         pairs = util.read_symbol_list(text_file)
         for pair in pairs:
-            if pair == '---':
-                if len(rows) > 0:
-                    rows.append(['-'] * len(rows[0]))
-                continue
             ps = process_pair_string(pair)
             bring_if_connected(ps.ticker1, False)
             bring_if_connected(ps.ticker2, False)
@@ -232,8 +224,7 @@ def update_stock(command):
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
-            if ticker != '---':
-                gcnv.data_handler.request_market_data("STOCK", ticker)
+            gcnv.data_handler.request_market_data("STOCK", ticker)
     else:
         ticker = command[1].upper()
         gcnv.data_handler.request_market_data("STOCK", ticker)

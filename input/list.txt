@@ -4,6 +4,7 @@ IWM
 DIA
 
 TLT
+#TBT
 HYG
 
 GLD
@@ -30,10 +31,6 @@ RSX
 XRT
 #XLF
 #XLE
-
----
-
-#TBT
 
 XLY
 XLI

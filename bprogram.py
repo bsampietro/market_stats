@@ -104,30 +104,22 @@ if __name__ == "__main__" and not exec_in_console:
                 print(f"  Volat ratio: {format(pair.stdev_ratio(back_days), '.2f')}")
                 continue
 
-            elif command[0] == "corrs" or command[0] == "uncorrs":
-                symbols = util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt")
-                text_output_file = open(f"/media/ramd/{'-'.join(command)}", "w")
-                for symbol1 in symbols:
-                    print(symbol1)
-                    text_output_file.write(f"{symbol1}\n")
-                    for symbol2 in symbols:
-                        if symbol1 == symbol2 or symbol1 == "---" or symbol2 == "---":
-                            continue
-                        try:
-                            pair = Pair(gcnv.data_handler, symbol2, symbol1)
-                            out_string = f"  {symbol2}: {format(pair.correlation(gcnv.back_days), '.2f')} | {format(pair.stdev_ratio(gcnv.back_days), '.2f')}"
-                            if command[0] == "corrs":
-                                if symbol1 in gcnv.BETA_REFERENCES or (pair.correlation(gcnv.back_days) > gcnv.MIN_CORRELATED_CORRELATION or pair.correlation(gcnv.back_days) < -gcnv.MIN_CORRELATED_CORRELATION):
-                                    print(out_string)
-                                    text_output_file.write(f"{out_string}\n")
-                            else:
-                                if pair.correlation(gcnv.back_days) > -gcnv.MAX_UNCORRELATED_CORRELATION and pair.correlation(gcnv.back_days) < gcnv.MAX_UNCORRELATED_CORRELATION:
-                                    print(out_string)
-                                    text_output_file.write(f"{out_string}\n")
-                        except GettingInfoError as e:
-                            pass
-                text_output_file.close()
-                continue
+            elif command[0] == "corrs":
+                back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[2])
+                header = ["", "SPY", "TLT", "IEF", "GLD", "USO", "UNG", "FXE", "FXY", "FXB", "IYR", "XLU", "EFA", "EEM", "VXX"]
+                rows = []
+                for symbol in util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
+                    row = [symbol]
+                    for head_symbol in header[1:]:
+                        if symbol == head_symbol:
+                            row.append("-")
+                        else:
+                            try:
+                                pair = Pair(gcnv.data_handler, head_symbol, symbol)
+                                row.append(pair.correlation(back_days))
+                            except GettingInfoError:
+                                row.append("-")
+                    rows.append(row)
 
             elif command[0] == "chart":
                 if command[1] == "pair":
@@ -197,12 +189,8 @@ if __name__ == "__main__" and not exec_in_console:
                 # Sorting
                 order_column = command[3] if command[3] in header else "LngRnk"
                 order_column = header.index(order_column)
-                def key_select(row):
-                    if isinstance(row[order_column], (int, float)):
-                        return row[order_column]
-                    else:
-                        return core.safe_execute(50, ValueError, int, command[4])
-                rows.sort(key = key_select, reverse = True)
+                rows.sort(key = lambda row: row[order_column], reverse = True)
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] < sep, [75, 50, 25])
 
             elif command[0] == "pair":
 
@@ -213,12 +201,8 @@ if __name__ == "__main__" and not exec_in_console:
                 # Sorting
                 order_column = command[2] if command[2] in header else "Rank"
                 order_column = header.index(order_column)
-                def key_select(row):
-                    if isinstance(row[order_column], (int, float)):
-                        return row[order_column]
-                    else:
-                        return core.safe_execute(50, ValueError, int, command[4])
-                rows.sort(key = key_select, reverse = True)
+                rows.sort(key = lambda row: row[order_column], reverse = True)
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] < sep, [0])
 
             elif command[0] == "update":
                 update_stock(command)
@@ -262,6 +246,8 @@ if __name__ == "__main__" and not exec_in_console:
                         if isinstance(row[i], float):
                             # row[i] = round(row[i], 2)
                             row[i] = f"{row[i]:.2f}"
+                        if vars().get("order_column") == i:
+                            row[i] = f"<b>{row[i]}</b>"
                 f.write(html.table(rows, header_row=header,
                     style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
 

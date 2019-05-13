@@ -30,7 +30,9 @@ class Stock:
 
 
     def get_last_percentage_change(self):
-        return self.percentage_changes(2)[-1]
+        # Using 10 as an arbitrary big number to have at least
+        # 1 percentage change. (Weekends and holidays don't add numbers)
+        return self.percentage_changes(10)[-1]
 
 
     def min(self, back_days):

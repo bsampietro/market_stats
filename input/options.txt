@@ -38,8 +38,6 @@ EWZ
 FXI
 EWW
 
----
-
 #Too correlated with SPY
 XLI
 XLY
