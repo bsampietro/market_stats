@@ -181,16 +181,16 @@ if __name__ == "__main__" and not exec_in_console:
 
                 # Filter
                 if 'filter' in command:
-                    rank_column = header.index("LngRnk")
+                    rank_column = header.index("BDRnk")
                     options_list = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
                     rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
                             35 < row[rank_column] < 65 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
 
                 # Sorting
-                order_column = command[3] if command[3] in header else "LngRnk"
+                order_column = command[3] if command[3] in header else "BDRnk"
                 order_column = header.index(order_column)
                 rows.sort(key = lambda row: row[order_column], reverse = True)
-                util.add_separators_to_list(rows, lambda row, sep: row[order_column] < sep, [75, 50, 25])
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [65, 35])
 
             elif command[0] == "pair":
 
@@ -202,7 +202,7 @@ if __name__ == "__main__" and not exec_in_console:
                 order_column = command[2] if command[2] in header else "Rank"
                 order_column = header.index(order_column)
                 rows.sort(key = lambda row: row[order_column], reverse = True)
-                util.add_separators_to_list(rows, lambda row, sep: row[order_column] < sep, [0])
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [30, -30])
 
             elif command[0] == "update":
                 update_stock(command)

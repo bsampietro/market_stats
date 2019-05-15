@@ -24,10 +24,10 @@ def get_iv_header():
     header = ['Tckr', 'Date']
     header += [
         'Last',
-        'LngInt',
-        'LngRnk',
-        'LngV%',
-        'Shrt%',
+        'BDInterval',
+        'BDRnk',
+        'BDV%',
+        '14%',
         'L%chg',
         'UD14',
         'SPCrr',
@@ -63,7 +63,7 @@ def get_iv_row(ticker, date, back_days):
         row += [
             stock.get_close_at(date),
             f"{stock.min(back_days)} - {stock.max(back_days)}",
-            stock.min_max_rank(date, back_days),
+            round(stock.min_max_rank(date, back_days)),
             stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
@@ -109,7 +109,7 @@ def get_pairs_header():
         'Corr',
         '210R',
         '-']
-    header += ['-'] * 3
+    header += ['-'] * gcnv.PAIR_PAST_RESULTS
     return header
 
 
@@ -130,7 +130,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio, back_days):
             pair.correlation(back_days),
             pair.hv_to_10_ratio(back_days),
             '-']
-        closes = pair.closes(70)[-3:]
+        closes = pair.closes(back_days)[-gcnv.PAIR_PAST_RESULTS:]
         closes.reverse()
         row += closes
         return row

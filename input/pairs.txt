@@ -11,6 +11,7 @@ SLV-PPLT
 # curve spreads (NOB, 2-10)
 IEF-TLT-0.41
 SHY-IEF-0.5
+SHY-TLT-0.25
 
 
 #FUTURES

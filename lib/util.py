@@ -66,7 +66,7 @@ def add_separators_to_list(lst, condition, separators):
     i = 0
     while i < len(lst) and len(separators) > 0:
         if condition(lst[i], separators[0]):
-            lst.insert(i, ["*"] * len(lst[0]))
+            lst.insert(i, ["**"] * len(lst[0]))
             separators.pop(0)
             i += 1
         i += 1
