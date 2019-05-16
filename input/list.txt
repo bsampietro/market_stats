@@ -55,6 +55,9 @@ EWI
 EWQ
 EWP
 TUR
+EPOL
+EWS
+EIS
 
 FXE
 FXY
@@ -79,7 +82,4 @@ WEAT
 #XLK
 #UUP
 
-#EPOL Poland
-#EWS Singapore
 #EWM Malaysia
-#EIS Israel

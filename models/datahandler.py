@@ -67,12 +67,6 @@ class DataHandler:
         if self.connected():
             self.remote.disconnect()
 
-    def stop(self):
-        self.save()
-        if self.connected():
-            self.disconnect()
-        
-
     def get_max_stored_date(self, requested_data, ticker):
         data = self.find_in_data(requested_data, ticker, None, silent = True)
         if data is None:
@@ -196,7 +190,7 @@ class DataHandler:
             close = []
             for requested_data, ticker in wtb:
                 close.append(self.find_in_data(requested_data, ticker, older_date.strftime("%Y%m%d"), True))
-            if all(close):
+            if all(close_i is not None for close_i in close):
                 data.append(close)
         data.reverse()
         data = list(zip(*data))

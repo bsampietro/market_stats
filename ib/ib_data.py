@@ -42,9 +42,6 @@ class IBData(EClient, EWrapper):
         else:
             self.session_requested_data.add(requested_data_key)
 
-        # Setting query variables
-        duration_string = "2 Y"
-        
         if requested_data == "IV":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
         elif requested_data == "HV":
@@ -55,6 +52,10 @@ class IBData(EClient, EWrapper):
             raise RuntimeError("Unknown requested_data parameter")
 
         # Adjusting max duration_string query variable
+        duration_string = "2 Y"
+        if util.contract_type(ticker) == "FUT":
+            duration_string = "3 M"
+
         last = self.data_handler.get_max_stored_date(requested_data, ticker)
         if last is not None:
             delta = datetime.today() - last
@@ -62,6 +63,7 @@ class IBData(EClient, EWrapper):
                 return
             else:
                 duration_string = f"{delta.days + 1} D"
+
         logging.info(f"Last historical query duration string: {duration_string}")
         
         # Class level mappings
