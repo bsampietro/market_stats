@@ -69,9 +69,9 @@ class IBData(EClient, EWrapper):
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
         self.req_id_to_requested_historical_data[next_req_id] = requested_data
 
-        time.sleep(1)
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
+        time.sleep(1)
 
 
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,

@@ -1,8 +1,6 @@
-import pickle
 import json
 from json.decoder import JSONDecodeError
-import os.path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from lib import util
 from lib.errors import *
@@ -110,7 +108,7 @@ class DataHandler:
         self.remote.request_market_data(requested_data, ticker)
     
 
-    def find_in_data(self, requested_data, ticker, the_day = None, silent = False):
+    def find_in_data(self, requested_data, ticker, date, silent):
         data = None
         if requested_data == "IV":
             data = self.implied_volatility
@@ -122,11 +120,11 @@ class DataHandler:
             raise RuntimeError("Unknown requested_data parameter")
 
         try:
-            if the_day is None:
+            if date is None:
                 return data[ticker]
             else:
-                the_day = util.date_in_string(the_day)
-                return data[ticker][the_day]
+                date = util.date_in_string(date)
+                return data[ticker][date]
         except KeyError as e:
             if silent:
                 return None
@@ -185,3 +183,21 @@ class DataHandler:
     def wait_for_api_ready(self):
         if self.connected():
             self.remote.wait_for_api_ready()
+
+
+    # Data
+
+    # Last list element is the most recent value, achieved by data.reverse() statement
+    def list_data(self, wtb, back_days):
+        today = datetime.today()
+        data = []
+        for i in range(back_days):
+            older_date = today - timedelta(days = i)
+            close = []
+            for requested_data, ticker in wtb:
+                close.append(self.find_in_data(requested_data, ticker, older_date.strftime("%Y%m%d"), True))
+            if all(close):
+                data.append(close)
+        data.reverse()
+        data = list(zip(*data))
+        return data

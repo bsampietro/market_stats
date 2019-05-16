@@ -1,12 +1,6 @@
-from datetime import datetime, timedelta
-
 from functools import lru_cache
 import statistics
 import math
-
-import gcnv
-
-from lib import util
 
 class Stock:
     def __init__(self, data_handler, ticker):
@@ -26,7 +20,7 @@ class Stock:
 
 
     def get_close_at(self, date):
-        return self.data_handler.find_in_data("STOCK", self.ticker, date)
+        return self.data_handler.find_in_data("STOCK", self.ticker, date, False)
 
 
     def get_last_percentage_change(self):
@@ -90,48 +84,20 @@ class Stock:
         return self.hv(back_days) / 10
 
 
-    # private
+    # Private
 
-    # Last list element is the most recent value, achieved by closes.reverse() statement
     @lru_cache(maxsize=None)
     def closes(self, back_days):
-        max_date = self.data_handler.get_max_stored_date("STOCK", self.ticker)
-        if max_date is None:
-            return []
-
-        closes = []
-        for i in range(back_days):
-            older_date = max_date - timedelta(days = i)
-            close = self.data_handler.find_in_data("STOCK", self.ticker, older_date.strftime("%Y%m%d"), True)
-            if close is not None:
-                closes.append(close)
-        closes.reverse()
-        return closes
+        return self.data_handler.list_data([["STOCK", self.ticker]], back_days)[0]
 
 
     @lru_cache(maxsize=None)
     def percentage_changes(self, back_days):
         closes = self.closes(back_days)
-        percentage_changes = []
-        for i in range(1, len(closes)):
-            percentage_changes.append((closes[i] / closes[i-1] - 1) * 100)
-        return percentage_changes
-
-
-    @lru_cache(maxsize=None)
-    def accumulative_percentage_changes(self, back_days):
-        closes = self.closes(back_days)
-        percentage_changes = [0]
-        base = closes[0]
-        for i in range(1, len(closes)):
-            percentage_changes.append((closes[i] / base - 1) * 100)
-        return percentage_changes
+        return [(closes[i] / closes[i-1] - 1) * 100 for i in range(1, len(closes))]
 
 
     @lru_cache(maxsize=None)
     def log_changes(self, back_days):
         closes = self.closes(back_days)
-        percentage_changes = []
-        for i in range(1, len(closes)):
-            percentage_changes.append(math.log(closes[i] / closes[i-1]) * 100)
-        return percentage_changes
+        return [math.log(closes[i] / closes[i-1]) * 100 for i in range(1, len(closes))]
