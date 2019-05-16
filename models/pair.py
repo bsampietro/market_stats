@@ -1,13 +1,12 @@
-from datetime import datetime, timedelta
-from functools import lru_cache
 import statistics
 import math
+from functools import lru_cache
+from itertools import accumulate
 
 import pygal
 
 from lib import util
 from lib.errors import *
-import gcnv
 
 class Pair:
     def __init__(self, data_handler, ticker1, ticker2, fixed_stdev_ratio = None):
@@ -52,24 +51,46 @@ class Pair:
 
     # -------- Pairs part ----------
 
-    # Could also be called accumulative_percentage_changes
-    # Sum of percentage changes of the pair as a whole
     @lru_cache(maxsize=None)
-    def closes(self, back_days):
-        closes = []
-        suma = 0
-        # for change in self.log_changes(back_days):
-        for change in self.percentage_changes(back_days):
-            suma += change
-            closes.append(suma)
-        return closes
+    def parallel_closes(self, back_days):
+        return self.data_handler.list_data(
+            [["STOCK", self.ticker1], ["STOCK", self.ticker2]], back_days)
+
+
+    @lru_cache(maxsize=None)
+    def parallel_percentage_changes(self, back_days):
+        closes_ticker1, closes_ticker2 = self.parallel_closes(back_days)
+
+        percentage_changes_ticker1 = []; percentage_changes_ticker2 = []
+        for i in range(1, len(closes_ticker1)):
+            percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1[i-1] - 1) * 100)
+            percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2[i-1] - 1) * 100)
+
+        return (percentage_changes_ticker1, percentage_changes_ticker2)
+
+
+    # Calculates percentage changes taking the base from first day since back days.
+    # Used mostly for charting
+    @lru_cache(maxsize=None)
+    def parallel_accumulative_percentage_changes(self, back_days):
+        closes_ticker1, closes_ticker2 = self.parallel_closes(back_days)
+
+        closes_ticker1_base = closes_ticker1[0]
+        closes_ticker2_base = closes_ticker2[0]
+
+        percentage_changes_ticker1 = [0] # starts with 0 change
+        percentage_changes_ticker2 = [0] # starts with 0 change
+        for i in range(1, len(closes_ticker1)):
+            percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1_base - 1) * 100)
+            percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2_base - 1) * 100)
+
+        return (percentage_changes_ticker1, percentage_changes_ticker2)
 
 
     # Percentage changes of the pair as a whole
     @lru_cache(maxsize=None)
     def percentage_changes(self, back_days):
-        percentage_changes1 = self.parallel_percentage_changes(back_days)[0]
-        percentage_changes2 = self.parallel_percentage_changes(back_days)[1]
+        percentage_changes1, percentage_changes2 = self.parallel_percentage_changes(back_days)
         percentage_changes = []
         positively_correlated = self.correlation(back_days) >= 0
         for i in range(len(percentage_changes1)):
@@ -81,9 +102,11 @@ class Pair:
         return percentage_changes
 
 
+    # Could also be called accumulative_percentage_changes
+    # Sum of percentage changes of the pair as a whole
     @lru_cache(maxsize=None)
-    def log_changes(self, back_days):
-        return [math.log((change / 100) + 1) for change in self.percentage_changes(back_days)]
+    def closes(self, back_days):
+        return list(accumulate(self.percentage_changes(back_days)))
 
 
     def get_last_close(self, back_days):
@@ -137,56 +160,3 @@ class Pair:
         # line_chart.show_dots = False
         line_chart.render_to_file(f"/media/ramd/{self.ticker1}-{self.ticker2}.svg")
 
-
-    # PRIVATE
-
-    @lru_cache(maxsize=None)
-    def parallel_closes(self, back_days):
-        max_date_ticker1 = self.data_handler.get_max_stored_date("STOCK", self.ticker1)
-        max_date_ticker2 = self.data_handler.get_max_stored_date("STOCK", self.ticker2)
-        if max_date_ticker1 is None or max_date_ticker2 is None or max_date_ticker1 != max_date_ticker2:
-            raise GettingInfoError(f"{self.ticker1}-{self.ticker2}: Not available data for pairs percentage change calculation")
-
-        closes_ticker1 = []
-        closes_ticker2 = []
-        for i in range(back_days):
-            older_date = max_date_ticker1 - timedelta(days = i)
-            close_ticker1 = self.data_handler.find_in_data("STOCK", self.ticker1, older_date.strftime("%Y%m%d"), True)
-            close_ticker2 = self.data_handler.find_in_data("STOCK", self.ticker2, older_date.strftime("%Y%m%d"), True)
-            if close_ticker1 is not None and close_ticker2 is not None:
-                closes_ticker1.append(close_ticker1)
-                closes_ticker2.append(close_ticker2)
-        closes_ticker1.reverse()
-        closes_ticker2.reverse()
-
-        return (closes_ticker1, closes_ticker2)
-
-
-    @lru_cache(maxsize=None)
-    def parallel_percentage_changes(self, back_days):
-        closes_ticker1 = self.parallel_closes(back_days)[0]
-        closes_ticker2 = self.parallel_closes(back_days)[1]
-
-        percentage_changes_ticker1 = []
-        percentage_changes_ticker2 = []
-        for i in range(1, len(closes_ticker1)):
-            percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1[i-1] - 1) * 100)
-            percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2[i-1] - 1) * 100)
-
-        return (percentage_changes_ticker1, percentage_changes_ticker2)
-
-    @lru_cache(maxsize=None)
-    def parallel_accumulative_percentage_changes(self, back_days):
-        closes_ticker1 = self.parallel_closes(back_days)[0]
-        closes_ticker2 = self.parallel_closes(back_days)[1]
-
-        closes_ticker1_base = closes_ticker1[0]
-        closes_ticker2_base = closes_ticker2[0]
-
-        percentage_changes_ticker1 = [0] # starts with 0 change
-        percentage_changes_ticker2 = [0] # starts with 0 change
-        for i in range(1, len(closes_ticker1)):
-            percentage_changes_ticker1.append((closes_ticker1[i] / closes_ticker1_base - 1) * 100)
-            percentage_changes_ticker2.append((closes_ticker2[i] / closes_ticker2_base - 1) * 100)
-
-        return (percentage_changes_ticker1, percentage_changes_ticker2)

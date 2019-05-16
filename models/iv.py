@@ -1,7 +1,4 @@
-from datetime import datetime, timedelta
-import calendar
 import statistics
-
 from functools import lru_cache
 
 class IV:
@@ -12,17 +9,10 @@ class IV:
     
     @lru_cache(maxsize=None)
     def period_list(self, back_days):
-        max_date = self.data_handler.get_max_stored_date("IV", self.ticker)
-        if max_date is None:
-            return []
-
-        iv_list = []
-        for i in range(back_days):
-            older_date = max_date - timedelta(days = i)
-            iv = self.data_handler.find_in_data("IV", self.ticker, older_date.strftime("%Y%m%d"), True)
-            if iv is not None:
-                iv_list.append(iv * 100)
-        return iv_list
+        ivs = self.data_handler.list_data([["IV", self.ticker]], back_days)[0]
+        ivs = [iv * 100 for iv in ivs]
+        ivs.reverse() # Reverse so first element of the array will be the last iv
+        return ivs
 
     
     @lru_cache(maxsize=None)
@@ -36,7 +26,7 @@ class IV:
 
 
     def get_at(self, date):
-        return self.data_handler.find_in_data("IV", self.ticker, date) * 100
+        return self.data_handler.find_in_data("IV", self.ticker, date, False) * 100
 
 
     @lru_cache(maxsize=None)

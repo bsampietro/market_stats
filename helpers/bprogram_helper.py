@@ -174,8 +174,8 @@ def bring_if_connected(ticker, bring_volatility):
 
 
 def read_symbol_file_and_process(command, get_row_method):
-    months = core.safe_execute(-1, ValueError, int, command[2])
-    back_days = gcnv.back_days if months == -1 else months * 30
+    back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
+        lambda x: int(x) * 30, command[2])
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
     rows = []
@@ -196,8 +196,8 @@ def read_symbol_file_and_process(command, get_row_method):
 
 
 def read_pairs_file_and_process(command, get_row_method):
-    months = core.safe_execute(-1, ValueError, int, command[2])
-    back_days = gcnv.back_days if months == -1 else months * 30
+    back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError, 
+        lambda x: int(x) * 30, command[2])
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
     rows = []
     if os.path.isfile(text_file):

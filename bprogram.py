@@ -40,7 +40,6 @@ parameters = sys.argv + 5 * ['']
 gcnv.connected = (parameters[1] == "connect")
 gcnv.data_handler = DataHandler(gcnv.connected)
 gcnv.data_handler.wait_for_api_ready()
-gcnv.back_days = core.safe_execute(365 * 2, ValueError, lambda x: int(x) * 30, parameters[2])
 
 
 # MAIN METHOD
@@ -62,10 +61,8 @@ if __name__ == "__main__" and not exec_in_console:
 
         try:
             if command[0] == "exit" or command[0] == "e":
-                try:
-                    gcnv.data_handler.stop()
-                except KeyError as e:
-                    print(f"Exit with error: {e}")
+                gcnv.data_handler.save()
+                gcnv.data_handler.disconnect()
                 break
 
             if command[0] == "":
@@ -86,18 +83,20 @@ if __name__ == "__main__" and not exec_in_console:
                 if command[1] == "":
                     gcnv.data_handler.delete_at(util.today_in_string())
                     print("Today deleted")
+                elif command[1].isdigit():
+                    gcnv.data_handler.delete_back(int(command[1]))
+                    print("Back days deleted")
                 else:
-                    try:
-                        gcnv.data_handler.delete_back(int(command[1]))
-                        print("Back days deleted")
-                    except (ValueError, TypeError) as e:
-                        gcnv.data_handler.delete_ticker(command[1].upper())
-                        print("Ticker deleted")
+                    for ticker in command[1:]:
+                        if ticker == "":
+                            continue
+                        gcnv.data_handler.delete_ticker(ticker.upper())
+                        print(f"{ticker} deleted")
                 continue
 
             elif command[0] == "corr":
                 pair = Pair(gcnv.data_handler, command[1].upper(), command[2].upper())
-                back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[3])
+                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, lambda x: int(x) * 30, command[3])
 
                 print(f"  Correlation: {format(pair.correlation(back_days), '.2f')}")
                 print(f"  Beta:        {format(pair.beta(back_days), '.2f')}")
@@ -105,7 +104,7 @@ if __name__ == "__main__" and not exec_in_console:
                 continue
 
             elif command[0] == "corrs":
-                back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[2])
+                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, lambda x: int(x) * 30, command[2])
                 header = ["", "SPY", "TLT", "IEF", "GLD", "USO", "UNG", "FXE", "FXY", "FXB", "IYR", "XLU", "EFA", "EEM", "VXX"]
                 rows = []
                 for symbol in util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
@@ -126,7 +125,7 @@ if __name__ == "__main__" and not exec_in_console:
                     print("Remember to bring data before with the 'pair' command (if needed).")
                     ps = process_pair_string(command[2])
                     pair = Pair(gcnv.data_handler, ps.ticker1, ps.ticker2, ps.stdev_ratio)
-                    back_days = core.safe_execute(gcnv.back_days, ValueError, lambda x: int(x) * 30, command[3])
+                    back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError, lambda x: int(x) * 30, command[3])
                     pair.output_chart(back_days)
                 continue
 
@@ -165,6 +164,10 @@ if __name__ == "__main__" and not exec_in_console:
                     stock = list(gcnv.data_handler.stock.keys())
                     stock.sort()
                     print(stock)
+
+                    print("Futures:")
+                    futures = [st for st in stock if util.contract_type(st) == "FUT"]
+                    print(futures)
 
                     continue
 
@@ -261,4 +264,5 @@ if __name__ == "__main__" and not exec_in_console:
 
         except:
             gcnv.data_handler.disconnect()
+            # print(sys.exc_info()[0])
             raise
