@@ -76,7 +76,7 @@ class Stock:
     def hv(self, back_days):
         # changes_metric = self.percentage_changes(back_days) # simple percentage change
         changes_metric = self.log_changes(back_days) # log changes
-        return statistics.stdev(changes_metric) * math.sqrt(252)
+        return statistics.stdev(changes_metric) * 15.8745 # = math.sqrt(252)
 
 
     @lru_cache(maxsize=None)

@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from functools import lru_cache
 import statistics
 
@@ -22,26 +21,19 @@ class MixedVs:
 
     @lru_cache(maxsize=None)
     def iv_hv_difference(self, back_days):
-        back_day = datetime.today() - timedelta(days = back_days)
-        differences = []
-        available_hv_period = back_days - 30 # Takes IV starting from last year until 30 days ago and compares to HV until today
-        for i in range(available_hv_period):
-            iv = self.data_handler.find_in_data("IV", self.ticker, back_day, silent = True)
-            hv = self.data_handler.find_in_data("HV", self.ticker, back_day + timedelta(days = 28), silent = True)
-            if iv is not None and hv is not None:
-                differences.append(iv * 100 - hv * 100)
-            back_day += timedelta(days = 1)
-        return differences
+        ivs, hvs = self.data_handler.list_data([["IV", self.ticker], ["HV", self.ticker]], back_days)
+        ivs = list(ivs); hvs = list(hvs)
+        del hvs[:20] # 20 because no trading days are already removed
+        return [ivs[i] * 100 - hvs[i] * 100 for i in range(len(hvs))]
 
 
     # returns percentage of success of daily one month volatility trading
-    def negative_difference_ratio(self, back_days):
-        negative_count = 0
+    def positive_difference_ratio(self, back_days):
+        positive_count = 0
         for diff in self.iv_hv_difference(back_days):
-            if diff < 0:
-                negative_count += 1
-        available_hv_period = len(self.iv_hv_difference(back_days)) # similar to (back_days - 30 - unavailable days)
-        return (float(available_hv_period - negative_count) / available_hv_period) * 100
+            if diff > 0:
+                positive_count += 1
+        return (positive_count / len(self.iv_hv_difference(back_days))) * 100
 
 
     def difference_average(self, back_days):

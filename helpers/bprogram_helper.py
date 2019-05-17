@@ -81,7 +81,7 @@ def get_iv_row(ticker, date, back_days):
             row += [
                 iv.current_to_average_ratio(date, back_days),
                 mixed_vs.iv_current_to_hv_average(date, back_days),
-                mixed_vs.negative_difference_ratio(back_days),
+                mixed_vs.positive_difference_ratio(back_days),
                 mixed_vs.difference_average(back_days),
                 iv.current_percentile_iv_rank(back_days)
             ]
