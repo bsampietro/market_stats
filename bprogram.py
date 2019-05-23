@@ -40,6 +40,7 @@ parameters = sys.argv + 5 * ['']
 gcnv.connected = (parameters[1] == "connect")
 gcnv.data_handler = DataHandler(gcnv.connected)
 gcnv.data_handler.wait_for_api_ready()
+gcnv.messages = []
 
 
 # MAIN METHOD
@@ -59,25 +60,29 @@ if __name__ == "__main__" and not exec_in_console:
         else:
             last_command = command
 
+        if command[0] == "":
+            continue
+
+        elif command[0] == "help":
+            print("HELP")
+            print("delete [nr_of_back_days] => deletes current date, or number of back days, or entry")
+            print("corr symbol1 symbol2")
+            print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
+            print("chart pair symbol1 symbol2 fixed_stdev_ratio")
+            print("prvol file.txt|symbol [back_days] [ord]")
+            print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
+            print("print symbol")
+            continue
+
         try:
             if command[0] == "exit" or command[0] == "e":
                 gcnv.data_handler.save()
                 gcnv.data_handler.disconnect()
                 break
 
-            if command[0] == "":
-                continue
-
-            elif command[0] == "help":
-                print("HELP")
-                print("delete [nr_of_back_days] => deletes current date, or number of back days, or entry")
-                print("corr symbol1 symbol2")
-                print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
-                print("chart pair symbol1 symbol2 fixed_stdev_ratio")
-                print("prvol file.txt|symbol [back_days] [ord]")
-                print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
-                print("print symbol")
-                continue
+            elif command[0] == "e!":
+                gcnv.data_handler.disconnect()
+                break
 
             elif command[0] == "delete":
                 if command[1] == "":
@@ -87,9 +92,7 @@ if __name__ == "__main__" and not exec_in_console:
                     gcnv.data_handler.delete_back(int(command[1]))
                     print("Back days deleted")
                 else:
-                    for ticker in command[1:]:
-                        if ticker == "":
-                            continue
+                    for ticker in filter(lambda p: p != '', command[1:]):
                         gcnv.data_handler.delete_ticker(ticker.upper())
                         print(f"{ticker} deleted")
                 continue
@@ -193,7 +196,7 @@ if __name__ == "__main__" and not exec_in_console:
                 order_column = command[3] if command[3] in header else "BDRnk"
                 order_column = header.index(order_column)
                 rows.sort(key = lambda row: row[order_column], reverse = True)
-                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [65, 35])
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [50])
 
             elif command[0] == "pair":
 
@@ -242,7 +245,7 @@ if __name__ == "__main__" and not exec_in_console:
             #     t.add_row(row)
             # print(t.draw())
 
-            command = filter(lambda c: c != '', command)
+            command = filter(lambda p: p != '', command)
             with open(f"/media/ramd/{'-'.join(command)}.html", "w") as f:
                 for row in rows:
                     for i in range(len(row)):
@@ -253,8 +256,11 @@ if __name__ == "__main__" and not exec_in_console:
                             row[i] = f"<b>{row[i]}</b>"
                 f.write(html.table(rows, header_row=header,
                     style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
-
             print("Finished. Stored report on /media/ramd.")
+
+            if len(gcnv.messages) > 0:
+                print("\n".join(gcnv.messages))
+                gcnv.messages = []
 
         except GettingInfoError as e:
             print(e)

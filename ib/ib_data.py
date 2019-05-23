@@ -12,6 +12,7 @@ from ibapi.contract import *
 from ibapi.common import *
 
 from lib import util
+import gcnv
 
 
 class IBData(EClient, EWrapper):
@@ -37,7 +38,7 @@ class IBData(EClient, EWrapper):
         # Remember queries in this session
         requested_data_key = f"{requested_data},{ticker}"
         if requested_data_key in self.session_requested_data:
-            print(f"{requested_data_key} already requested")
+            gcnv.messages.append(f"{requested_data_key} already requested")
             return
         else:
             self.session_requested_data.add(requested_data_key)
@@ -126,10 +127,8 @@ class IBData(EClient, EWrapper):
             if len(self.req_id_to_stock_ticker_map) == 0:
                 break
             else:
+                assert i != 299, "Timeout!"
                 time.sleep(1)
-                # debug
-                if i == 299:
-                    print("Timeout!!")
 
 
     def wait_for_api_ready(self):

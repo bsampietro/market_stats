@@ -22,8 +22,7 @@ class MixedVs:
     @lru_cache(maxsize=None)
     def iv_hv_difference(self, back_days):
         ivs, hvs = self.data_handler.list_data([["IV", self.ticker], ["HV", self.ticker]], back_days)
-        ivs = list(ivs); hvs = list(hvs)
-        del hvs[:20] # 20 because no trading days are already removed
+        hvs = hvs[20:] # 20 because no trading days are already removed
         return [ivs[i] * 100 - hvs[i] * 100 for i in range(len(hvs))]
 
 

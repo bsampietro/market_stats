@@ -163,11 +163,3 @@ def get_futures_date(fdcode):
         raise InputError("Unknown futures year")
 
     return year + month
-
-
-# ----------- to implement ---------------
-
-def get_option_expiration(date):
-    day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
-    return datetime(date.year, date.month, day)
-

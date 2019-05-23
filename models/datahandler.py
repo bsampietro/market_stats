@@ -184,6 +184,7 @@ class DataHandler:
     # Last list element is the most recent value, achieved by data.reverse() statement
     def list_data(self, wtb, back_days):
         today = datetime.today()
+        missing_dates = []
         data = []
         for i in range(back_days):
             older_date = today - timedelta(days = i)
@@ -192,6 +193,16 @@ class DataHandler:
                 close.append(self.find_in_data(requested_data, ticker, older_date.strftime("%Y%m%d"), True))
             if all(close_i is not None for close_i in close):
                 data.append(close)
+            else:
+                if older_date.weekday() not in (5,6): # not a weekend and still not stored
+                    missing_dates.append(older_date.strftime("%Y%m%d"))
+        if back_days < 365 * 2:
+            cdl = round(back_days * (5 / 7)) # correct_data_length
+            if len(data) < cdl - 30 or len(data) > cdl + 15:
+                gcnv.messages.append(
+                    f"Incorrect data length for {wtb}. "
+                    f"Should return {cdl} but returning {len(data)}. "
+                    f"Missing dates: {missing_dates}")
         data.reverse()
         data = list(zip(*data))
         return data

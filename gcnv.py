@@ -14,3 +14,4 @@ APP_PATH = None
 # Variables
 data_handler = None
 connected = None
+messages = None

@@ -84,6 +84,10 @@ class Stock:
         return self.hv(back_days) / 10
 
 
+    def range(self, back_days):
+        return (self.max(back_days) / self.min(back_days) - 1) * 100
+
+
     # Private
 
     @lru_cache(maxsize=None)
