@@ -152,45 +152,42 @@ def get_query_date(ticker):
             return util.date_in_string(max_stored_date)
 
 
-def bring_if_connected(ticker, bring_volatility):
+def bring_if_connected(tickers):
     if not gcnv.connected:
         return
-    try:
-        if bring_volatility:
-            max_stored_date = gcnv.data_handler.get_max_stored_date("IV", ticker)
+    for ticker in tickers:
+        try:
+            if ticker in gcnv.v_tickers:
+                max_stored_date = gcnv.data_handler.get_max_stored_date("IV", ticker)
+                if (max_stored_date is None) or max_stored_date.date() < date.today():
+                    print(f"Getting IV data for ticker {ticker}...")
+                    gcnv.data_handler.request_historical_data("IV", ticker)
+
+                max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
+                if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+                    print(f"Getting HV data for ticker {ticker}...")
+                    gcnv.data_handler.request_historical_data("HV", ticker)
+
+            max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
-                print(f"Getting IV data for ticker {ticker}...")
-                gcnv.data_handler.request_historical_data("IV", ticker)
-
-            max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
-            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
-                print(f"Getting HV data for ticker {ticker}...")
-                gcnv.data_handler.request_historical_data("HV", ticker)
-
-        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
-        if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting STOCK data for ticker {ticker}...")
-            gcnv.data_handler.request_historical_data("STOCK", ticker)
-    except InputError as e:
-        print(e)
+                print(f"Getting STOCK data for ticker {ticker}...")
+                gcnv.data_handler.request_historical_data("STOCK", ticker)
+        except InputError as e:
+            print(e)
 
 
 def read_symbol_file_and_process(command, get_row_method):
     back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
         lambda x: int(x) * 30, command[2])
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
-    v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
-        for ticker in tickers:
-            bring_if_connected(ticker, ticker in v_tickers)
-            row = get_row_method(ticker, get_query_date(ticker), back_days)
-            if len(row) > 0:
-                rows.append(row)
     else:
-        ticker = command[1].upper()
-        bring_if_connected(ticker, ticker in v_tickers)
+        tickers = [command[1].upper()]
+    bring_if_connected(tickers)
+    gcnv.data_handler.wait_for_async_request()
+    for ticker in tickers:
         row = get_row_method(ticker, get_query_date(ticker), back_days)
         if len(row) > 0:
             rows.append(row)
@@ -204,17 +201,12 @@ def read_pairs_file_and_process(command, get_row_method):
     rows = []
     if os.path.isfile(text_file):
         pairs = util.read_symbol_list(text_file)
-        for pair in pairs:
-            ps = process_pair_string(pair)
-            bring_if_connected(ps.ticker1, False)
-            bring_if_connected(ps.ticker2, False)
-            row = get_row_method(ps.ticker1, ps.ticker2, ps.stdev_ratio, back_days)
-            if len(row) > 0:
-                rows.append(row)
     else:
-        ps = process_pair_string(command[1])
-        bring_if_connected(ps.ticker1, False)
-        bring_if_connected(ps.ticker2, False)
+        pairs = [command[1]]
+    for pair in pairs:
+        ps = process_pair_string(pair)
+        bring_if_connected([ps.ticker1, ps.ticker2])
+        gcnv.data_handler.wait_for_async_request()
         row = get_row_method(ps.ticker1, ps.ticker2, ps.stdev_ratio, back_days)
         if len(row) > 0:
             rows.append(row)

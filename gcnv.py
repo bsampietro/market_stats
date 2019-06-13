@@ -15,3 +15,4 @@ APP_PATH = None
 data_handler = None
 connected = None
 messages = None
+v_tickers = None

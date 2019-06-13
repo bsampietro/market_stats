@@ -41,6 +41,7 @@ gcnv.connected = (parameters[1] == "connect")
 gcnv.data_handler = DataHandler(gcnv.connected)
 gcnv.data_handler.wait_for_api_ready()
 gcnv.messages = []
+gcnv.v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
 
 
 # MAIN METHOD
