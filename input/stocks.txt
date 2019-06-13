@@ -46,7 +46,8 @@ AMD
 MU
 CAT
 
-# NEW
+# ++ New ++
+
 ATVI
 COST
 CVS
@@ -92,6 +93,9 @@ AAL
 M
 AA
 
-#Liquidity?
+# Liquidity?
 #CELG
 #XLNX
+
+# ++ Only for investing ++
+IBKR

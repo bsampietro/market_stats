@@ -28,12 +28,12 @@ def get_iv_header():
         'BDRnk',
         'BDV%',
         '14%',
-        'Rng14',
         'L%chg',
+        'Rng14',
         'UD14',
         'SPCrr',
         '210R',
-        'DQtty',
+        'DCtrNr',
         'NCtrNr',
         'Erngs',
         'D2Ern',
@@ -67,13 +67,13 @@ def get_iv_row(ticker, date, back_days):
             round(stock.min_max_rank(date, back_days)),
             stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
             stock.current_to_ma_percentage(date, 14),
-            stock.range(14),
             stock.get_last_percentage_change(),
+            stock.range(14),
             up_down_closes_str(stock, 14),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             stock.hv_to_10_ratio(back_days),
-            util.int_round_to(notional.directional_quantity(stock.hv_to_10_ratio(back_days)), 100),
-            round(notional.contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days)), 1),
+            round(notional.directional_contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days))),
+            round(notional.neutral_contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days)), 1),
             earnings_data[ticker][0],
             earnings_data[ticker][1],
             chart_link(ticker)
@@ -179,7 +179,7 @@ def read_symbol_file_and_process(command, get_row_method):
     back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
         lambda x: int(x) * 30, command[2])
     text_file = f"{gcnv.APP_PATH}/input/{command[1]}.txt"
-    v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
+    v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)

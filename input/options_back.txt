@@ -1,0 +1,59 @@
+# Tickers (from list) that should bring options data
+SPY
+QQQ
+IWM
+#DIA
+
+TLT
+#HYG
+
+GLD
+#SLV
+GDXJ
+#UNG
+
+XOP
+USO
+#XLE
+
+VXX
+
+FXE
+FXY
+FXB
+
+IYR
+XLU
+XLP
+XRT
+XHB
+XBI
+KRE
+XME
+XLV
+
+EFA
+EEM
+EWZ
+FXI
+EWW
+
+#Too correlated with SPY
+XLI
+XLY
+XLB
+
+#Too small
+#GDX
+#OIH
+#XLF
+#TBT
+
+#Too correlated with QQQ
+SMH
+
+#Not very liquid
+FEZ
+#EWY
+#EWJ
+#RSX

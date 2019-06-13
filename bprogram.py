@@ -52,7 +52,7 @@ if __name__ == "__main__" and not exec_in_console:
         if command == "":
             continue
 
-        command = command.split(" ")
+        command = command.split()
         command += [""] * 5 # adding empty strings to the list to make it easier to manage the command
 
         if command[0] == "l":
@@ -61,17 +61,6 @@ if __name__ == "__main__" and not exec_in_console:
             last_command = command
 
         if command[0] == "":
-            continue
-
-        elif command[0] == "help":
-            print("HELP")
-            print("delete [nr_of_back_days] => deletes current date, or number of back days, or entry")
-            print("corr symbol1 symbol2")
-            print("corrs file.txt => prints all the correlations with correlation bigger than 0.60")
-            print("chart pair symbol1 symbol2 fixed_stdev_ratio")
-            print("prvol file.txt|symbol [back_days] [ord]")
-            print("pair (file.txt)|(symbol1 symbol2 [fixed_stdev_ratio]) [ord]")
-            print("print symbol")
             continue
 
         try:
