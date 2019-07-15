@@ -14,7 +14,7 @@ from models.mixed_vs import MixedVs
 from models.stock import Stock
 from models.pair import Pair
 
-from helpers.bprogram_helper import *
+from helpers.main_helper import *
 
 import gcnv
 
