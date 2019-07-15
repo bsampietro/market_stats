@@ -62,6 +62,8 @@ class IBData(EClient, EWrapper):
             delta = datetime.today() - last
             if delta.days <= 0:
                 return
+            elif delta.days >= 365:
+                self.data_handler.delete_ticker(ticker)
             else:
                 duration_string = f"{delta.days + 1} D"
 

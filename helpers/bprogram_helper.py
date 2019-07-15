@@ -68,7 +68,7 @@ def get_iv_row(ticker, date, back_days):
             stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
             stock.current_to_ma_percentage(date, 14),
             stock.get_last_percentage_change(),
-            stock.range(14),
+            stock.range(14) / stock.hv_to_10_ratio(back_days),
             up_down_closes_str(stock, 14),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             stock.hv_to_10_ratio(back_days),
