@@ -14,7 +14,6 @@ from ibapi.common import *
 from lib import util
 import gcnv
 
-
 class IBData(EClient, EWrapper):
     def __init__(self, data_handler):
         EClient.__init__(self, wrapper = self)
@@ -32,7 +31,6 @@ class IBData(EClient, EWrapper):
 
         self.message_loop = Thread(target = self.run)
         self.message_loop.start()
-
 
     def request_historical_data(self, requested_data, ticker):
         # Remember queries in this session
@@ -75,36 +73,36 @@ class IBData(EClient, EWrapper):
         self.req_id_to_requested_historical_data[next_req_id] = requested_data
 
         # Query
-        self.reqHistoricalData(next_req_id, util.get_contract(ticker), '', duration_string, "1 day", what_to_show, 1, 1, [])
+        self.reqHistoricalData(next_req_id, util.get_contract(ticker), '',
+                            duration_string, "1 day", what_to_show, 1, 1, [])
         time.sleep(1)
-
 
     def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
-        super().historicalData(reqId, date, open, high, low, close, volume, barCount, WAP, hasGaps)
+        super().historicalData(reqId, date, open, high, low, close,
+                                volume, barCount, WAP, hasGaps)
 
         if self.req_id_to_requested_historical_data[reqId] == "IV":
-            self.data_handler.store_iv(self.req_id_to_stock_ticker_map[reqId], date, close)
+            self.data_handler.store_iv(
+                self.req_id_to_stock_ticker_map[reqId], date, close)
         elif self.req_id_to_requested_historical_data[reqId] == "HV":
-            self.data_handler.store_hv(self.req_id_to_stock_ticker_map[reqId], date, close)
+            self.data_handler.store_hv(
+                self.req_id_to_stock_ticker_map[reqId], date, close)
         elif self.req_id_to_requested_historical_data[reqId] == "STOCK":
-            self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], date, close)
+            self.data_handler.store_stock(
+                self.req_id_to_stock_ticker_map[reqId], date, close)
         else:
             raise RuntimeError("Unknown requested_data parameter")
-
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
         self.req_id_to_stock_ticker_map.pop(reqId, None)
         logging.info(f"Historical data fetched for reqId: {reqId}")
 
-
-
     def request_market_data(self, requested_data, ticker):
         next_req_id = self.get_next_req_id()
         self.req_id_to_stock_ticker_map[next_req_id] = ticker
         self.reqMktData(next_req_id, util.get_contract(ticker), "", True, False, [])
-
 
     def tickPrice(self, reqId, tickType, price:float, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
@@ -114,13 +112,12 @@ class IBData(EClient, EWrapper):
             return
         if tickType != 4:
             return
-        self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId], util.today_in_string(), price)
-
+        self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId],
+                                        util.today_in_string(), price)
 
     def tickSnapshotEnd(self, reqId:int):
         super().tickSnapshotEnd(reqId)
         self.req_id_to_stock_ticker_map.pop(reqId, None)
-
 
     # Async
 
@@ -140,7 +137,6 @@ class IBData(EClient, EWrapper):
             else:
                 time.sleep(1)
 
-
     # Private
     
     def get_next_req_id(self, next = True):
@@ -159,12 +155,10 @@ class IBData(EClient, EWrapper):
         self.req_id_to_stock_ticker_map.pop(reqId, None)
         logging.info(f"Bruno says: Error logged with reqId: {reqId}")
 
-    
     # Overwritten
 
     def keyboardInterrupt(self):
         self.disconnect()
-
 
     def nextValidId(self, orderId:int):
         super().nextValidId(orderId)

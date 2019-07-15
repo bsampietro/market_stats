@@ -72,8 +72,10 @@ def get_iv_row(ticker, date, back_days):
             up_down_closes_str(stock, 14),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
             stock.hv_to_10_ratio(back_days),
-            round(notional.directional_contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days))),
-            round(notional.neutral_contract_number(stock.get_close_at(date), stock.hv_to_10_ratio(back_days)), 1),
+            round(notional.directional_contract_number(stock.get_close_at(date),
+                stock.hv_to_10_ratio(back_days))),
+            round(notional.neutral_contract_number(stock.get_close_at(date),
+                stock.hv_to_10_ratio(back_days)), 1),
             earnings_data[ticker][0],
             earnings_data[ticker][1],
             chart_link(ticker)
@@ -118,7 +120,11 @@ def get_pairs_header():
 def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio, back_days):
     try:
         pair = Pair(gcnv.data_handler, ticker1, ticker2, fixed_stdev_ratio)
-        date = '-' if gcnv.data_handler.get_max_stored_date("STOCK", ticker1) is None else util.date_in_string(gcnv.data_handler.get_max_stored_date("STOCK", ticker1))
+        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker1)
+        if max_stored_date is None:
+            date = '-'
+        else:
+            date = util.date_in_string(max_stored_date)
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
@@ -164,7 +170,8 @@ def bring_if_connected(tickers):
                     gcnv.data_handler.request_historical_data("IV", ticker)
 
                 max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
-                if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))): # arbitrary 4 days because is not needed day to day
+                # Using arbitrary 4 days because is not needed day to day
+                if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))):
                     print(f"Getting HV data for ticker {ticker}...")
                     gcnv.data_handler.request_historical_data("HV", ticker)
 
@@ -265,7 +272,8 @@ def process_pair_string(pair_string):
     data.ticker1, data.ticker2, data.stdev_ratio, *_ = pair_string.split('-') + [None]
     data.ticker1 = data.ticker1.upper()
     data.ticker2 = data.ticker2.upper()
-    data.stdev_ratio = core.safe_execute(None, (ValueError, TypeError), float, data.stdev_ratio)
+    data.stdev_ratio = core.safe_execute(None, (ValueError, TypeError),
+                            float, data.stdev_ratio)
     return data
 
 

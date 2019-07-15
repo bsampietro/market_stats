@@ -16,3 +16,4 @@ data_handler = None
 connected = None
 messages = None
 v_tickers = None
+store_dir = None

@@ -21,7 +21,6 @@ import gcnv
 #from texttable import Texttable
 from lib import html
 
-
 # INITIALIZATION
 # Detects if it is executed as the main file/import OR through a console exec to 
 # make import available and initialize variables
@@ -42,7 +41,7 @@ gcnv.data_handler = DataHandler(gcnv.connected)
 gcnv.data_handler.wait_for_api_ready()
 gcnv.messages = []
 gcnv.v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
-
+gcnv.store_dir = "/media/ramd"
 
 # MAIN METHOD
 if __name__ == "__main__" and not exec_in_console:
@@ -54,15 +53,16 @@ if __name__ == "__main__" and not exec_in_console:
             continue
 
         command = command.split()
-        command += [""] * 5 # adding empty strings to the list to make it easier to manage the command
+        # adding empty strings to the list to make it easier to manage the command
+        command += [""] * 5
+
+        if command[0] == "":
+            continue
 
         if command[0] == "l":
             command = last_command
         else:
             last_command = command
-
-        if command[0] == "":
-            continue
 
         try:
             if command[0] == "exit" or command[0] == "e":
@@ -74,7 +74,7 @@ if __name__ == "__main__" and not exec_in_console:
                 gcnv.data_handler.disconnect()
                 break
 
-            elif command[0] == "delete":
+            elif command[0] == "delete" or command[0] == "del":
                 if command[1] == "":
                     gcnv.data_handler.delete_at(util.today_in_string())
                     print("Today deleted")
@@ -89,7 +89,8 @@ if __name__ == "__main__" and not exec_in_console:
 
             elif command[0] == "corr":
                 pair = Pair(gcnv.data_handler, command[1].upper(), command[2].upper())
-                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, lambda x: int(x) * 30, command[3])
+                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError,
+                                lambda x: int(x) * 30, command[3])
 
                 print(f"  Correlation: {format(pair.correlation(back_days), '.2f')}")
                 print(f"  Beta:        {format(pair.beta(back_days), '.2f')}")
@@ -97,10 +98,13 @@ if __name__ == "__main__" and not exec_in_console:
                 continue
 
             elif command[0] == "corrs":
-                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, lambda x: int(x) * 30, command[2])
-                header = ["", "SPY", "TLT", "IEF", "GLD", "USO", "UNG", "FXE", "FXY", "FXB", "IYR", "XLU", "EFA", "EEM", "VXX"]
+                back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError,
+                                lambda x: int(x) * 30, command[2])
+                header = ["", "SPY", "TLT", "IEF", "GLD", "USO", "UNG", "FXE", "FXY",
+                            "FXB", "IYR", "XLU", "EFA", "EEM", "VXX"]
                 rows = []
-                for symbol in util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
+                for symbol in util.read_symbol_list(
+                        f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
                     row = [symbol]
                     for head_symbol in header[1:]:
                         if symbol == head_symbol:
@@ -118,7 +122,8 @@ if __name__ == "__main__" and not exec_in_console:
                     print("Remember to bring data before with the 'pair' command (if needed).")
                     ps = process_pair_string(command[2])
                     pair = Pair(gcnv.data_handler, ps.ticker1, ps.ticker2, ps.stdev_ratio)
-                    back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError, lambda x: int(x) * 30, command[3])
+                    back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError,
+                                    lambda x: int(x) * 30, command[3])
                     pair.output_chart(back_days)
                 continue
 
@@ -165,7 +170,6 @@ if __name__ == "__main__" and not exec_in_console:
                     continue
 
             elif command[0] == "prvol":
-
                 header = get_iv_header()
                 
                 rows = read_symbol_file_and_process(command, get_iv_row)
@@ -178,9 +182,13 @@ if __name__ == "__main__" and not exec_in_console:
                 # Filter
                 if 'filter' in command:
                     rank_column = header.index("BDRnk")
-                    options_list = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") + util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt")
-                    rows = [row for row in rows if not (isinstance(row[rank_column], (int, float)) and 
-                            35 < row[rank_column] < 65 and row[0] not in options_list)] # conditions are for exclusion, note the 'not' at the beginning of the if condition
+                    options_list = (util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt") +
+                                    util.read_symbol_list(f"{gcnv.APP_PATH}/input/stocks.txt"))
+                    rows = [row for row in rows if not (
+                                isinstance(row[rank_column], (int, float)) and 
+                                35 < row[rank_column] < 65 and row[0] not in options_list)]
+                                # conditions are for exclusion, note the 'not' at 
+                                #the beginning of the if condition
 
                 # Sorting
                 order_column = command[3] if command[3] in header else "BDRnk"
@@ -189,7 +197,6 @@ if __name__ == "__main__" and not exec_in_console:
                 util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [50])
 
             elif command[0] == "pair":
-
                 header = get_pairs_header()
 
                 rows = read_pairs_file_and_process(command, get_pairs_row)
@@ -236,7 +243,7 @@ if __name__ == "__main__" and not exec_in_console:
             # print(t.draw())
 
             command = filter(lambda p: p != '', command)
-            with open(f"/media/ramd/{'-'.join(command)}.html", "w") as f:
+            with open(f"{gcnv.store_dir}/{'-'.join(command)}.html", "w") as f:
                 for row in rows:
                     for i in range(len(row)):
                         if isinstance(row[i], float):
@@ -245,8 +252,9 @@ if __name__ == "__main__" and not exec_in_console:
                         if vars().get("order_column") == i:
                             row[i] = f"<b>{row[i]}</b>"
                 f.write(html.table(rows, header_row=header,
-                    style="border: 1px solid #000000; border-collapse: collapse; font: 12px arial, sans-serif;"))
-            print("Finished. Stored report on /media/ramd.")
+                    style=("border: 1px solid #000000; border-collapse: collapse;"
+                            "font: 12px arial, sans-serif;")))
+            print(f"Finished. Stored report on {gcnv.store_dir}.")
 
             if len(gcnv.messages) > 0:
                 print("\n".join(gcnv.messages))

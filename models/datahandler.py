@@ -12,9 +12,12 @@ class DataHandler:
     def __init__(self, connect:bool):
         
         # Path variables
-        self.implied_volatility_data_file_path = f"{gcnv.APP_PATH}/data/data_implied_volatility.json"
-        self.historical_volatility_data_file_path = f"{gcnv.APP_PATH}/data/data_historical_volatility.json"
-        self.stock_data_file_path = f"{gcnv.APP_PATH}/data/stock.json"
+        self.implied_volatility_data_file_path = \
+                f"{gcnv.APP_PATH}/data/data_implied_volatility.json"
+        self.historical_volatility_data_file_path = \
+                f"{gcnv.APP_PATH}/data/data_historical_volatility.json"
+        self.stock_data_file_path = \
+                f"{gcnv.APP_PATH}/data/stock.json"
 
         self.load() # Load data variables
 
@@ -26,7 +29,6 @@ class DataHandler:
         self.modified_iv = False
         self.modified_hv = False
         self.modified_stock = False
-
 
     def save_data_json(self):
         if self.modified_iv:
@@ -41,7 +43,6 @@ class DataHandler:
             with open(self.stock_data_file_path, "w") as f:
                 json.dump(self.stock, f)
 
-
     def load_data_json(self):
         with open(self.implied_volatility_data_file_path, "r") as f:
             self.implied_volatility = json.load(f)
@@ -52,10 +53,8 @@ class DataHandler:
         with open(self.stock_data_file_path, "r") as f:
             self.stock = json.load(f)
 
-
     def connected(self):
         return self.remote is not None
-
 
     def load(self):
         self.load_data_json()
@@ -73,7 +72,6 @@ class DataHandler:
             return None
         else:
             return datetime.strptime(max(data.keys()), "%Y%m%d")
-
 
     def store_iv(self, ticker, date, value):
         if not ticker in self.implied_volatility:
@@ -93,15 +91,12 @@ class DataHandler:
         self.stock[ticker][date] = value
         self.modified_stock = True
 
-
     def request_historical_data(self, requested_data, ticker):
         self.remote.request_historical_data(requested_data, ticker)
-
 
     def request_market_data(self, requested_data, ticker):
         self.remote.request_market_data(requested_data, ticker)
     
-
     def find_in_data(self, requested_data, ticker, date, silent):
         data = None
         if requested_data == "IV":
@@ -123,11 +118,11 @@ class DataHandler:
             if silent:
                 return None
             elif self.connected():
-                # self.request_historical_data(requested_data, ticker) # Now getting it before hand (bring_if_connected method)
-                raise GettingInfoError(f"{ticker} not stored, getting it in background...")
+                raise GettingInfoError(
+                    f"{ticker} not stored, getting it in background...")
             else:
-                raise GettingInfoError(f"{ticker} info not available and remote not connected")
-
+                raise GettingInfoError(
+                    f"{ticker} info not available and remote not connected")
 
     def delete_at(self, date):
         for key in self.implied_volatility.keys():
@@ -145,13 +140,11 @@ class DataHandler:
         if self.connected():
             self.remote.reset_session_requested_data()
 
-
     def delete_back(self, back_days):
         today = datetime.today()
         for i in range(back_days):
             delete_day = util.date_in_string(today - timedelta(days = i))
             self.delete_at(delete_day)
-
 
     def delete_ticker(self, ticker):
         self.implied_volatility.pop(ticker, None)
@@ -166,18 +159,15 @@ class DataHandler:
         if self.connected():
             self.remote.reset_session_requested_data()
 
-
     # Async
 
     def wait_for_async_request(self):
         if self.connected():
             self.remote.wait_for_async_request()
 
-
     def wait_for_api_ready(self):
         if self.connected():
             self.remote.wait_for_api_ready()
-
 
     # Data
 
@@ -190,7 +180,9 @@ class DataHandler:
             older_date = today - timedelta(days = i)
             close = []
             for requested_data, ticker in wtb:
-                close.append(self.find_in_data(requested_data, ticker, older_date.strftime("%Y%m%d"), True))
+                close.append(
+                        self.find_in_data(requested_data, ticker,
+                                        older_date.strftime("%Y%m%d"), True))
             if all(close_i is not None for close_i in close):
                 data.append(close)
             else:
