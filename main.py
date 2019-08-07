@@ -205,7 +205,7 @@ if __name__ == "__main__" and not exec_in_console:
                 order_column = command[2] if command[2] in header else "Rank"
                 order_column = header.index(order_column)
                 rows.sort(key = lambda row: row[order_column], reverse = True)
-                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [30, -30])
+                util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [50])
 
             elif command[0] == "update":
                 update_stock(command)

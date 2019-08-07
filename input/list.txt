@@ -9,7 +9,7 @@ HYG
 
 GLD
 SLV
-#GDX
+GDX
 GDXJ
 
 XOP
@@ -29,8 +29,8 @@ EWW
 RSX
 
 XRT
-#XLF
-#XLE
+XLF
+XLE
 
 XLY
 XLI

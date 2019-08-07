@@ -127,10 +127,8 @@ class Pair:
         return max(self.closes(back_days))
 
     def current_rank(self, back_days):
-        midpoint = (self.max(back_days) + self.min(back_days)) / 2
-        min_max_midpoint_distance = self.max(back_days) - midpoint
-        return ((self.get_last_close(back_days) - midpoint)
-                / min_max_midpoint_distance) * 100
+        return ((self.get_last_close(back_days) - self.min(back_days))
+                    / (self.max(back_days) - self.min(back_days)) * 100)
 
     def output_chart(self, back_days):
         line_chart = pygal.Line(truncate_label=-1)
