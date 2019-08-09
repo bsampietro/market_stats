@@ -7,30 +7,35 @@ XOP-USO
 GLD-GDXJ
 GLD-SLV
 SLV-PPLT
-#6C-6A (canada - aussie)
+
+# Note: Multipliers is always the notional 
+#   division between the second and the first (second/first)
+#   ie. for NOB with futures: ZB(notional) * 1 / ZN(Notional) * 3  => ~0.58
+
 # curve spreads (NOB, 2-10)
 IEF-TLT-0.41
-SHY-IEF-0.5
-SHY-TLT-0.25
-
+SHY-IEF-0.30
+SHY-TLT-0.27
 
 #FUTURES
 
 # Credit quality
 #(3 GE(2 years from now) - 2 ZT)
-# GEZ9-ZTM8-0.58
+GEU1-ZTU9-0.58
 
-#ZCK8-ZSK8
-#ZWK8-ZCK8
+ZCU9-ZSU9
+ZWU9-ZCU9
 
 # CALENDARS
 
 ZCU9-ZCZ9-1
 ZWU9-ZWZ9-1
-#ZSU9-ZSF0-1
+ZSU9-ZSF0-1
 
 CLU9-CLZ9-1
-#CADU9-AUDU9-1
+
+CADU9-AUDU9-1
+
 
 #VIXK9-VIXM9-1
 

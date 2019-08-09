@@ -1,14 +1,15 @@
 import statistics
 from functools import lru_cache
 
+import gcnv
+
 class IV:
-    def __init__(self, data_handler, ticker):
-        self.data_handler = data_handler
+    def __init__(self, ticker):
         self.ticker = ticker
 
     @lru_cache(maxsize=None)
     def period_list(self, back_days):
-        ivs = self.data_handler.list_data([["IV", self.ticker]], back_days)[0]
+        ivs = gcnv.data_handler.list_data([["IV", self.ticker]], back_days)[0]
         ivs = [iv * 100 for iv in ivs]
         ivs.reverse() # Reverse so first element of the array will be the last iv
         return ivs
@@ -22,7 +23,7 @@ class IV:
         return max(self.period_list(back_days))
 
     def get_at(self, date):
-        return self.data_handler.find_in_data("IV", self.ticker, date, False) * 100
+        return gcnv.data_handler.find_in_data("IV", self.ticker, date, False) * 100
 
     @lru_cache(maxsize=None)
     def period_iv_ranks(self, back_days, max_results):

@@ -13,7 +13,7 @@ APP_PATH = None
 
 # Variables
 data_handler = None
-connected = None
 messages = None
 v_tickers = None
 store_dir = None
+ib = None

@@ -10,8 +10,7 @@ from lib.errors import *
 import gcnv
 
 class Pair:
-    def __init__(self, data_handler, ticker1, ticker2, fixed_stdev_ratio = None):
-        self.data_handler = data_handler
+    def __init__(self, ticker1, ticker2, fixed_stdev_ratio = None):
         self.ticker1 = ticker1
         self.ticker2 = ticker2
         self.fixed_stdev_ratio = fixed_stdev_ratio
@@ -49,8 +48,13 @@ class Pair:
 
     @lru_cache(maxsize=None)
     def parallel_closes(self, back_days):
-        return self.data_handler.list_data(
-            [["STOCK", self.ticker1], ["STOCK", self.ticker2]], back_days)
+        closes = gcnv.data_handler.list_data(
+                    [["STOCK", self.ticker1], ["STOCK", self.ticker2]],
+                    back_days)
+        if len(closes) == 0:
+            raise GettingInfoError(
+                    f"No pairs data for {self.ticker1}-{self.ticker2}")
+        return closes
 
     @lru_cache(maxsize=None)
     def parallel_percentage_changes(self, back_days):

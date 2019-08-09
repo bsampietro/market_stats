@@ -52,17 +52,17 @@ def get_iv_header():
 
 def get_iv_row(ticker, date, back_days):
     try:
-        iv = IV(gcnv.data_handler, ticker)
-        hv = HV(gcnv.data_handler, ticker)
-        mixed_vs = MixedVs(gcnv.data_handler, iv, hv)
-        stock = Stock(gcnv.data_handler, ticker)
-        spy_pair = Pair(gcnv.data_handler, ticker, "SPY")
-        spy_iv = IV(gcnv.data_handler, "SPY")
+        iv = IV(ticker)
+        hv = HV(ticker)
+        mixed_vs = MixedVs(iv, hv)
+        stock = Stock(ticker)
+        spy_pair = Pair(ticker, "SPY")
+        spy_iv = IV("SPY")
         earnings_data = load_earnings()
         row = [ticker, date]
         # Price related data
         row += [
-            stock.get_close_at(date),
+            stock.get_close_at(date), # GettingInfoError raised here if not stored data
             f"{stock.min(back_days)} - {stock.max(back_days)}",
             round(stock.min_max_rank(date, back_days)),
             stock.current_to_ma_percentage(date, back_days) / stock.hv_to_10_ratio(back_days),
@@ -119,16 +119,14 @@ def get_pairs_header():
 
 def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio, back_days):
     try:
-        pair = Pair(gcnv.data_handler, ticker1, ticker2, fixed_stdev_ratio)
+        pair = Pair(ticker1, ticker2, fixed_stdev_ratio)
         max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker1)
-        if max_stored_date is None:
-            date = '-'
-        else:
-            date = util.date_in_string(max_stored_date)
+        date = '-' if max_stored_date is None \
+                    else util.date_in_string(max_stored_date) # Need to change this
         row = [ticker1 + '-' + ticker2,
             date,
             '-',
-            pair.get_last_close(back_days),
+            pair.get_last_close(back_days), # GettingInfoError raised here if not stored data
             pair.min(back_days),
             pair.max(back_days),
             pair.current_rank(back_days),
@@ -148,7 +146,7 @@ def get_pairs_row(ticker1, ticker2, fixed_stdev_ratio, back_days):
 
 
 def get_query_date(ticker):
-    if gcnv.connected:
+    if gcnv.ib:
         return util.today_in_string()
     else:
         max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
@@ -159,7 +157,7 @@ def get_query_date(ticker):
 
 
 def bring_if_connected(tickers):
-    if not gcnv.connected:
+    if gcnv.ib is None:
         return
     for ticker in tickers:
         try:
@@ -167,18 +165,18 @@ def bring_if_connected(tickers):
                 max_stored_date = gcnv.data_handler.get_max_stored_date("IV", ticker)
                 if (max_stored_date is None) or max_stored_date.date() < date.today():
                     print(f"Getting IV data for ticker {ticker}...")
-                    gcnv.data_handler.request_historical_data("IV", ticker)
+                    gcnv.ib.request_historical_data("IV", ticker)
 
                 max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
                 # Using arbitrary 4 days because is not needed day to day
                 if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))):
                     print(f"Getting HV data for ticker {ticker}...")
-                    gcnv.data_handler.request_historical_data("HV", ticker)
+                    gcnv.ib.request_historical_data("HV", ticker)
 
             max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting STOCK data for ticker {ticker}...")
-                gcnv.data_handler.request_historical_data("STOCK", ticker)
+                gcnv.ib.request_historical_data("STOCK", ticker)
         except InputError as e:
             print(e)
 
@@ -193,7 +191,8 @@ def read_symbol_file_and_process(command, get_row_method):
     else:
         tickers = [command[1].upper()]
     bring_if_connected(tickers)
-    gcnv.data_handler.wait_for_async_request()
+    if gcnv.ib:
+        gcnv.ib.wait_for_async_request()
     for ticker in tickers:
         row = get_row_method(ticker, get_query_date(ticker), back_days)
         if len(row) > 0:
@@ -213,7 +212,8 @@ def read_pairs_file_and_process(command, get_row_method):
     for pair in pairs:
         ps = process_pair_string(pair)
         bring_if_connected([ps.ticker1, ps.ticker2])
-        gcnv.data_handler.wait_for_async_request()
+        if gcnv.ib:
+            gcnv.ib.wait_for_async_request()
         row = get_row_method(ps.ticker1, ps.ticker2, ps.stdev_ratio, back_days)
         if len(row) > 0:
             rows.append(row)
@@ -225,10 +225,10 @@ def update_stock(command):
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
-            gcnv.data_handler.request_market_data("STOCK", ticker)
+            gcnv.ib.request_market_data("STOCK", ticker)
     else:
         ticker = command[1].upper()
-        gcnv.data_handler.request_market_data("STOCK", ticker)
+        gcnv.ib.request_market_data("STOCK", ticker)
 
 
 def load_earnings():

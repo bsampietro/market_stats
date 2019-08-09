@@ -21,6 +21,8 @@ import gcnv
 #from texttable import Texttable
 from lib import html
 
+from ib.ib_data import IBData
+
 # INITIALIZATION
 # Detects if it is executed as the main file/import OR through a console exec to 
 # make import available and initialize variables
@@ -36,9 +38,10 @@ else:
 logging.basicConfig(filename=f"{gcnv.APP_PATH}/log/bprogram.log", level=logging.INFO)
 
 parameters = sys.argv + 5 * ['']
-gcnv.connected = (parameters[1] == "connect")
-gcnv.data_handler = DataHandler(gcnv.connected)
-gcnv.data_handler.wait_for_api_ready()
+if parameters[1] == "connect":
+    gcnv.ib = IBData()
+    gcnv.ib.wait_for_api_ready()
+gcnv.data_handler = DataHandler()
 gcnv.messages = []
 gcnv.v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
 gcnv.store_dir = "/media/ramd"
@@ -67,11 +70,13 @@ if __name__ == "__main__" and not exec_in_console:
         try:
             if command[0] == "exit" or command[0] == "e":
                 gcnv.data_handler.save()
-                gcnv.data_handler.disconnect()
+                if gcnv.ib:
+                    gcnv.ib.disconnect()
                 break
 
             elif command[0] == "e!":
-                gcnv.data_handler.disconnect()
+                if gcnv.ib:
+                    gcnv.ib.disconnect()
                 break
 
             elif command[0] == "delete" or command[0] == "del":
@@ -88,7 +93,7 @@ if __name__ == "__main__" and not exec_in_console:
                 continue
 
             elif command[0] == "corr":
-                pair = Pair(gcnv.data_handler, command[1].upper(), command[2].upper())
+                pair = Pair(command[1].upper(), command[2].upper())
                 back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError,
                                 lambda x: int(x) * 30, command[3])
 
@@ -111,7 +116,7 @@ if __name__ == "__main__" and not exec_in_console:
                             row.append("-")
                         else:
                             try:
-                                pair = Pair(gcnv.data_handler, head_symbol, symbol)
+                                pair = Pair(head_symbol, symbol)
                                 row.append(pair.correlation(back_days))
                             except GettingInfoError:
                                 row.append("-")
@@ -121,7 +126,7 @@ if __name__ == "__main__" and not exec_in_console:
                 if command[1] == "pair":
                     print("Remember to bring data before with the 'pair' command (if needed).")
                     ps = process_pair_string(command[2])
-                    pair = Pair(gcnv.data_handler, ps.ticker1, ps.ticker2, ps.stdev_ratio)
+                    pair = Pair(ps.ticker1, ps.ticker2, ps.stdev_ratio)
                     back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError,
                                     lambda x: int(x) * 30, command[3])
                     pair.output_chart(back_days)
@@ -210,7 +215,8 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "update":
                 update_stock(command)
                 print("Updating stock values...")
-                gcnv.data_handler.wait_for_async_request()
+                if gcnv.ib:
+                    gcnv.ib.wait_for_async_request()
                 continue
 
             elif command[0] == "earnings":
@@ -233,7 +239,8 @@ if __name__ == "__main__" and not exec_in_console:
                 continue
 
             print("Waiting for async request...")
-            gcnv.data_handler.wait_for_async_request()
+            if gcnv.ib:
+                gcnv.ib.wait_for_async_request()
 
             # t = Texttable(max_width = 0)
             # t.set_precision(2)
@@ -267,6 +274,7 @@ if __name__ == "__main__" and not exec_in_console:
             print(f"Didn't find file: {e}")
 
         except:
-            gcnv.data_handler.disconnect()
+            if gcnv.ib:
+                gcnv.ib.disconnect()
             # print(sys.exc_info()[0])
             raise

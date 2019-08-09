@@ -9,7 +9,7 @@ from ib.ib_data import IBData
 import gcnv
 
 class DataHandler:
-    def __init__(self, connect:bool):
+    def __init__(self):
         
         # Path variables
         self.implied_volatility_data_file_path = \
@@ -20,10 +20,6 @@ class DataHandler:
                 f"{gcnv.APP_PATH}/data/stock.json"
 
         self.load() # Load data variables
-
-        self.remote = None
-        if connect:
-            self.remote = IBData(self)
 
         # smart saving variables
         self.modified_iv = False
@@ -53,25 +49,11 @@ class DataHandler:
         with open(self.stock_data_file_path, "r") as f:
             self.stock = json.load(f)
 
-    def connected(self):
-        return self.remote is not None
-
     def load(self):
         self.load_data_json()
 
     def save(self):
         self.save_data_json()
-
-    def disconnect(self):
-        if self.connected():
-            self.remote.disconnect()
-
-    def get_max_stored_date(self, requested_data, ticker):
-        data = self.find_in_data(requested_data, ticker, None, silent = True)
-        if data is None:
-            return None
-        else:
-            return datetime.strptime(max(data.keys()), "%Y%m%d")
 
     def store_iv(self, ticker, date, value):
         if not ticker in self.implied_volatility:
@@ -91,11 +73,12 @@ class DataHandler:
         self.stock[ticker][date] = value
         self.modified_stock = True
 
-    def request_historical_data(self, requested_data, ticker):
-        self.remote.request_historical_data(requested_data, ticker)
-
-    def request_market_data(self, requested_data, ticker):
-        self.remote.request_market_data(requested_data, ticker)
+    def get_max_stored_date(self, requested_data, ticker):
+        data = self.find_in_data(requested_data, ticker, None, silent = True)
+        if data is None:
+            return None
+        else:
+            return datetime.strptime(max(data.keys()), "%Y%m%d")
     
     def find_in_data(self, requested_data, ticker, date, silent):
         data = None
@@ -117,7 +100,7 @@ class DataHandler:
         except KeyError as e:
             if silent:
                 return None
-            elif self.connected():
+            elif gcnv.ib:
                 raise GettingInfoError(
                     f"{ticker} not stored, getting it in background...")
             else:
@@ -137,8 +120,8 @@ class DataHandler:
             self.stock[key].pop(date, None)
         self.modified_stock = True
 
-        if self.connected():
-            self.remote.reset_session_requested_data()
+        if gcnv.ib:
+            gcnv.ib.reset_session_requested_data()
 
     def delete_back(self, back_days):
         today = datetime.today()
@@ -156,20 +139,10 @@ class DataHandler:
         self.stock.pop(ticker, None)
         self.modified_stock = True
 
-        if self.connected():
-            self.remote.reset_session_requested_data()
+        if gcnv.ib:
+            gcnv.ib.reset_session_requested_data()
 
-    # Async
-
-    def wait_for_async_request(self):
-        if self.connected():
-            self.remote.wait_for_async_request()
-
-    def wait_for_api_ready(self):
-        if self.connected():
-            self.remote.wait_for_api_ready()
-
-    # Data
+    # +++ Data +++
 
     # Last list element is the most recent value, achieved by data.reverse() statement
     def list_data(self, wtb, back_days):
@@ -182,7 +155,7 @@ class DataHandler:
             for requested_data, ticker in wtb:
                 close.append(
                         self.find_in_data(requested_data, ticker,
-                                        older_date.strftime("%Y%m%d"), True))
+                                            older_date.strftime("%Y%m%d"), True))
             if all(close_i is not None for close_i in close):
                 data.append(close)
             else:

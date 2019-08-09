@@ -104,20 +104,22 @@ def get_stock_contract(symbol):
 def get_futures_contract(symbol):
     contract = get_basic_contract()
     contract.secType = "FUT"
-    if symbol[0:2] in ("GC", "SI", "NG", "CL", "HG"):
+    
+    underlying_symbol = symbol[:-2]
+
+    if underlying_symbol in ("GC", "SI", "NG", "CL", "HG"):
         contract.exchange = "NYMEX"
-    elif symbol[0:2] in ("ES", "GE", "6E", "6J"):
+    elif underlying_symbol in ("ES", "GE"):
         contract.exchange = "GLOBEX"
-    elif symbol[0:2] in ("UB" ,"ZB", "ZN", "ZF", "ZT", "ZS", "ZC", "ZW", "YM"):
+    elif underlying_symbol in ("UB" ,"ZB", "ZN", "ZF", "ZT", "ZS", "ZC", "ZW", "YM"):
         contract.exchange = "ECBOT"
-    elif symbol[0:3] in ("EUR", "JPY"):
+    elif underlying_symbol in ("EUR", "JPY", "CAD", "AUD"):
         contract.exchange = "GLOBEX"
-    elif symbol[0:3] in ("VIX"):
+    elif underlying_symbol in ("VIX"):
         contract.exchange = "CFE"
         contract.localSymbol = "VX" + symbol[-2:]
     
-    ticker_length = len(symbol) - 2 # 2 is the lengh of month and year. eg. U8
-    contract.symbol = symbol[0:ticker_length]
+    contract.symbol = underlying_symbol
     contract.lastTradeDateOrContractMonth = get_futures_date(symbol[-2:]) # eg. "201612"
 
     return contract
@@ -158,8 +160,14 @@ def get_futures_date(fdcode):
         year = "2018"
     elif fdcode[1] == "9":
         year = "2019"
+    elif fdcode[1] == "0":
+        year = "2020"
+    elif fdcode[1] == "1":
+        year = "2021"
+    elif fdcode[1] == "2":
+        year = "2022"
     # more elifs...
     else:
-        raise InputError("Unknown futures year")
+        raise InputError("Bruno: Unknown futures year")
 
     return year + month

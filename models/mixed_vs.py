@@ -1,11 +1,12 @@
 from functools import lru_cache
 import statistics
 
+import gcnv
+
 class MixedVs:
-    def __init__(self, data_handler, iv, hv):
+    def __init__(self, iv, hv):
         self.iv = iv
         self.hv = hv
-        self.data_handler = data_handler
         self.ticker = self.iv.ticker
         assert self.iv.ticker == self.hv.ticker
 
@@ -17,7 +18,7 @@ class MixedVs:
 
     @lru_cache(maxsize=None)
     def iv_hv_difference(self, back_days):
-        ivs, hvs = self.data_handler.list_data(
+        ivs, hvs = gcnv.data_handler.list_data(
                     [["IV", self.ticker], ["HV", self.ticker]], back_days)
         hvs = hvs[20:] # 20 because no trading days are already removed
         return [ivs[i] * 100 - hvs[i] * 100 for i in range(len(hvs))]

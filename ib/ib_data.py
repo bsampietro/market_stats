@@ -15,11 +15,9 @@ from lib import util
 import gcnv
 
 class IBData(EClient, EWrapper):
-    def __init__(self, data_handler):
+    def __init__(self):
         EClient.__init__(self, wrapper = self)
-
-        self.data_handler = data_handler
-
+        
         # variables
         self.next_req_id = 0
         self.req_id_to_stock_ticker_map = {}
@@ -55,13 +53,13 @@ class IBData(EClient, EWrapper):
         if util.contract_type(ticker) == "FUT":
             duration_string = "3 M"
 
-        last = self.data_handler.get_max_stored_date(requested_data, ticker)
+        last = gcnv.data_handler.get_max_stored_date(requested_data, ticker)
         if last is not None:
             delta = datetime.today() - last
             if delta.days <= 0:
                 return
             elif delta.days >= 365:
-                self.data_handler.delete_ticker(ticker)
+                gcnv.data_handler.delete_ticker(ticker)
             else:
                 duration_string = f"{delta.days + 1} D"
 
@@ -84,13 +82,13 @@ class IBData(EClient, EWrapper):
                                 volume, barCount, WAP, hasGaps)
 
         if self.req_id_to_requested_historical_data[reqId] == "IV":
-            self.data_handler.store_iv(
+            gcnv.data_handler.store_iv(
                 self.req_id_to_stock_ticker_map[reqId], date, close)
         elif self.req_id_to_requested_historical_data[reqId] == "HV":
-            self.data_handler.store_hv(
+            gcnv.data_handler.store_hv(
                 self.req_id_to_stock_ticker_map[reqId], date, close)
         elif self.req_id_to_requested_historical_data[reqId] == "STOCK":
-            self.data_handler.store_stock(
+            gcnv.data_handler.store_stock(
                 self.req_id_to_stock_ticker_map[reqId], date, close)
         else:
             raise RuntimeError("Unknown requested_data parameter")
@@ -112,7 +110,7 @@ class IBData(EClient, EWrapper):
             return
         if tickType != 4:
             return
-        self.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId],
+        gcnv.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId],
                                         util.today_in_string(), price)
 
     def tickSnapshotEnd(self, reqId:int):
