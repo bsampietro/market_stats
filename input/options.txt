@@ -30,15 +30,20 @@ XLV
 XBI
 XME
 XLP
+XOP
 
 XHB
 KRE
 UNG
 
+GDXJ
+SLV
+
 # Use with Futures options that have
 # approximately double the notional value
 FXE
 FXB
+FXY
 
 # Stocks
 MSFT
@@ -80,3 +85,36 @@ COP
 WDC
 ABBV
 MU
+BA
+FB
+
+# Lower size
+C
+GM
+CSCO
+VZ
+NFLX
+EA
+TWTR
+PG
+KO
+YUM
+MRK
+CMCSA
+EBAY
+AXP
+ABT
+AMAT
+DAL
+QCOM
+BMY
+XOM
+WFC
+WBA
+ORCL
+PFE
+AAL
+SLB
+INTC
+BAC
+T

@@ -260,7 +260,7 @@ if __name__ == "__main__" and not exec_in_console:
                             row[i] = f"<b>{row[i]}</b>"
                 f.write(html.table(rows, header_row=header,
                     style=("border: 1px solid #000000; border-collapse: collapse;"
-                            "font: 12px arial, sans-serif;")))
+                            "font: 11px arial, sans-serif;")))
             print(f"Finished. Stored report on {gcnv.store_dir}.")
 
             if len(gcnv.messages) > 0:

@@ -1,9 +1,9 @@
 SPY-DIA
 SPY-IWM
 SPY-QQQ
-SPY-EFA
+#SPY-EFA
 SPY-EEM
-XOP-USO
+#XOP-USO
 GLD-GDXJ
 GLD-SLV
 SLV-PPLT
@@ -23,8 +23,11 @@ SHY-TLT-0.27
 #(3 GE(2 years from now) - 2 ZT)
 GEU1-ZTU9-0.58
 
-ZCU9-ZSU9
-ZWU9-ZCU9
+# are not too correlated
+#ZCU9-ZSU9
+
+# 1.25 because of contracts difference
+ZWU9-ZCU9-1.25
 
 # CALENDARS
 
