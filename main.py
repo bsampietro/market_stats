@@ -13,6 +13,10 @@ from models.hv import HV
 from models.mixed_vs import MixedVs
 from models.stock import Stock
 from models.pair import Pair
+import controllers.iv as iv_controller
+import controllers.pairs as pairs_controller
+import controllers.options as options_controller
+import controllers.helper
 
 from helpers.main_helper import *
 
@@ -125,7 +129,7 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "chart":
                 if command[1] == "pair":
                     print("Remember to bring data before with the 'pair' command (if needed).")
-                    ps = process_pair_string(command[2])
+                    ps = controllers.helper.process_pair_string(command[2])
                     pair = Pair(ps.ticker1, ps.ticker2, ps.stdev_ratio)
                     back_days = core.safe_execute(gcnv.PAIR_BACK_DAYS, ValueError,
                                     lambda x: int(x) * 30, command[3])
@@ -175,9 +179,9 @@ if __name__ == "__main__" and not exec_in_console:
                     continue
 
             elif command[0] == "prvol":
-                header = get_iv_header()
+                header = iv_controller.get_iv_header()
                 
-                rows = read_symbol_file_and_process(command, get_iv_row)
+                rows = read_symbol_file_and_process(command, iv_controller.get_iv_row)
 
                 # Remove year from date
                 current_year = time.strftime('%Y')
@@ -202,9 +206,9 @@ if __name__ == "__main__" and not exec_in_console:
                 util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [50])
 
             elif command[0] == "pair":
-                header = get_pairs_header()
+                header = pairs_controller.get_pairs_header()
 
-                rows = read_pairs_file_and_process(command, get_pairs_row)
+                rows = read_pairs_file_and_process(command, pairs_controller.get_pairs_row)
 
                 # Sorting
                 order_column = command[2] if command[2] in header else "Rank"
@@ -233,6 +237,10 @@ if __name__ == "__main__" and not exec_in_console:
                         print(f"Stored earnings for {ticker}")
                 save_earnings(earnings_data)
                 continue
+
+            elif command[0] == "options":
+                header = get_options_header()
+                rows = read_symbol_file_and_process(command, get_options_row)
 
             else:
                 print("Command not recognized")
