@@ -21,11 +21,9 @@ import controllers.helper
 from main_helper import *
 
 import gcnv
-
-#from texttable import Texttable
 from lib import html
-
 from ib.ib_data import IBData
+import tests.fixture
 
 # INITIALIZATION
 # Detects if it is executed as the main file/import OR through a console exec to 
@@ -49,13 +47,23 @@ gcnv.data_handler = DataHandler()
 gcnv.messages = []
 gcnv.v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
 gcnv.store_dir = "/media/ramd"
+test = 'test' in parameters
 
 # MAIN METHOD
 if __name__ == "__main__" and not exec_in_console:
     last_command = []
 
     while True:
-        command = input('--> ')
+        if test:
+            try:
+                next_command = next(tests.fixture.test_commands)
+                print(f"-> Running: '{next_command}'")
+                command = next_command
+            except StopIteration:
+                break
+        else:
+            command = input('--> ')
+
         if command == "":
             continue
 
