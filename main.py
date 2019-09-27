@@ -18,7 +18,7 @@ import controllers.pairs as pairs_controller
 import controllers.options as options_controller
 import controllers.helper
 
-from helpers.main_helper import *
+from main_helper import *
 
 import gcnv
 
