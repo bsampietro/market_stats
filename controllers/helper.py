@@ -1,3 +1,4 @@
+import os
 import json
 from json.decoder import JSONDecodeError
 from datetime import datetime, date, timedelta
@@ -85,3 +86,12 @@ def up_down_closes_str(stock, back_days):
     map.reverse()
     map = map[1:] # remove first element which is today
     return str(" ").join(map)
+
+def get_tickers_from_command(name):
+    text_file = f"{gcnv.APP_PATH}/input/{name}.txt"
+    rows = []
+    if os.path.isfile(text_file):
+        tickers = util.read_symbol_list(text_file)
+    else:
+        tickers = [name.upper()]
+    return tickers

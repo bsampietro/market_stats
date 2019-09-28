@@ -6,7 +6,28 @@ from models.pair import Pair
 from controllers.helper import *
 import gcnv
 
-def get_pairs_header():
+def table(command):
+    header = get_header()
+    rows = get_rows(command)
+
+    # Sorting
+    order_column = command[2] if command[2] in header else "Rank"
+    order_column = header.index(order_column)
+    rows.sort(key = lambda row: row[order_column], reverse = True)
+    util.add_separators_to_list(rows, lambda row, sep: row[order_column] <= sep, [50])
+
+    return header, rows, order_column
+
+def get_rows(command):
+    pairs = get_tickers_from_command(command[1])
+    rows = []
+    for pair in pairs:
+        row = get_row(pair, command)
+        if len(row) > 0:
+            rows.append(row)
+    return rows
+
+def get_header():
     header = ['Pair',
         'Date',
         '-',
@@ -23,7 +44,7 @@ def get_pairs_header():
     header += ['-'] * gcnv.PAIR_PAST_RESULTS
     return header
 
-def get_pairs_row(pair, command):
+def get_row(pair, command):
     ps = process_pair_string(pair)
     ticker1 = ps.ticker1
     ticker2 = ps.ticker2
