@@ -17,3 +17,8 @@ messages = None
 v_tickers = None
 store_dir = None
 ib = None
+
+# temp variable to hold options data
+# until datahandler is restructured
+from collections import defaultdict
+options = defaultdict(list)

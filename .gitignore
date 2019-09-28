@@ -4,3 +4,5 @@ tws_output.txt
 *.json
 *.pk
 *.pyc
+to_do.txt
+input/test.txt

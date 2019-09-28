@@ -38,7 +38,7 @@ if parameters[1] == "connect":
     gcnv.ib.wait_for_api_ready()
 gcnv.data_handler = DataHandler()
 gcnv.messages = []
-gcnv.v_tickers = util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt")
+gcnv.v_tickers = set(util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt"))
 gcnv.store_dir = "/media/ramd"
 test = 'test' in parameters
 
@@ -126,9 +126,8 @@ if __name__ == "__main__" and not exec_in_console:
                 continue
 
             elif command[0] == "options":
-                # header = get_options_header()
-                # rows = read_symbol_file_and_process(command, get_options_row)
-                pass
+                header = options_controller.get_header()
+                rows = options_controller.get_rows(command)
 
             else:
                 print("Command not recognized")

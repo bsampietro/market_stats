@@ -55,32 +55,6 @@ def bring_if_connected(ticker):
     except InputError as e:
         print(e)
 
-def load_earnings():
-    data = None
-    try:
-        with open(f"{gcnv.APP_PATH}/data/earnings.json", "r") as f:
-            data = json.load(f)
-    except (JSONDecodeError, FileNotFoundError) as e:
-        data = {}
-    data = defaultdict(lambda: ["-", "-"], data)
-    today = date.today()
-    yesterday = today - timedelta(days=1)
-    for ticker in data.keys():
-        try:
-            earnings_date = datetime.strptime(data[ticker][:10], "%m/%d/%Y").date()
-            if earnings_date == today:
-                data[ticker] = "T" + data[ticker][10:]
-            elif earnings_date == yesterday:
-                data[ticker] = "Y" + data[ticker][10:]
-            elif earnings_date < yesterday:
-                data[ticker] = "P"
-            else:
-                data[ticker] = data[ticker].replace(f"/{today.year}", "")
-            data[ticker] = [data[ticker], (earnings_date - today).days]
-        except ValueError:
-            data[ticker] = ["PrsErr", "-"]
-    return data
-
 def up_down_closes_str(stock, back_days):
     map = ["+" if udc == 1 else "-" for udc in stock.up_down_closes(back_days)]
     map.reverse()
