@@ -117,6 +117,9 @@ class IBData(EClient, EWrapper):
         super().tickSnapshotEnd(reqId)
         self.req_id_to_stock_ticker_map.pop(reqId, None)
 
+    def request_options_data(self):
+        pass
+
     # Async
 
     def wait_for_async_request(self):
@@ -126,7 +129,6 @@ class IBData(EClient, EWrapper):
             else:
                 assert i != 299, "Timeout!"
                 time.sleep(1)
-
 
     def wait_for_api_ready(self):
         for i in range(120):
@@ -142,10 +144,8 @@ class IBData(EClient, EWrapper):
             self.next_req_id += 1
         return self.next_req_id
 
-
     def reset_session_requested_data(self):
         self.session_requested_data = set()
-
 
     def error(self, reqId:TickerId, errorCode:int, errorString:str):
         super().error(reqId, errorCode, errorString)
