@@ -8,10 +8,8 @@ from datetime import datetime
 
 from ibapi.wrapper import EWrapper
 from ibapi.client import EClient
-from ibapi.contract import *
-from ibapi.common import *
 
-from lib import util
+from lib import util, core
 import gcnv
 
 class IBData(EClient, EWrapper):
@@ -20,8 +18,7 @@ class IBData(EClient, EWrapper):
         
         # variables
         self.next_req_id = 0
-        self.req_id_to_stock_ticker_map = {}
-        self.req_id_to_requested_historical_data = {}
+        self.calling_info = {}
         self.session_requested_data = set()
         self.api_ready = False
 
@@ -67,98 +64,68 @@ class IBData(EClient, EWrapper):
         
         # Class level mappings
         next_req_id = self.get_next_req_id()
-        self.req_id_to_stock_ticker_map[next_req_id] = ticker
-        self.req_id_to_requested_historical_data[next_req_id] = requested_data
+        self.calling_info[next_req_id] = core.Struct(
+                                ticker=ticker, requested_data=requested_data)
 
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '',
                             duration_string, "1 day", what_to_show, 1, 1, [])
         time.sleep(1)
 
-    def historicalData(self, reqId:TickerId , date:str, open:float, high:float,
+    def historicalData(self, reqId, date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
                         WAP:float, hasGaps:int):
         super().historicalData(reqId, date, open, high, low, close,
                                 volume, barCount, WAP, hasGaps)
 
-        if self.req_id_to_requested_historical_data[reqId] == "IV":
+        if self.calling_info[reqId].requested_data == "IV":
             gcnv.data_handler.store_iv(
-                self.req_id_to_stock_ticker_map[reqId], date, close)
-        elif self.req_id_to_requested_historical_data[reqId] == "HV":
+                self.calling_info[reqId].ticker, date, close)
+        elif self.calling_info[reqId].requested_data == "HV":
             gcnv.data_handler.store_hv(
-                self.req_id_to_stock_ticker_map[reqId], date, close)
-        elif self.req_id_to_requested_historical_data[reqId] == "STOCK":
+                self.calling_info[reqId].ticker, date, close)
+        elif self.calling_info[reqId].requested_data == "STOCK":
             gcnv.data_handler.store_stock(
-                self.req_id_to_stock_ticker_map[reqId], date, close)
+                self.calling_info[reqId].ticker, date, close)
         else:
             raise RuntimeError("Unknown requested_data parameter")
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
-        self.req_id_to_stock_ticker_map.pop(reqId, None)
+        self.calling_info.pop(reqId, None)
         logging.info(f"Historical data fetched for reqId: {reqId}")
 
     ## Commented while developing the options part
-    # def request_market_data(self, requested_data, ticker):
-    #     next_req_id = self.get_next_req_id()
-    #     self.req_id_to_stock_ticker_map[next_req_id] = ticker
-    #     self.reqMktData(next_req_id, util.get_contract(ticker), "", True, False, [])
+    def request_market_data(self, requested_data, ticker):
+        next_req_id = self.get_next_req_id()
+        self.calling_info[next_req_id] = core.Struct(
+                                ticker=ticker,
+                                requested_data=requested_data,
+                                method='request_market_data')
+        self.reqMktData(next_req_id, util.get_contract(ticker), "", True, False, [])
 
-    # def tickPrice(self, reqId, tickType, price:float, attrib):
-    #     super().tickPrice(reqId, tickType, price, attrib)
-    #     logging.info(f"Snapshot data fetched for reqId: {reqId}")
+    def tickPrice(self, reqId, tickType, price:float, attrib):
+        super().tickPrice(reqId, tickType, price, attrib)
+        logging.info(f"Snapshot data fetched for reqId: {reqId}")
 
-    #     if price <= 0:
-    #         return
-    #     if tickType != 4:
-    #         return
-    #     gcnv.data_handler.store_stock(self.req_id_to_stock_ticker_map[reqId],
-    #                                     util.today_in_string(), price)
+        calling_info = self.calling_info[reqId]
+        if calling_info.method != 'request_market_data':
+            return
+        if price <= 0:
+            return
+        if tickType != 4:
+            return
+        gcnv.data_handler.store_stock(calling_info.ticker,
+                                        util.today_in_string(), price)
 
     def tickSnapshotEnd(self, reqId:int):
         super().tickSnapshotEnd(reqId)
-        self.req_id_to_stock_ticker_map.pop(reqId, None)
-
-    
-    # def request_contract_details(self, ticker):
-    #     next_req_id = self.get_next_req_id()
-    #     # used only to know when to stop waiting asynchronously
-    #     # as contract ticker is obviously returned in contract details
-    #     self.req_id_to_stock_ticker_map[next_req_id] = ticker
-    #     self.reqContractDetails(next_req_id , util.get_contract(ticker))
-
-    # def contractDetails(self, reqId, contractDetails):
-    #     contract = contractDetails.summary
-    #     gcnv.data_handler.store_contract_id(contract.symbol, contract.conId)
-
-    # def contractDetailsEnd(self, reqId):
-    #     self.req_id_to_stock_ticker_map.pop(reqId, None)
-        
-
-    # # bring options chain
-    # def request_options_details(self, ticker):
-    #     next_req_id = self.get_next_req_id()
-    #     self.req_id_to_stock_ticker_map[next_req_id] = ticker
-    #     #contract_id = gcnv.data_handler.get_contract_id(ticker)
-    #     self.reqSecDefOptParams(next_req_id, ticker, "", "STK", 756733) #756733
-
-    # def securityDefinitionOptionParameter(self, reqId:int, exchange:str,
-    #                 underlyingConId:int, tradingClass:str, multiplier:str,
-    #                 expirations:SetOfString, strikes:SetOfFloat):
-    #     super().securityDefinitionOptionParameter(
-    #                 reqId, exchange, underlyingConId, tradingClass,
-    #                 multiplier, expirations, strikes)
-    #     print(f"exchange: {exchange}")
-    #     print(f"underlyingConId: {underlyingConId}")
-    #     print(f"tradingClass: {tradingClass}")
-    #     print(f"multiplier: {multiplier}")
-    #     print(f"expirations: {expirations}")
-    #     print(f"strikes: {strikes}")
+        self.calling_info.pop(reqId, None)
 
     
     # bring specific options details
     def request_options_contract(self, ticker, price, right, expiration_date):
         next_req_id = self.get_next_req_id()
-        self.req_id_to_stock_ticker_map[next_req_id] = ticker
+        self.calling_info[next_req_id] = core.Struct(ticker=ticker)
         
         contract = util.get_options_contract(ticker)
         contract.lastTradeDateOrContractMonth = expiration_date
@@ -172,20 +139,20 @@ class IBData(EClient, EWrapper):
                 optPrice, pvDividend, gamma, vega, theta, undPrice):
         if tickType != 12: # last price
             return
-        ticker = self.req_id_to_stock_ticker_map[reqId]
+        ticker = self.calling_info[reqId].ticker
         gcnv.options[ticker].append({'delta': delta, 'price': optPrice})
 
-    def error(self, reqId:TickerId, errorCode:int, errorString:str):
+    def error(self, reqId, errorCode:int, errorString:str):
         super().error(reqId, errorCode, errorString)
-        
-        self.req_id_to_stock_ticker_map.pop(reqId, None)
         logging.info(f"Bruno says: Error logged with reqId: {reqId}")
+        
+        self.calling_info.pop(reqId, None)
 
     # Async
 
     def wait_for_async_request(self):
         for i in range(300):
-            if len(self.req_id_to_stock_ticker_map) == 0:
+            if len(self.calling_info) == 0:
                 break
             else:
                 assert i != 299, "Timeout!"
