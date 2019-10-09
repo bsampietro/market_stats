@@ -16,7 +16,8 @@ import controllers.show as show_controller
 import gcnv
 from lib import html
 from ib.ib_data import IBData
-import tests.fixture
+
+from ib.ib_data_test import IBDataTest
 
 # INITIALIZATION
 # Detects if it is executed as the main file/import OR through a console exec to 
@@ -33,23 +34,28 @@ else:
 logging.basicConfig(filename=f"{gcnv.APP_PATH}/log/bprogram.log", level=logging.INFO)
 
 parameters = sys.argv + 5 * ['']
+test = 'test' in parameters
+batch = 'batch' in parameters
+
 if parameters[1] == "connect":
-    gcnv.ib = IBData()
+    gcnv.ib = IBData() if not test else IBDataTest()
     gcnv.ib.wait_for_api_ready()
 gcnv.data_handler = DataHandler()
 gcnv.messages = []
 gcnv.v_tickers = set(util.read_symbol_list(f"{gcnv.APP_PATH}/input/options.txt"))
 gcnv.store_dir = "/media/ramd"
-test = 'test' in parameters
+if batch:
+    batch_commands = iter(
+        util.read_symbol_list(f"{gcnv.APP_PATH}/input/batch_commands.txt"))
 
 # MAIN METHOD
 if __name__ == "__main__" and not exec_in_console:
     last_command = []
 
     while True:
-        if test:
+        if batch:
             try:
-                next_command = next(tests.fixture.test_commands)
+                next_command = next(batch_commands)
                 print(f"-> Running: '{next_command}'")
                 command = next_command
             except StopIteration:

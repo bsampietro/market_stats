@@ -70,7 +70,6 @@ class IBData(EClient, EWrapper):
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '',
                             duration_string, "1 day", what_to_show, 1, 1, [])
-        time.sleep(1)
 
     def historicalData(self, reqId, date:str, open:float, high:float,
                        low:float, close:float, volume:int, barCount:int,
@@ -107,40 +106,50 @@ class IBData(EClient, EWrapper):
         super().tickPrice(reqId, tickType, price, attrib)
         logging.info(f"Snapshot data fetched for reqId: {reqId}")
 
-        calling_info = self.calling_info[reqId]
-        if calling_info.method != 'request_market_data':
-            return
         if price <= 0:
             return
         if tickType != 4:
             return
-        gcnv.data_handler.store_stock(calling_info.ticker,
+
+        calling_info = self.calling_info[reqId]
+        if calling_info.method == 'request_market_data':
+            gcnv.data_handler.store_stock(calling_info.ticker,
                                         util.today_in_string(), price)
 
     def tickSnapshotEnd(self, reqId:int):
         super().tickSnapshotEnd(reqId)
         self.calling_info.pop(reqId, None)
 
-    
     # bring specific options details
-    def request_options_contract(self, ticker, price, right, expiration_date):
+    def request_options_contract(self, ticker, strike, right, expiration_date):
         next_req_id = self.get_next_req_id()
-        self.calling_info[next_req_id] = core.Struct(ticker=ticker)
+        self.calling_info[next_req_id] = core.Struct(
+                ticker=ticker,
+                strike=strike,
+                right=right,
+                method='request_options_contract')
         
         contract = util.get_options_contract(ticker)
         contract.lastTradeDateOrContractMonth = expiration_date
-        contract.strike = price
+        contract.strike = strike
         contract.right = right
         
         self.reqMktData(next_req_id, contract, "", True, False, [])
-        time.sleep(1)
 
     def tickOptionComputation(self, reqId, tickType, impliedVol, delta,
                 optPrice, pvDividend, gamma, vega, theta, undPrice):
-        if tickType != 12: # last price
+        super().tickOptionComputation(reqId, tickType, impliedVol, delta,
+                optPrice, pvDividend, gamma, vega, theta, undPrice)
+        if tickType != 11: # ask price
             return
-        ticker = self.calling_info[reqId].ticker
-        gcnv.options[ticker].append({'delta': delta, 'price': optPrice})
+
+        calling_info = self.calling_info[reqId]
+        if calling_info.method == 'request_options_contract':
+            gcnv.options[calling_info.ticker].append({
+                                        'delta': delta,
+                                        'price': optPrice,
+                                        'strike': calling_info.strike, 
+                                        'right': calling_info.right})
 
     def error(self, reqId, errorCode:int, errorString:str):
         super().error(reqId, errorCode, errorString)

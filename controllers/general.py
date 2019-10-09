@@ -17,8 +17,6 @@ def update_stock(command):
     else:
         ticker = command[1].upper()
         gcnv.ib.request_market_data("STOCK", ticker)
-    if gcnv.ib:
-        gcnv.ib.wait_for_async_request()
 
 def save_earnings(command):
     earnings_data = {}
