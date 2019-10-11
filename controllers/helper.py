@@ -12,7 +12,7 @@ def get_query_date(ticker):
     if gcnv.ib:
         return util.today_in_string()
     else:
-        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker)
         if max_stored_date is None:
             return util.today_in_string()
         else:
@@ -35,21 +35,21 @@ def bring_if_connected(ticker):
         return
     try:
         if ticker in gcnv.v_tickers:
-            max_stored_date = gcnv.data_handler.get_max_stored_date("IV", ticker)
+            max_stored_date = gcnv.data_handler.get_max_stored_date("iv", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting IV data for ticker {ticker}...")
-                gcnv.ib.request_historical_data("IV", ticker)
+                gcnv.ib.request_historical_data("iv", ticker)
 
-            max_stored_date = gcnv.data_handler.get_max_stored_date("HV", ticker)
+            max_stored_date = gcnv.data_handler.get_max_stored_date("hv", ticker)
             # Using arbitrary 4 days because is not needed day to day
             if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))):
                 print(f"Getting HV data for ticker {ticker}...")
-                gcnv.ib.request_historical_data("HV", ticker)
+                gcnv.ib.request_historical_data("hv", ticker)
 
-        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting STOCK data for ticker {ticker}...")
-            gcnv.ib.request_historical_data("STOCK", ticker)
+            print(f"Getting stock data for ticker {ticker}...")
+            gcnv.ib.request_historical_data("stock", ticker)
 
         gcnv.ib.wait_for_async_request()
     except InputError as e:

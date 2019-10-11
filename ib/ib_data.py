@@ -36,11 +36,11 @@ class IBData(EClient, EWrapper):
         else:
             self.session_requested_data.add(requested_data_key)
 
-        if requested_data == "IV":
+        if requested_data == "iv":
             what_to_show = "OPTION_IMPLIED_VOLATILITY"
-        elif requested_data == "HV":
+        elif requested_data == "hv":
             what_to_show = "HISTORICAL_VOLATILITY"
-        elif requested_data == "STOCK":
+        elif requested_data == "stock":
             what_to_show = "ASK"
         else:
             raise RuntimeError("Unknown requested_data parameter")
@@ -65,7 +65,8 @@ class IBData(EClient, EWrapper):
         # Class level mappings
         next_req_id = self.get_next_req_id()
         self.calling_info[next_req_id] = core.Struct(
-                                ticker=ticker, requested_data=requested_data)
+                                            ticker=ticker,
+                                            requested_data=requested_data)
 
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '',
@@ -77,17 +78,12 @@ class IBData(EClient, EWrapper):
         super().historicalData(reqId, date, open, high, low, close,
                                 volume, barCount, WAP, hasGaps)
 
-        if self.calling_info[reqId].requested_data == "IV":
-            gcnv.data_handler.store_iv(
-                self.calling_info[reqId].ticker, date, close)
-        elif self.calling_info[reqId].requested_data == "HV":
-            gcnv.data_handler.store_hv(
-                self.calling_info[reqId].ticker, date, close)
-        elif self.calling_info[reqId].requested_data == "STOCK":
-            gcnv.data_handler.store_stock(
-                self.calling_info[reqId].ticker, date, close)
-        else:
-            raise RuntimeError("Unknown requested_data parameter")
+        gcnv.data_handler.store_history(
+                self.calling_info[reqId].requested_data,
+                self.calling_info[reqId].ticker,
+                date,
+                close
+            )
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):
         self.calling_info.pop(reqId, None)
@@ -113,8 +109,10 @@ class IBData(EClient, EWrapper):
 
         calling_info = self.calling_info[reqId]
         if calling_info.method == 'request_market_data':
-            gcnv.data_handler.store_stock(calling_info.ticker,
-                                        util.today_in_string(), price)
+            gcnv.data_handler.store_history('stock',
+                                            calling_info.ticker,
+                                            util.today_in_string(),
+                                            price)
 
     def tickSnapshotEnd(self, reqId:int):
         super().tickSnapshotEnd(reqId)

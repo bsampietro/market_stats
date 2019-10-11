@@ -21,12 +21,12 @@ def price(command):
 
 def instruments(command):
     print("IV:")
-    iv = list(gcnv.data_handler.implied_volatility.keys())
+    iv = list(gcnv.data_handler.iv.keys())
     iv.sort()
     print(iv)
 
     print("HV:")
-    hv = list(gcnv.data_handler.historical_volatility.keys())
+    hv = list(gcnv.data_handler.hv.keys())
     hv.sort()
     print(hv)
 

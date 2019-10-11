@@ -9,7 +9,7 @@ class HV:
 
     @lru_cache(maxsize=None)
     def period_list(self, back_days):
-        hvs = gcnv.data_handler.list_data([["HV", self.ticker]], back_days)[0]
+        hvs = gcnv.data_handler.list_data([["hv", self.ticker]], back_days)[0]
         return [hv * 100 for hv in hvs]
 
     @lru_cache(maxsize=None)

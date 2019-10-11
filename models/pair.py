@@ -49,7 +49,7 @@ class Pair:
     @lru_cache(maxsize=None)
     def parallel_closes(self, back_days):
         closes = gcnv.data_handler.list_data(
-                    [["STOCK", self.ticker1], ["STOCK", self.ticker2]],
+                    [["stock", self.ticker1], ["stock", self.ticker2]],
                     back_days)
         if len(closes) == 0:
             raise GettingInfoError(

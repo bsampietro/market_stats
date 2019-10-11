@@ -10,87 +10,40 @@ import gcnv
 
 class DataHandler:
     def __init__(self):
-        
-        # Path variables
-        self.implied_volatility_data_file_path = \
-                f"{gcnv.APP_PATH}/data/data_implied_volatility.json"
-        self.historical_volatility_data_file_path = \
-                f"{gcnv.APP_PATH}/data/data_historical_volatility.json"
-        self.stock_data_file_path = \
-                f"{gcnv.APP_PATH}/data/stock.json"
-
-        self.load() # Load data variables
-
-        # smart saving variables
-        self.modified_iv = False
-        self.modified_hv = False
-        self.modified_stock = False
-
-    def save_data_json(self):
-        if self.modified_iv:
-            with open(self.implied_volatility_data_file_path, "w") as f:
-                json.dump(self.implied_volatility, f)
-
-        if self.modified_hv:
-            with open(self.historical_volatility_data_file_path, "w") as f:
-                json.dump(self.historical_volatility, f)
-
-        if self.modified_stock:
-            with open(self.stock_data_file_path, "w") as f:
-                json.dump(self.stock, f)
-
-    def load_data_json(self):
-        with open(self.implied_volatility_data_file_path, "r") as f:
-            self.implied_volatility = json.load(f)
-
-        with open(self.historical_volatility_data_file_path, "r") as f:
-            self.historical_volatility = json.load(f)
-
-        with open(self.stock_data_file_path, "r") as f:
-            self.stock = json.load(f)
+        self.documents = ['iv', 'hv', 'stock']
+        self.load()
 
     def load(self):
-        self.load_data_json()
+        for document in self.documents:
+            setattr(self, f"modified_{document}", False)
+            with open(f"{gcnv.APP_PATH}/data/{document}.json", "r") as f:
+                setattr(self, document, json.load(f))
 
     def save(self):
-        self.save_data_json()
+        for document in self.documents:
+            if getattr(self, f"modified_{document}"):
+                with open(f"{gcnv.APP_PATH}/data/{document}.json", "w") as f:
+                    json.dump(getattr(self, document), f)
 
-    def store_iv(self, ticker, date, value):
-        if not ticker in self.implied_volatility:
-            self.implied_volatility[ticker] = {}
-        self.implied_volatility[ticker][date] = value
-        self.modified_iv = True
+    def store_history(self, document, ticker, date, value):
+        assert document in self.documents
+        data = getattr(self, document)
+        if not ticker in data:
+            data[ticker] = {}
+        data[ticker][date] = value
+        setattr(self, f"modified_{document}", True)
 
-    def store_hv(self, ticker, date, value):
-        if not ticker in self.historical_volatility:
-            self.historical_volatility[ticker] = {}
-        self.historical_volatility[ticker][date] = value
-        self.modified_hv = True
-
-    def store_stock(self, ticker, date, value):
-        if not ticker in self.stock:
-            self.stock[ticker] = {}
-        self.stock[ticker][date] = value
-        self.modified_stock = True
-
-    def get_max_stored_date(self, requested_data, ticker):
-        data = self.find_in_data(requested_data, ticker, None, silent = True)
+    def get_max_stored_date(self, document, ticker):
+        assert document in self.documents
+        data = self.find_in_data(document, ticker, None, silent = True)
         if data is None:
             return None
         else:
             return datetime.strptime(max(data.keys()), "%Y%m%d")
     
-    def find_in_data(self, requested_data, ticker, date, silent):
-        data = None
-        if requested_data == "IV":
-            data = self.implied_volatility
-        elif requested_data == "HV":
-            data = self.historical_volatility
-        elif requested_data == "STOCK":
-            data = self.stock
-        else:
-            raise RuntimeError("Unknown requested_data parameter")
-
+    def find_in_data(self, document, ticker, date, silent):
+        assert document in self.documents
+        data = getattr(self, document)
         try:
             if date is None:
                 return data[ticker]
@@ -108,18 +61,11 @@ class DataHandler:
                     f"{ticker} info not available and remote not connected")
 
     def delete_at(self, date):
-        for key in self.implied_volatility.keys():
-            self.implied_volatility[key].pop(date, None)
-        self.modified_iv = True
-
-        for key in self.historical_volatility.keys():
-            self.historical_volatility[key].pop(date, None)
-        self.modified_hv = True
-
-        for key in self.stock.keys():
-            self.stock[key].pop(date, None)
-        self.modified_stock = True
-
+        for document in self.documents:
+            data = getattr(self, document)
+            for value in data.values():
+                value.pop(date, None)
+            setattr(self, f"modified_{document}", True)
         if gcnv.ib:
             gcnv.ib.reset_session_requested_data()
 
@@ -130,15 +76,10 @@ class DataHandler:
             self.delete_at(delete_day)
 
     def delete_ticker(self, ticker):
-        self.implied_volatility.pop(ticker, None)
-        self.modified_iv = True
-
-        self.historical_volatility.pop(ticker, None)
-        self.modified_hv = True
-
-        self.stock.pop(ticker, None)
-        self.modified_stock = True
-
+        for document in self.documents:
+            data = getattr(self, document)
+            data.pop(ticker, None)
+            setattr(self, f"modified_{document}", True)
         if gcnv.ib:
             gcnv.ib.reset_session_requested_data()
 
@@ -146,16 +87,20 @@ class DataHandler:
 
     # Last list element is the most recent value, achieved by data.reverse() statement
     def list_data(self, wtb, back_days):
+        assert all(document in self.documents for document, _ in wtb)
         today = datetime.today()
         missing_dates = []
         data = []
         for i in range(back_days):
             older_date = today - timedelta(days = i)
             close = []
-            for requested_data, ticker in wtb:
+            for document, ticker in wtb:
                 close.append(
-                        self.find_in_data(requested_data, ticker,
-                                            older_date.strftime("%Y%m%d"), True))
+                    self.find_in_data(
+                            document,
+                            ticker,
+                            older_date.strftime("%Y%m%d"),
+                            True))
             if all(close_i is not None for close_i in close):
                 data.append(close)
             else:

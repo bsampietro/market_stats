@@ -11,7 +11,7 @@ def get_rows(command):
     for ticker in tickers:
         if ticker not in gcnv.v_tickers:
             continue
-        closes = gcnv.data_handler.list_data([["STOCK", ticker]], 45)[0]
+        closes = gcnv.data_handler.list_data([["stock", ticker]], 45)[0]
         if len(closes) == 0:
             continue
     

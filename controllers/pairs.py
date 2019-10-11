@@ -55,7 +55,7 @@ def get_row(pair, command):
     bring_if_connected(ticker2)
     try:
         pair = Pair(ticker1, ticker2, fixed_stdev_ratio)
-        max_stored_date = gcnv.data_handler.get_max_stored_date("STOCK", ticker1)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker1)
         date = '-' if max_stored_date is None \
                     else util.date_in_string(max_stored_date) # Need to change this
         row = [ticker1 + '-' + ticker2,

@@ -18,7 +18,7 @@ class Stock:
         return (float(self.get_close_at(date)) / self.ma(back_days) - 1.0) * 100
 
     def get_close_at(self, date):
-        return gcnv.data_handler.find_in_data("STOCK", self.ticker, date, False)
+        return gcnv.data_handler.find_in_data("stock", self.ticker, date, False)
 
     def get_last_percentage_change(self):
         # Using 10 as an arbitrary big number to have at least
@@ -81,7 +81,7 @@ class Stock:
 
     @lru_cache(maxsize=None)
     def closes(self, back_days):
-        return gcnv.data_handler.list_data([["STOCK", self.ticker]], back_days)[0]
+        return gcnv.data_handler.list_data([["stock", self.ticker]], back_days)[0]
 
     @lru_cache(maxsize=None)
     def percentage_changes(self, back_days):

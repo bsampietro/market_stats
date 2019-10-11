@@ -13,10 +13,10 @@ def update_stock(command):
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
         for ticker in tickers:
-            gcnv.ib.request_market_data("STOCK", ticker)
+            gcnv.ib.request_market_data("stock", ticker)
     else:
         ticker = command[1].upper()
-        gcnv.ib.request_market_data("STOCK", ticker)
+        gcnv.ib.request_market_data("stock", ticker)
 
 def save_earnings(command):
     earnings_data = {}
