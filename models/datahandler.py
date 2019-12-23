@@ -8,25 +8,26 @@ from ib.ib_data import IBData
 
 import gcnv
 
+DOCUMENTS = ['iv', 'hv', 'stock']
+
 class DataHandler:
     def __init__(self):
-        self.documents = ['iv', 'hv', 'stock']
         self.load()
 
     def load(self):
-        for document in self.documents:
+        for document in DOCUMENTS:
             setattr(self, f"modified_{document}", False)
             with open(f"{gcnv.APP_PATH}/data/{document}.json", "r") as f:
                 setattr(self, document, json.load(f))
 
     def save(self):
-        for document in self.documents:
+        for document in DOCUMENTS:
             if getattr(self, f"modified_{document}"):
                 with open(f"{gcnv.APP_PATH}/data/{document}.json", "w") as f:
                     json.dump(getattr(self, document), f)
 
     def store_history(self, document, ticker, date, value):
-        assert document in self.documents
+        assert document in DOCUMENTS
         data = getattr(self, document)
         if not ticker in data:
             data[ticker] = {}
@@ -34,7 +35,7 @@ class DataHandler:
         setattr(self, f"modified_{document}", True)
 
     def get_max_stored_date(self, document, ticker):
-        assert document in self.documents
+        assert document in DOCUMENTS
         data = self.find_in_data(document, ticker, None, silent = True)
         if data is None:
             return None
@@ -42,7 +43,7 @@ class DataHandler:
             return datetime.strptime(max(data.keys()), "%Y%m%d")
     
     def find_in_data(self, document, ticker, date, silent):
-        assert document in self.documents
+        assert document in DOCUMENTS
         data = getattr(self, document)
         try:
             if date is None:
@@ -61,7 +62,7 @@ class DataHandler:
                     f"{ticker} info not available and remote not connected")
 
     def delete_at(self, date):
-        for document in self.documents:
+        for document in DOCUMENTS:
             data = getattr(self, document)
             for value in data.values():
                 value.pop(date, None)
@@ -76,7 +77,7 @@ class DataHandler:
             self.delete_at(delete_day)
 
     def delete_ticker(self, ticker):
-        for document in self.documents:
+        for document in DOCUMENTS:
             data = getattr(self, document)
             data.pop(ticker, None)
             setattr(self, f"modified_{document}", True)
@@ -87,12 +88,13 @@ class DataHandler:
 
     # Last list element is the most recent value, achieved by data.reverse() statement
     def list_data(self, wtb, back_days):
-        assert all(document in self.documents for document, _ in wtb)
-        today = datetime.today()
+        assert all(document in DOCUMENTS for document, _ in wtb)
+        min_stored_date = min(
+            self.get_max_stored_date(document, ticker) for document, ticker in wtb)
         missing_dates = []
         data = []
         for i in range(back_days):
-            older_date = today - timedelta(days = i)
+            older_date = min_stored_date - timedelta(days = i)
             close = []
             for document, ticker in wtb:
                 close.append(

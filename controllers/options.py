@@ -18,8 +18,8 @@ def get_rows(command):
         current = int(closes[-1])
         min_ = int(min(closes))
         gcnv.options.pop(ticker, None) # delete all elements for ticker first
-        try_strikes(ticker, current, 'P', "20191115")
-        try_strikes(ticker, min_, 'P', "20191115")
+        try_strikes(ticker, current, 'P', command[2]) # command[2] is something like: "20191220"
+        try_strikes(ticker, min_, 'P', command[2])
 
     print(gcnv.options)
 

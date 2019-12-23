@@ -77,6 +77,10 @@ class Stock:
     def range(self, back_days):
         return (self.max(back_days) / self.min(back_days) - 1) * 100
 
+    def move(self, back_days):
+        closes = self.closes(back_days)
+        return ((closes[-1] / closes[0]) - 1) * 100
+
     # Private
 
     @lru_cache(maxsize=None)

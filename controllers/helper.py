@@ -34,7 +34,7 @@ def bring_if_connected(ticker):
     if gcnv.ib is None:
         return
     try:
-        if ticker in gcnv.v_tickers:
+        if gcnv.BRING_VOLATILITY_DATA and ticker in gcnv.v_tickers:
             max_stored_date = gcnv.data_handler.get_max_stored_date("iv", ticker)
             if (max_stored_date is None) or max_stored_date.date() < date.today():
                 print(f"Getting IV data for ticker {ticker}...")
