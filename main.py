@@ -78,6 +78,7 @@ if __name__ == "__main__" and not exec_in_console:
         else:
             last_command = command
 
+        header = rows = None
         try:
             if command[0] == "exit" or command[0] == "e":
                 gcnv.data_handler.save()
@@ -92,11 +93,9 @@ if __name__ == "__main__" and not exec_in_console:
 
             elif command[0] == "delete" or command[0] == "del":
                 general_controller.delete(command)
-                continue
 
             elif command[0] == "corr":
                 correlations_controller.pair(command)
-                continue
 
             elif command[0] == "corrs":
                 header, rows = correlations_controller.table(command)
@@ -104,7 +103,6 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "chart":
                 if command[1] == "pair":
                     general_controller.chart_pair(command)
-                continue
 
             elif command[0] == "print":
                 if command[1] == "price":
@@ -114,7 +112,6 @@ if __name__ == "__main__" and not exec_in_console:
                         print("Ticker not found")
                 elif command[1] == "keys":
                     show_controller.instruments(command)
-                    continue
 
             elif command[0] == "prvol":
                 header, rows, order_column = iv_controller.table(command)
@@ -125,11 +122,9 @@ if __name__ == "__main__" and not exec_in_console:
             elif command[0] == "update":
                 print("Updating stock values...")
                 general_controller.update_stock(command)
-                continue
 
             elif command[0] == "earnings":
                 general_controller.save_earnings(command)
-                continue
 
             elif command[0] == "options":
                 header = options_controller.get_header()
@@ -137,24 +132,24 @@ if __name__ == "__main__" and not exec_in_console:
 
             else:
                 print("Command not recognized")
-                continue
 
-            print("Waiting for async request...")
             if gcnv.ib:
+                print("Waiting for async request...")
                 gcnv.ib.wait_for_async_request()
 
-            command = filter(lambda p: p != '', command)
-            with open(f"{gcnv.store_dir}/{'-'.join(command)}.html", "w") as f:
-                for row in rows:
-                    for i in range(len(row)):
-                        if isinstance(row[i], float):
-                            row[i] = f"{row[i]:.2f}"
-                        if vars().get("order_column") == i:
-                            row[i] = f"<b>{row[i]}</b>"
-                f.write(html.table(rows, header_row=header,
-                    style=("border: 1px solid #000000; border-collapse: collapse;"
-                            "font: 11px arial, sans-serif;")))
-            print(f"Finished. Stored report on {gcnv.store_dir}.")
+            if header and rows:
+                command = filter(lambda p: p != '', command)
+                with open(f"{gcnv.store_dir}/{'-'.join(command)}.html", "w") as f:
+                    for row in rows:
+                        for i in range(len(row)):
+                            if isinstance(row[i], float):
+                                row[i] = f"{row[i]:.2f}"
+                            if vars().get("order_column") == i:
+                                row[i] = f"<b>{row[i]}</b>"
+                    f.write(html.table(rows, header_row=header,
+                        style=("border: 1px solid #000000; border-collapse: collapse;"
+                                "font: 11px arial, sans-serif;")))
+                print(f"Finished. Stored report on {gcnv.store_dir}.")
 
             if len(gcnv.messages) > 0:
                 print("\n".join(gcnv.messages))

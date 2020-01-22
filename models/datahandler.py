@@ -1,6 +1,7 @@
 import json
 from json.decoder import JSONDecodeError
 from datetime import datetime, timedelta
+import os
 
 from lib import util
 from lib.errors import *
@@ -12,19 +13,30 @@ DOCUMENTS = ['iv', 'hv', 'stock']
 
 class DataHandler:
     def __init__(self):
+        self.modified = set()
         self.load()
 
     def load(self):
         for document in DOCUMENTS:
-            setattr(self, f"modified_{document}", False)
-            with open(f"{gcnv.APP_PATH}/data/{document}.json", "r") as f:
-                setattr(self, document, json.load(f))
+            setattr(self, document, {})
+            data = getattr(self, document)
+            filenames = os.listdir(f"{gcnv.APP_PATH}/data/{document}")
+            tickers = [filename.replace('.json', '')
+                        for filename in filenames 
+                        if '.json' in filename] # could add file checking also
+            for ticker in tickers:
+                with open(f"{gcnv.APP_PATH}/data/{document}/{ticker}.json", "r") as f:
+                    data[ticker] = json.load(f)
+
 
     def save(self):
         for document in DOCUMENTS:
-            if getattr(self, f"modified_{document}"):
-                with open(f"{gcnv.APP_PATH}/data/{document}.json", "w") as f:
-                    json.dump(getattr(self, document), f)
+            data = getattr(self, document)
+            for ticker in data.keys():
+                if (document, ticker) not in self.modified:
+                    continue
+                with open(f"{gcnv.APP_PATH}/data/{document}/{ticker}.json", "w") as f:
+                    json.dump(data[ticker], f)
 
     def store_history(self, document, ticker, date, value):
         assert document in DOCUMENTS
@@ -32,7 +44,7 @@ class DataHandler:
         if not ticker in data:
             data[ticker] = {}
         data[ticker][date] = value
-        setattr(self, f"modified_{document}", True)
+        self.modified.add((document, ticker))
 
     def get_max_stored_date(self, document, ticker):
         assert document in DOCUMENTS
@@ -64,9 +76,9 @@ class DataHandler:
     def delete_at(self, date):
         for document in DOCUMENTS:
             data = getattr(self, document)
-            for value in data.values():
-                value.pop(date, None)
-            setattr(self, f"modified_{document}", True)
+            for ticker, prices in data.items():
+                prices.pop(date, None)
+                self.modified.add((document, ticker))
         if gcnv.ib:
             gcnv.ib.reset_session_requested_data()
 
@@ -80,7 +92,10 @@ class DataHandler:
         for document in DOCUMENTS:
             data = getattr(self, document)
             data.pop(ticker, None)
-            setattr(self, f"modified_{document}", True)
+            try:
+                os.remove(f"{gcnv.APP_PATH}/data/{document}/{ticker}.json") # delete file
+            except FileNotFoundError as e:
+                gcnv.messages.append(f"Didn't find file: {gcnv.APP_PATH}/data/{document}/{ticker}.json")
         if gcnv.ib:
             gcnv.ib.reset_session_requested_data()
 
