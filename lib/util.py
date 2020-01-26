@@ -41,9 +41,12 @@ def read_symbol_list(path):
     symbol_list = []
     with open(path) as symbols:
         for symbol in symbols:
+            if '#' in symbol:
+                symbol = symbol[:symbol.index('#')]
             symbol = symbol.strip()
-            if symbol != '' and symbol[0] != '#':
-                symbol_list.append(symbol)
+            if symbol == '':
+                continue
+            symbol_list.append(symbol)
     return symbol_list
 
 def covariance(data1, data2):

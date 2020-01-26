@@ -21,13 +21,23 @@ def update_stock(command):
 def save_earnings(command):
     earnings_data = {}
     for ticker in util.read_symbol_list(f"{gcnv.APP_PATH}/input/{command[1]}.txt"):
-        f = urllib.request.urlopen(f"https://www.nasdaq.com/earnings/report/{ticker}")
+        f = urllib.request.urlopen(f"https://api.nasdaq.com/api/analyst/{ticker}/earnings-date")
         page_bytes = f.read()
-        location = page_bytes.find(b"earnings on")
+        # ++ Scraping ++
+        #location = page_bytes.find(b"earnings on")
+        # ++++++++++++++
+        # ++ JSON ++
+        response = json.loads(page_bytes)
+        if not response['data']:
+            print(f"No data for {ticker}")
+            continue
+        data = response['data']['reportText']
+        location = data.find('earnings on')
+        # ++++++++++
         if location == -1:
             print(f"Couldn't find earnings for {ticker}")
         else:
-            earnings_data[ticker] = page_bytes[location+13:location+25].decode()
+            earnings_data[ticker] = data[location+13:location+25]
             print(f"Stored earnings for {ticker}")
     
     with open(f"{gcnv.APP_PATH}/data/earnings.json", "w") as f:

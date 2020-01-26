@@ -18,8 +18,7 @@ class DataHandler:
 
     def load(self):
         for document in DOCUMENTS:
-            setattr(self, document, {})
-            data = getattr(self, document)
+            data = {}
             filenames = os.listdir(f"{gcnv.APP_PATH}/data/{document}")
             tickers = [filename.replace('.json', '')
                         for filename in filenames 
@@ -27,7 +26,7 @@ class DataHandler:
             for ticker in tickers:
                 with open(f"{gcnv.APP_PATH}/data/{document}/{ticker}.json", "r") as f:
                     data[ticker] = json.load(f)
-
+            setattr(self, document, data)
 
     def save(self):
         for document in DOCUMENTS:
