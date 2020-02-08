@@ -62,8 +62,6 @@ EIS
 FXE
 FXY
 FXB
-#FXC (doesn't work)
-#FXA
 
 #special
 PPLT

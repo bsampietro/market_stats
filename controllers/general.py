@@ -39,7 +39,6 @@ def save_earnings(command):
         else:
             earnings_data[ticker] = data[location+13:location+25]
             print(f"Stored earnings for {ticker}")
-    
     with open(f"{gcnv.APP_PATH}/data/earnings.json", "w") as f:
         json.dump(earnings_data, f, indent=4)
 

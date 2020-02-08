@@ -3,13 +3,10 @@ QQQ
 IWM
 VXX
 
-# More than 3 contracts, only with very high IV
-# due to extreme low option prices
 GLD
 TLT
 EWZ
 
-# Only for buying
 IYR
 XLU
 
@@ -38,8 +35,6 @@ UNG
 GDXJ
 SLV
 
-# Use with Futures options that have
-# approximately double the notional value
 FXE
 FXB
 FXY

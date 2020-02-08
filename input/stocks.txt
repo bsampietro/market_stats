@@ -22,7 +22,6 @@ XOM
 
 AMZN
 TSLA
-#SNAP
 SBUX
 AAPL
 NFLX
@@ -35,7 +34,7 @@ VZ
 BA
 BABA
 UPS
-#MO
+MO
 QCOM
 NKE
 
@@ -45,8 +44,6 @@ X
 AMD
 MU
 CAT
-
-# ++ New ++
 
 ATVI
 COST
@@ -92,10 +89,4 @@ BBY
 AAL
 M
 AA
-
-# Liquidity?
-#CELG
-#XLNX
-
-# ++ Only for investing ++
 IBKR
