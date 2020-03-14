@@ -81,7 +81,10 @@ def get_header():
 
 def get_row(ticker, command):
     bring_if_connected(ticker)
-    date = get_query_date(ticker)
+    date = gcnv.data_handler.get_max_stored_date("stock", ticker)
+    if date is None:
+        return []
+    date = util.date_in_string(date)
     back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
         lambda x: int(x) * 30, command[2])
     try:

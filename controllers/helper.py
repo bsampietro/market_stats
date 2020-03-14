@@ -8,16 +8,6 @@ from collections import defaultdict
 from lib import util, core
 import gcnv
 
-def get_query_date(ticker):
-    if gcnv.ib:
-        return util.today_in_string()
-    else:
-        max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker)
-        if max_stored_date is None:
-            return util.today_in_string()
-        else:
-            return util.date_in_string(max_stored_date)
-
 def chart_link(ticker):
     return f"<a href=\"https://finance.yahoo.com/chart/{ticker}\" target=\"_blank\">--&gt;</a>"
 
