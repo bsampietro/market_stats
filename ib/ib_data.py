@@ -69,19 +69,16 @@ class IBData(EClient, EWrapper):
 
         # Query
         self.reqHistoricalData(next_req_id, util.get_contract(ticker), '',
-                            duration_string, "1 day", what_to_show, 1, 1, [])
+                            duration_string, "1 day", what_to_show, 1, 1, False, [])
 
-    def historicalData(self, reqId, date:str, open:float, high:float,
-                       low:float, close:float, volume:int, barCount:int,
-                        WAP:float, hasGaps:int):
-        super().historicalData(reqId, date, open, high, low, close,
-                                volume, barCount, WAP, hasGaps)
+    def historicalData(self, reqId, bar_data):
+        super().historicalData(reqId, bar_data)
 
         gcnv.data_handler.store_history(
                 self.calling_info[reqId].requested_data,
                 self.calling_info[reqId].ticker,
-                date,
-                close
+                bar_data.date,
+                bar_data.close
             )
 
     def historicalDataEnd(self, reqId:int, start:str, end:str):

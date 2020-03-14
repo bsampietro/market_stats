@@ -66,6 +66,7 @@ def get_tickers_from_command(name):
     rows = []
     if os.path.isfile(text_file):
         tickers = util.read_symbol_list(text_file)
+        tickers = list(set(tickers))
     else:
         tickers = [name.upper()]
     return tickers
