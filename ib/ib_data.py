@@ -1,5 +1,4 @@
-import sys
-sys.path.append('/home/bruno/ib_api/9_73/IBJts/source/pythonclient')
+# Need to set PYTHONPATH environment variable with path to ibapi library
 
 from threading import Thread
 import logging
