@@ -1,4 +1,10 @@
 import statistics
+import json
+from json.decoder import JSONDecodeError
+from datetime import datetime, date, timedelta
+import time
+from collections import defaultdict
+
 from lib import util, core
 from lib.errors import *
 from controllers.helper import *
@@ -60,6 +66,7 @@ def get_header():
         'L%chg',
         'UD14',
         'SPCrr',
+        'SPstdv',
         '210R',
         'DStkNr',
         'NOptNr',
@@ -80,14 +87,15 @@ def get_header():
     return header
 
 def get_row(ticker, command):
-    bring_if_connected(ticker)
-    date = gcnv.data_handler.get_max_stored_date("stock", ticker)
-    if date is None:
-        return []
-    date = util.date_in_string(date)
-    back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
-        lambda x: int(x) * 30, command[2])
     try:
+        bring_if_connected(ticker)
+        date = gcnv.data_handler.get_max_stored_date("stock", ticker)
+        if date is None:
+            return []
+        date = util.date_in_string(date)
+        back_days = core.safe_execute(gcnv.BACK_DAYS, ValueError, 
+            lambda x: int(x) * 30, command[2])
+
         iv = IV(ticker)
         hv = HV(ticker)
         mixed_vs = MixedVs(iv, hv)
@@ -101,19 +109,20 @@ def get_row(ticker, command):
             stock.get_close_at(date), # GettingInfoError raised here if not stored data
             f"{stock.min(back_days)} - {stock.max(back_days)}",
             round(stock.min_max_rank(date, back_days)),
-            stock.range(28) / stock.hv_to_10_ratio(back_days),
-            stock.range(14) / stock.hv_to_10_ratio(back_days),
-            stock.move(7) / stock.hv_to_10_ratio(back_days),
+            stock.range(28) / spy_pair.stdev_ratio(back_days),
+            stock.range(14) / spy_pair.stdev_ratio(back_days),
+            stock.move(7) / spy_pair.stdev_ratio(back_days),
             stock.get_last_percentage_change(),
             up_down_closes_str(stock, 14),
             core.safe_execute('-', GettingInfoError, spy_pair.correlation, back_days),
+            spy_pair.stdev_ratio(back_days),
             stock.hv_to_10_ratio(back_days),
             round(notional.directional_stock_number(stock.get_close_at(date),
-                stock.hv_to_10_ratio(back_days))),
+                spy_pair.stdev_ratio(back_days))),
             round(notional.neutral_options_number(stock.get_close_at(date),
-                stock.hv_to_10_ratio(back_days)), 1),
+                spy_pair.stdev_ratio(back_days)), 1),
             round(notional.directional_options_number(stock.get_close_at(date),
-                stock.hv_to_10_ratio(back_days)), 1),
+                spy_pair.stdev_ratio(back_days)), 1),
             earnings_data[ticker][0],
             earnings_data[ticker][1],
             chart_link(ticker)
@@ -132,7 +141,7 @@ def get_row(ticker, command):
             result_row_len = 5 # Number of rows above
             row += ['-'] * (result_row_len + gcnv.IVR_RESULTS)
         return row
-    except (GettingInfoError, ZeroDivisionError, statistics.StatisticsError) as e:
+    except (GettingInfoError, InputError, ZeroDivisionError, statistics.StatisticsError) as e:
         print(e)
         return []
 

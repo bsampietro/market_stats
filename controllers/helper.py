@@ -1,9 +1,4 @@
 import os
-import json
-from json.decoder import JSONDecodeError
-from datetime import datetime, date, timedelta
-import time
-from collections import defaultdict
 
 from lib import util, core
 import gcnv
@@ -23,27 +18,23 @@ def process_pair_string(pair_string):
 def bring_if_connected(ticker):
     if gcnv.ib is None:
         return
-    try:
-        if gcnv.BRING_VOLATILITY_DATA and ticker in gcnv.v_tickers:
-            max_stored_date = gcnv.data_handler.get_max_stored_date("iv", ticker)
-            if (max_stored_date is None) or max_stored_date.date() < date.today():
-                print(f"Getting IV data for ticker {ticker}...")
-                gcnv.ib.request_historical_data("iv", ticker)
-
-            max_stored_date = gcnv.data_handler.get_max_stored_date("hv", ticker)
-            # Using arbitrary 4 days because is not needed day to day
-            if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))):
-                print(f"Getting HV data for ticker {ticker}...")
-                gcnv.ib.request_historical_data("hv", ticker)
-
-        max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker)
+    if gcnv.BRING_VOLATILITY_DATA and ticker in gcnv.v_tickers:
+        max_stored_date = gcnv.data_handler.get_max_stored_date("iv", ticker)
         if (max_stored_date is None) or max_stored_date.date() < date.today():
-            print(f"Getting stock data for ticker {ticker}...")
-            gcnv.ib.request_historical_data("stock", ticker)
+            print(f"Getting IV data for ticker {ticker}...")
+            gcnv.ib.request_historical_data("iv", ticker)
 
-        gcnv.ib.wait_for_async_request()
-    except InputError as e:
-        print(e)
+        max_stored_date = gcnv.data_handler.get_max_stored_date("hv", ticker)
+        # Using arbitrary 4 days because is not needed day to day
+        if (max_stored_date is None) or (max_stored_date.date() < (date.today() - timedelta(days = 4))):
+            print(f"Getting HV data for ticker {ticker}...")
+            gcnv.ib.request_historical_data("hv", ticker)
+
+    max_stored_date = gcnv.data_handler.get_max_stored_date("stock", ticker)
+    if (max_stored_date is None) or max_stored_date.date() < date.today(): # need to modify if today the market is not open (weekend)
+        print(f"Getting stock data for ticker {ticker}...")
+        gcnv.ib.request_historical_data("stock", ticker)
+    gcnv.ib.wait_for_async_request()
 
 def up_down_closes_str(stock, back_days):
     map = ["+" if udc == 1 else "-" for udc in stock.up_down_closes(back_days)]

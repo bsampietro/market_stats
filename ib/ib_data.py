@@ -9,6 +9,7 @@ from ibapi.wrapper import EWrapper
 from ibapi.client import EClient
 
 from lib import util, core
+from lib.errors import *
 import gcnv
 
 class IBData(EClient, EWrapper):
@@ -154,12 +155,12 @@ class IBData(EClient, EWrapper):
     # Async
 
     def wait_for_async_request(self):
-        for i in range(300):
+        for i in range(20):
             if len(self.calling_info) == 0:
-                break
-            else:
-                assert i != 299, "Timeout!"
-                time.sleep(1)
+                return
+            time.sleep(1)
+        self.calling_info.clear()
+        raise GettingInfoError("Timeout while getting data")
 
     def wait_for_api_ready(self):
         for i in range(120):
